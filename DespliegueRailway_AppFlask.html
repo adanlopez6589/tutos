@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Despliegue de aplicación Flask en Railway</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0;
+      background: #f4f6f8;
+      color: #222;
+      line-height: 1.55;
+    }
+    header {
+      background: #263238;
+      color: white;
+      padding: 28px 36px;
+    }
+    header h1 {
+      margin: 0 0 8px 0;
+      font-size: 28px;
+    }
+    header p {
+      margin: 0;
+      font-size: 15px;
+    }
+    main {
+      max-width: 1050px;
+      margin: 24px auto;
+      padding: 0 18px 40px;
+    }
+    .intro, .card {
+      background: white;
+      border-radius: 10px;
+      padding: 22px;
+      margin-bottom: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    h2 {
+      margin-top: 0;
+      color: #263238;
+      font-size: 21px;
+    }
+    h3 {
+      color: #263238;
+    }
+    .cmd-row {
+      display: flex;
+      gap: 12px;
+      margin: 14px 0;
+      align-items: flex-start;
+    }
+    .cmd-num {
+      min-width: 48px;
+      font-weight: bold;
+      color: #263238;
+      padding-top: 10px;
+    }
+    .cmd-content {
+      flex: 1;
+    }
+    .cmd-desc {
+      margin-bottom: 6px;
+      font-size: 14px;
+      color: #444;
+    }
+    .code-wrap {
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+    }
+    code {
+      flex: 1;
+      display: block;
+      background: #111827;
+      color: #f9fafb;
+      padding: 12px;
+      border-radius: 7px;
+      overflow-x: auto;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 14px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    button {
+      background: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 7px;
+      padding: 0 14px;
+      cursor: pointer;
+      font-weight: bold;
+      min-width: 78px;
+    }
+    button:hover {
+      background: #0d47a1;
+    }
+    .note {
+      background: #fff8e1;
+      border-left: 5px solid #f9a825;
+      padding: 12px 14px;
+      margin: 14px 0;
+      border-radius: 6px;
+    }
+    .ok {
+      background: #e8f5e9;
+      border-left: 5px solid #43a047;
+      padding: 12px 14px;
+      margin: 14px 0;
+      border-radius: 6px;
+    }
+    .warn {
+      background: #ffebee;
+      border-left: 5px solid #e53935;
+      padding: 12px 14px;
+      margin: 14px 0;
+      border-radius: 6px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #eceff1;
+    }
+    footer {
+      text-align: center;
+      color: #666;
+      font-size: 13px;
+      padding: 22px;
+    }
+    @media print {
+      button { display: none; }
+      body { background: white; }
+      .intro, .card { box-shadow: none; border: 1px solid #ddd; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Despliegue de una aplicación Flask en Railway</h1>
+    <p>Guía práctica desde la creación del entorno virtual hasta el primer despliegue exitoso con GitHub, Gunicorn y Procfile.</p>
+  </header>
+
+  <main>
+    <section class="intro">
+      <h2>Propósito de la práctica</h2>
+      <p>Preparar una aplicación web desarrollada con <strong>Python Flask</strong> para desplegarla en <strong>Railway</strong>, utilizando un entorno virtual, archivo <strong>requirements.txt</strong>, <strong>.gitignore</strong>, control de versiones con Git/GitHub, <strong>Gunicorn</strong> como servidor WSGI y un archivo <strong>Procfile</strong> para indicar el comando de inicio.</p>
+
+      <h2>Conceptos clave</h2>
+      <p><strong>Entorno virtual:</strong> carpeta aislada donde se instalan las librerías de Python necesarias para una aplicación específica, sin afectar las librerías globales instaladas en Windows.</p>
+      <p><strong>requirements.txt:</strong> archivo que guarda la lista de dependencias de Python que Railway debe instalar automáticamente al construir la aplicación.</p>
+      <p><strong>.gitignore:</strong> archivo que indica a Git qué carpetas o archivos no deben subirse a GitHub, por ejemplo el entorno virtual.</p>
+      <p><strong>Gunicorn:</strong> servidor WSGI usado para ejecutar aplicaciones Flask en producción. Railway lo utiliza para arrancar la aplicación en Linux.</p>
+      <p><strong>Procfile:</strong> archivo de texto sin extensión que le indica a Railway cómo iniciar la aplicación.</p>
+
+      <h3>Arquitectura básica del despliegue</h3>
+      <table>
+        <tr>
+          <th>Elemento</th>
+          <th>Función</th>
+          <th>Ejemplo usado</th>
+        </tr>
+        <tr>
+          <td>Aplicación Flask</td>
+          <td>Contiene rutas, vistas, templates, conexión a base de datos y lógica principal.</td>
+          <td>miapp.py</td>
+        </tr>
+        <tr>
+          <td>Objeto Flask</td>
+          <td>Instancia que Gunicorn debe cargar para iniciar la aplicación.</td>
+          <td>miproyectoApp</td>
+        </tr>
+        <tr>
+          <td>Entorno virtual</td>
+          <td>Aísla las dependencias del proyecto.</td>
+          <td>env/</td>
+        </tr>
+        <tr>
+          <td>Railway</td>
+          <td>Plataforma cloud donde se construye y ejecuta la aplicación.</td>
+          <td>Deploy from GitHub repo</td>
+        </tr>
+      </table>
+
+      <div class="note"><strong>Nota:</strong> En esta guía se usa como ejemplo una app cuyo archivo principal es <strong>miapp.py</strong> y cuyo objeto Flask se llama <strong>miproyectoApp</strong>. Si tu archivo u objeto tienen otro nombre, debes modificar el comando de Gunicorn.</div>
+    </section>
+
+    <section class="card">
+      <h2>1. Ubicarse en la carpeta del proyecto</h2>
+      <p>Antes de crear el entorno virtual, se debe abrir la carpeta del proyecto en Visual Studio Code o entrar a ella desde la terminal.</p>
+
+      <div class="cmd-row"><div class="cmd-num">1.1</div><div class="cmd-content"><div class="cmd-desc">Entra a la carpeta del proyecto desde PowerShell. Ajusta la ruta si tu proyecto está en otra ubicación.</div><div class="code-wrap"><code>cd C:\Users\Adán\Desktop\miapp</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+
+      <div class="cmd-row"><div class="cmd-num">1.2</div><div class="cmd-content"><div class="cmd-desc">Verifica que aparezcan los archivos principales del proyecto.</div><div class="code-wrap"><code>dir</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+
+      <div class="note"><strong>Nota:</strong> En Visual Studio Code también puedes abrir la carpeta desde <strong>File → Open Folder</strong> y luego abrir la terminal integrada con <strong>Terminal → New Terminal</strong>.</div>
+    </section>
+
+    <section class="card">
+      <h2>2. Crear el entorno virtual</h2>
+      <p>El entorno virtual se crea dentro del proyecto, pero no debe subirse a GitHub.</p>
+
+      <div class="cmd-row"><div class="cmd-num">2.1</div><div class="cmd-content"><div class="cmd-desc">Crea un entorno virtual llamado env.</div><div class="code-wrap"><code>python -m venv env</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+
+      <div class="cmd-row"><div class="cmd-num">2.2</div><div class="cmd-content"><div class="cmd-desc">Activa el entorno virtual en PowerShell.</div><div class="code-wrap"><code>.\env\Scripts\Activate.ps1</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+
+      <div class="cmd-row"><div class="cmd-num">2.3</div><div class="cmd-content"><div class="cmd-desc">Si PowerShell bloquea la activación, permite scripts para el usuario actual.</div><div class="code-wrap"><code>Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+
+      <div class="cmd-row"><div class="cmd-num">2.4</div><div class="cmd-content"><div class="cmd-desc">Activa nuevamente el entorno virtual después de cambiar la política.</div><div class="code-wrap"><code>.\env\Scripts\Activate.ps1</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+
+      <div class="cmd-row"><div class="cmd-num">2.5</div><div class="cmd-content"><div class="cmd-desc">Alternativa para CMD si no se desea usar PowerShell.</div><div class="code-wrap"><code>env\Scripts\activate</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+
+      <div class="ok"><strong>Resultado esperado:</strong> La terminal debe mostrar algo parecido a <strong>(env)</strong> al inicio de la línea.</div>
+    </section>
+
+    <section class="card">
+      <h2>3. Instalar dependencias dentro del entorno virtual</h2>
+      <p>Con el entorno virtual activo, se instalan las librerías utilizadas por la aplicación Flask.</p>
+
+      <div class="cmd-row"><div class="cmd-num">3.1</div><div class="cmd-content"><div class="cmd-desc">Instala Flask, login, correo, MySQL y Gunicorn.</div><div class="code-wrap"><code>pip install flask flask-login flask-mail flask-mysqldb pymysql gunicorn</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+
+      <div class="cmd-row"><div class="cmd-num">3.2</div><div class="cmd-content"><div class="cmd-desc">Verifica las librerías instaladas.</div><div class="code-wrap"><code>pip list</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+        <div class="cmd-row">
+      <div class="cmd-num">3.3</div><div class="cmd-content"><div class="cmd-desc">Agregar PyMySQL al inicio del archivo miapp.py, antes de importar flask_mysqldb.</div><div class="code-wrap"><code>import pymysql
+pymysql.install_as_MySQLdb()</code>
+        <button onclick="copyCommand(this)">Copiar</button>
+      </div>
+    </div>
+  </div>
+
+      <div class="note"><strong>Nota:</strong> Si la app usa otras librerías, también deben instalarse dentro del entorno virtual antes de generar el archivo requirements.txt.</div>
+    </section>
+
+    <section class="card">
+      <h2>4. Generar requirements.txt</h2>
+      <p>Este archivo permite que Railway instale las mismas dependencias durante el despliegue.</p>
+
+      <div class="cmd-row"><div class="cmd-num">4.1</div><div class="cmd-content"><div class="cmd-desc">Genera el archivo requirements.txt a partir de las librerías instaladas.</div><div class="code-wrap"><code>pip freeze > requirements.txt</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+
+      <div class="cmd-row"><div class="cmd-num">4.2</div><div class="cmd-content"><div class="cmd-desc">Muestra el contenido del archivo requirements.txt.</div><div class="code-wrap"><code>type requirements.txt</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+
+      <h3>Ejemplo de requirements.txt usado en la práctica</h3>
+      <div class="code-wrap"><code>blinker==1.8.2
+click==8.1.8
+colorama==0.4.6
+Flask==3.0.3
+Flask-Login==0.6.3
+Flask-Mail==0.10.0
+Flask-MySQLdb==2.0.0
+gunicorn==23.0.0
+importlib_metadata==8.5.0
+itsdangerous==2.2.0
+Jinja2==3.1.6
+MarkupSafe==2.1.5
+mysqlclient==2.2.4
+packaging==26.2
+Werkzeug==3.0.6
+zipp==3.20.2</code><button onclick="copyCommand(this)">Copiar</button></div>
+
+      <div class="note"><strong>Diferencia importante:</strong> <strong>pip freeze &gt; requirements.txt</strong> guarda las librerías instaladas. En cambio, <strong>pip install -r requirements.txt</strong> instala las librerías listadas en ese archivo.</div>
+    </section>
+
+    <section class="card">
+      <h2>5. Crear el archivo .gitignore</h2>
+      <p>El entorno virtual no debe subirse a GitHub. Para evitarlo, se crea un archivo .gitignore en la raíz del proyecto.</p>
+
+      <div class="cmd-row"><div class="cmd-num">5.1</div><div class="cmd-content"><div class="cmd-desc">Crea el archivo .gitignore con las exclusiones principales.</div><div class="code-wrap"><code>@"
+env/
+__pycache__/
+*.pyc
+.env
+"@ | Out-File .gitignore</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+
+      <div class="cmd-row"><div class="cmd-num">5.2</div><div class="cmd-content"><div class="cmd-desc">Verifica que el archivo exista en la raíz del proyecto.</div><div class="code-wrap"><code>dir</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+
+      <h3>Contenido esperado de .gitignore</h3>
+      <div class="code-wrap"><code>env/
+__pycache__/
+*.pyc
+.env</code><button onclick="copyCommand(this)">Copiar</button></div>
+
+      <div class="warn"><strong>Importante:</strong> El archivo .gitignore no se ejecuta como comando. Es un archivo de texto que se guarda en la raíz del proyecto, al mismo nivel que requirements.txt y miapp.py.</div>
+    </section>
+
+    <section class="card">
+      <h2>6. Verificar que Git ignore el entorno virtual</h2>
+      <p>Antes de hacer commit, se revisa que Git no intente subir la carpeta env.</p>
+
+      <div class="cmd-row"><div class="cmd-num">6.1</div><div class="cmd-content"><div class="cmd-desc">Revisa el estado del repositorio.</div><div class="code-wrap"><code>git status</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+
+      <div class="ok"><strong>Resultado esperado:</strong> Deben aparecer archivos como <strong>.gitignore</strong> y <strong>requirements.txt</strong>, pero no debe aparecer <strong>env/</strong>.</div>
+
+      <div class="cmd-row"><div class="cmd-num">6.2</div><div class="cmd-content"><div class="cmd-desc">Si por error Git ya empezó a rastrear env, quítalo del índice sin borrarlo de tu computadora.</div><div class="code-wrap"><code>git rm -r --cached env</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+    </section>
+
+    <section class="card">
+      <h2>7. Crear el Procfile para Railway</h2>
+      <p>Railway necesita saber cómo iniciar la aplicación. Como el archivo se llama miapp.py y no app.py o main.py, conviene crear un Procfile.</p>
+
+      <div class="cmd-row"><div class="cmd-num">7.1</div><div class="cmd-content"><div class="cmd-desc">Crea el archivo Procfile con el comando de inicio. Debe llamarse Procfile, sin extensión .txt.</div><div class="code-wrap"><code>@"
+web: gunicorn miapp:miproyectoApp
+"@ | Out-File Procfile -Encoding ascii</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+
+      <div class="cmd-row"><div class="cmd-num">7.2</div><div class="cmd-content"><div class="cmd-desc">Verifica que el archivo Procfile exista en la raíz del proyecto.</div><div class="code-wrap"><code>dir</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+
+      <h3>Contenido esperado del Procfile</h3>
+      <div class="code-wrap"><code>web: gunicorn miapp:miproyectoApp</code></div>
+
+      <div class="note"><strong>Explicación:</strong> <strong>miapp</strong> corresponde al archivo <strong>miapp.py</strong> sin la extensión. <strong>miproyectoApp</strong> corresponde al objeto Flask creado dentro del archivo.</div>
+    </section>
+
+<section class="card">
+  <h2>8. Crear base de datos MySQL en Railway e importar respaldo SQL</h2>
+  <p>En esta sección se crea el servicio MySQL en Railway, se importa el respaldo <strong>miapp.sql</strong> y se configuran las variables de entorno para conectar Flask con la base de datos en producción.</p>
+
+  <div class="cmd-row">
+    <div class="cmd-num">8.1</div>
+    <div class="cmd-content">
+      <div class="cmd-desc">Dentro del proyecto de Railway crear un nuevo servicio de MySQL.</div>
+      <div class="code-wrap">
+        <code>New → Database → MySQL</code>
+	</div>
+    </div>
+  </div>
+
+  <div class="cmd-row">
+    <div class="cmd-num">8.2</div>
+    <div class="cmd-content">
+      <div class="cmd-desc">Abrir el servicio MySQL y entrar a la sección de conexión pública.</div>
+      <div class="code-wrap">
+        <code>MySQL → Connect → Public Network</code>
+      </div>
+    </div>
+  </div>
+
+  <div class="cmd-row">
+    <div class="cmd-num">8.3</div>
+    <div class="cmd-content">
+      <div class="cmd-desc">Abrir PowerShell o la terminal de VS Code y entrar a la carpeta donde se encuentra el respaldo miapp.sql.</div>
+      <div class="code-wrap">
+        <code>cd /static/sql</code>
+         <button onclick="copyCommand(this)">Copiar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cmd-row">
+    <div class="cmd-num">8.4</div>
+    <div class="cmd-content">
+      <div class="cmd-desc">Importar el respaldo SQL usando MySQL 8 y conexión segura SSL.</div>
+      <div class="code-wrap">
+        <code>Get-Content miapp.sql | &amp; "C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe" -h kodama.proxy.rlwy.net -u root -p --port 38862 --protocol=TCP --ssl-mode=REQUIRED railway</code>
+        <button onclick="copyCommand(this)">Copiar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cmd-row">
+    <div class="cmd-num">8.5</div>
+    <div class="cmd-content">
+      <div class="cmd-desc">Cuando el sistema solicite la contraseña, pegar la contraseña MYSQLPASSWORD proporcionada por Railway.</div>
+      <div class="code-wrap">
+        <code>Enter password: ***************</code>
+      </div>
+    </div>
+  </div>
+
+  <div class="cmd-row">
+    <div class="cmd-num">8.6</div>
+    <div class="cmd-content">
+      <div class="cmd-desc">Verificar en Railway que las tablas se hayan importado correctamente.</div>
+      <div class="code-wrap">
+        <code>MySQL → Database → Data</code>
+          </div>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>9. Hacer commit y push a GitHub</h2>
+  <p>Después de crear requirements.txt, .gitignore y Procfile, se suben los cambios a GitHub.</p>
+
+  <div class="cmd-row"><div class="cmd-num">9.1</div><div class="cmd-content"><div class="cmd-desc">Agrega los archivos al commit.</div><div class="code-wrap"><code>git add .</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+
+  <div class="cmd-row"><div class="cmd-num">9.2</div><div class="cmd-content"><div class="cmd-desc">Crea el commit.</div><div class="code-wrap"><code>git commit -m "Preparar despliegue Flask en Railway"</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+
+  <div class="cmd-row"><div class="cmd-num">9.3</div><div class="cmd-content"><div class="cmd-desc">Sube los cambios al repositorio remoto.</div><div class="code-wrap"><code>git push</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+
+  <div class="note"><strong>Alternativa para clase:</strong> Después de preparar los archivos, los estudiantes pueden hacer commit y push desde la interfaz gráfica de Visual Studio Code usando <strong>Source Control</strong>, <strong>Commit</strong> y <strong>Sync Changes</strong>.</div>
+</section>
+
+<section class="card">
+  <h2>10. Crear proyecto en Railway desde GitHub</h2>
+  <p>Una vez que el repositorio está actualizado en GitHub, Railway puede desplegarlo automáticamente.</p>
+
+  <div class="cmd-row"><div class="cmd-num">10.1</div><div class="cmd-content"><div class="cmd-desc">En Railway selecciona esta opción.</div><div class="code-wrap"><code>New Project → Deploy from GitHub repo</code></div></div></div>
+
+  <div class="cmd-row"><div class="cmd-num">10.2</div><div class="cmd-content"><div class="cmd-desc">Si no aparece el repositorio, autoriza el acceso desde GitHub App.</div><div class="code-wrap"><code>Configure GitHub App → Repository access → Only select repositories → miapp → Save → Refresh</code></div></div></div>
+
+  <div class="cmd-row"><div class="cmd-num">10.3</div><div class="cmd-content"><div class="cmd-desc">Selecciona el repositorio de la aplicación.</div><div class="code-wrap"><code>adanlopez6589/miapp</code></div></div></div>
+
+  <div class="note"><strong>Nota:</strong> Railway puede asignar un nombre automático al proyecto. Ese nombre puede cambiarse en <strong>Project Settings → General → Name</strong>.</div>
+
+  <div class="cmd-row">
+  <div class="cmd-num">10.4</div>
+  <div class="cmd-content">
+    <div class="cmd-desc">Configurar las variables de entorno en el servicio Flask de Railway.</div>
+    <div class="code-wrap">
+      <code>MYSQLHOST=kodama.proxy.rlwy.net
+MYSQLUSER=root
+MYSQLPASSWORD=contraseña_generada_por_railway
+MYSQLDATABASE=railway
+MYSQLPORT=38862</code>
+      <button onclick="copyCommand(this)">Copiar</button>
+    </div>
+  </div>
+</div>
+
+<div class="cmd-row">
+  <div class="cmd-num">10.5</div>
+  <div class="cmd-content">
+    <div class="cmd-desc">Modificar config.py para leer las variables desde Railway.</div>
+    <div class="code-wrap">
+      <code>MYSQL_HOST = os.environ.get('MYSQLHOST')
+MYSQL_USER = os.environ.get('MYSQLUSER')
+MYSQL_PASSWORD = os.environ.get('MYSQLPASSWORD')
+MYSQL_DB = os.environ.get('MYSQLDATABASE')
+MYSQL_PORT = int(os.environ.get('MYSQLPORT', 3306))</code>
+      <button onclick="copyCommand(this)">Copiar</button>
+    </div>
+  </div>
+</div>
+
+<div class="cmd-row">
+  <div class="cmd-num">10.6</div>
+  <div class="cmd-content">
+    <div class="cmd-desc">Agregar temporalmente impresiones de diagnóstico para verificar que Railway está leyendo las variables correctamente. Despues de la linea: miproyectoApp.config.from_object(config['mail'])</div>
+    <div class="code-wrap">
+      <code>print("HOST:", miproyectoApp.config['MYSQL_HOST'])
+print("USER:", miproyectoApp.config['MYSQL_USER'])
+print("DB:", miproyectoApp.config['MYSQL_DB'])
+print("PORT:", miproyectoApp.config['MYSQL_PORT'])</code>
+      <button onclick="copyCommand(this)">Copiar</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="cmd-row">
+  <div class="cmd-num">10.7</div>
+  <div class="cmd-content">
+    <div class="cmd-desc">Guardar cambios, realizar commit y enviar nuevamente el proyecto a GitHub.</div>
+    <div class="code-wrap">
+      <code>git add .
+git commit -m "Configuracion MySQL Railway"
+git push origin main</code>
+    </div>
+  </div>
+</div>
+
+<div class="cmd-row">
+  <div class="cmd-num">10.8</div>
+  <div class="cmd-content">
+    <div class="cmd-desc">Aplicar los cambios pendientes del servicio en Railway.</div>
+    <div class="code-wrap">
+      <code>Deploy Changes</code>
+        </div>
+  </div>
+</div>
+
+<div class="cmd-row">
+  <div class="cmd-num">10.9</div>
+  <div class="cmd-content">
+    <div class="cmd-desc">Reiniciar o volver a desplegar el servicio Flask.</div>
+    <div class="code-wrap">
+      <code>Deployments → Redeploy</code>
+            </div>
+  </div>
+</div>
+
+<div class="cmd-row">
+  <div class="cmd-num">10.10</div>
+  <div class="cmd-content">
+    <div class="cmd-desc">Verificar en los logs que Flask ya detecte correctamente la conexión MySQL.</div>
+    <div class="code-wrap">
+      <code>HOST: kodama.proxy.rlwy.net
+USER: root
+DB: railway
+PORT: 38862</code>
+            </div>
+  </div>
+</div>
+
+<div class="cmd-row">
+  <div class="cmd-num">10.11</div>
+  <div class="cmd-content">
+    <div class="cmd-desc">Generar el dominio público para acceder a la aplicación Flask desde Internet.</div>
+    <div class="code-wrap">
+      <code>Networking → Generate Domain</code>
+            </div>
+  </div>
+</div>
+
+<div class="cmd-row">
+  <div class="cmd-num">10.12</div>
+  <div class="cmd-content">
+    <div class="cmd-desc">Abrir la aplicación desplegada en el navegador.</div>
+    <div class="code-wrap">
+      <code>https://miapp-production-e147.up.railway.app/</code>
+            </div>
+  </div>
+</div>
+
+<div class="note">
+  <strong>Resultado esperado:</strong> La aplicación Flask debe quedar desplegada correctamente en Railway con conexión funcional a MySQL y acceso desde navegador mediante dominio público HTTPS.
+</div>
+</section>
+
+    <section class="card">
+      <h2>Conclusión didáctica</h2>
+      <p>Esta práctica permite observar la transición entre una aplicación Flask ejecutada localmente y una aplicación preparada para producción en la nube. El punto central no es solo subir código, sino comprender la función de cada archivo: el entorno virtual organiza dependencias, requirements.txt permite reproducirlas, .gitignore evita subir archivos innecesarios, Procfile define el inicio del servicio y Gunicorn ejecuta Flask en Railway.</p>
+    </section>
+  </main>
+
+  <footer>
+    Material didáctico para práctica de laboratorio: Flask, GitHub, Gunicorn y Railway.
+  </footer>
+
+  <script>
+    function copyCommand(button) {
+      const code = button.parentElement.querySelector("code").innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        const original = button.innerText;
+        button.innerText = "Copiado";
+        setTimeout(() => {
+          button.innerText = original;
+        }, 1400);
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<title>Guía de Configuración de Postfix para Nextcloud</title>
+<style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1, h2 { color: #2c3e50; }
+    pre { background: #f4f4f4; padding: 10px; border-radius: 5px; position: relative; overflow-x: auto; }
+    .command { position: relative; margin-bottom: 20px; }
+    button.copy-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 5px 10px;
+        font-size: 0.9em;
+        cursor: pointer;
+    }
+</style>
+<script>
+function copyCode(button) {
+    const code = button.previousElementSibling.innerText;
+    navigator.clipboard.writeText(code).then(() => {
+        button.textContent = 'Copiado';
+        setTimeout(() => { button.textContent = 'Copiar'; }, 2000);
+    });
+}
+</script>
+</head>
+<body>
+<h1>Guía: Configurar Postfix para el envío de correos desde Nextcloud en Localhost</h1>
+<h2>1. Instalar Postfix</h2>
+<div class="command"><pre>sudo apt update</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div>
+<div class="command"><pre>sudo apt install postfix mailutils -y</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div>
+<h2>2. Configurar Postfix (modo básico)</h2>
+<p>Durante la instalación selecciona:</p>
+<ul>
+<li><b>Tipo de configuración:</b> Sitio de Internet</li>
+<li><b>Nombre del sistema de correo:</b> localhost</li>
+</ul>
+<h2>3. Probar el envío de correos entre usuarios locales</h2>
+<p>Este comando muestra solo los usuarios humanos del sistema (UID mayor o igual a 1000).</p>
+<div class="command"><pre>awk -F: '$3 &gt;= 1000 {print $1}' /etc/passwd</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div>
+<p>Este comando crea un nuevo usuario local llamado <code>juan</code> si no existe ninguno.</p>
+<div class="command"><pre>sudo adduser juan</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div>
+<p>Este comando envía un correo local al usuario <code>juan</code>.</p>
+<div class="command"><pre>echo "Este es un mensaje de prueba" | mail -s "Correo de prueba" juan</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div>
+<p>Este comando permite leer el correo como si fueras el usuario <code>juan</code>.</p>
+<div class="command"><pre>sudo -u juan mail</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div>
+<p>También puedes usar este comando si tú mismo recibiste el mensaje de prueba.</p>
+<div class="command"><pre>mail</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div>
+<h3>Resumen de comandos útiles dentro de <code>mail</code></h3>
+<ul>
+<li><code>h</code> — Ver la bandeja de entrada (encabezados de todos los mensajes).</li>
+<li><code>1</code>, <code>2</code>, etc. — Leer un mensaje específico por su número.</li>
+<li><code>n</code> — Pasar al siguiente mensaje.</li>
+<li><code>p</code> — Volver a mostrar el mensaje actual.</li>
+<li><code>d N</code> — Marcar para eliminación el mensaje número <code>N</code> (por ejemplo, <code>d 1</code>).</li>
+<li><code>u N</code> — Desmarcar el mensaje <code>N</code> si fue marcado con <code>d</code>.</li>
+<li><code>q</code> — Salir del programa y eliminar los mensajes marcados.</li>
+<li><code>x</code> — Salir del programa sin eliminar ningún mensaje ni guardar cambios.</li>
+</ul>
+<h2>4. Configurar Nextcloud para usar Postfix</h2>
+<p>En la interfaz de Nextcloud, accede como administrador y dirígete a:</p>
+<p><b>Configuración &gt; Administración &gt; Configuración básica</b></p>
+<p>Completa los campos de correo así:</p>
+<ul>
+<li><b>Modo de envío:</b> SMTP</li>
+<li><b>Servidor:</b> localhost</li>
+<li><b>Puerto:</b> 25</li>
+<li><b>Seguridad:</b> Ninguna</li>
+<li><b>Autenticación:</b> Sin autenticación</li>
+</ul>
+<h2>5. Verificar el envío</h2>
+<p>Usa la opción "Enviar correo de prueba" en la misma sección de configuración de Nextcloud para validar la conexión con Postfix.</p>
+<h2>Notas adicionales</h2>
+<ul>
+<li>Si deseas enviar correos fuera de localhost, deberás configurar Postfix con un servidor de retransmisión externo (SMTP relay como Gmail, Mailgun, etc.).</li>
+<li>Para ver los registros de correo: <code>/var/log/mail.log</code></li>
+</ul>
+<h2>6. Configurar Postfix como Relay SMTP usando Gmail (cuenta institucional @alumnos.udg.mx)</h2>
+<p>Este método permite que Postfix envíe correos usando la infraestructura de Gmail. Requiere:</p>
+<ul>
+<li>Cuenta institucional de Google Workspace (@alumnos.udg.mx)</li>
+<li>Verificación en dos pasos activada</li>
+<li>Contraseña de aplicación generada desde la configuración de seguridad de la cuenta</li>
+</ul>
+<h3>Editar configuración de Postfix</h3>
+<p>Edita el archivo <code>/etc/postfix/main.cf</code> y agrega al final:</p>
+<div class="command"><pre>
+relayhost = [smtp.gmail.com]:587
+smtp_use_tls = yes
+smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+smtp_sasl_security_options = noanonymous
+smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
+</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div>
+<h3>Crear archivo de contraseñas</h3>
+<p>Reemplaza <i>tuusuario@alumnos.udg.mx</i> y <i>tu_contraseña_app</i> con tus datos reales:</p>
+<div class="command"><pre>sudo nano /etc/postfix/sasl_passwd</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div>
+<div class="command"><pre>[smtp.gmail.com]:587 tuusuario@alumnos.udg.mx:tu_contraseña_app</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div>
+<h3>Proteger, compilar y reiniciar</h3>
+<div class="command"><pre>sudo postmap /etc/postfix/sasl_passwd</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div>
+<div class="command"><pre>sudo chown root:root /etc/postfix/sasl_passwd*</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div>
+<div class="command"><pre>sudo chmod 600 /etc/postfix/sasl_passwd*</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div>
+<div class="command"><pre>sudo systemctl restart postfix</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div>
+<h3>Verifica el log para ver si el correo fue enviado</h3>
+<div class="command"><pre>tail -f /var/log/mail.log</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div>
+<p>Desde Nextcloud puedes usar el botón "Enviar correo de prueba" para verificar que funcione correctamente.</p>
+</body>
+</html>

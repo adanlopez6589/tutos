@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía de Instalación de Nextcloud en LEMP con PostgreSQL y Nginx en Debian</title>
+<style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1, h2 { color: #333; }
+    .command-row { display: flex; align-items: center; margin-bottom: 15px; }
+    .cmd-number { width: 60px; font-weight: bold; }
+    .cmd-box { position: relative; flex: 1; }
+    pre { background: #f4f4f4; padding: 10px; border-radius: 5px; margin: 0; overflow-x: auto; }
+    button.copy-button { position: absolute; top: 5px; right: 5px; padding: 5px 10px; font-size: 0.8em; cursor: pointer; }
+</style>
+<script>
+function copyCode(button) {
+    const code = button.previousElementSibling.innerText;
+    navigator.clipboard.writeText(code).then(() => {
+        button.textContent = 'Copiado';
+        setTimeout(() => { button.textContent = 'Copiar'; }, 2000);
+    });
+}
+</script>
+</head>
+<body>
+
+<h1>Guía Paso a Paso: Instalación de Nextcloud en LEMP con PostgreSQL y Nginx en Debian</h1>
+
+<h2>1. Instalar dependencias</h2>
+<div class="command-row"><div class="cmd-number">1.1</div><div class="cmd-box"><pre>sudo apt update && sudo apt upgrade -y</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+<div class="command-row"><div class="cmd-number">1.2</div><div class="cmd-box"><pre>sudo apt install nginx php php-fpm php-pgsql php-cli php-curl php-gd php-xml php-zip php-mbstring php-intl php-bcmath php-imagick php-gmp unzip curl wget gnupg2 -y</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+
+<h2>2. Instalar y configurar PostgreSQL</h2>
+<div class="command-row"><div class="cmd-number">2.1</div><div class="cmd-box"><pre>sudo apt install postgresql -y</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+<div class="command-row"><div class="cmd-number">2.2</div><div class="cmd-box"><pre>sudo -u postgres psql</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+
+<p>Dentro de PostgreSQL ejecuta:</p>
+<div class="command-row"><div class="cmd-number">2.3.1</div><div class="cmd-box"><pre>CREATE DATABASE nextcloud;</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+<div class="command-row"><div class="cmd-number">2.4.1</div><div class="cmd-box"><pre>CREATE USER nextclouduser WITH PASSWORD 'tu_password_segura';</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+<div class="command-row"><div class="cmd-number">2.5.1</div><div class="cmd-box"><pre>GRANT ALL PRIVILEGES ON DATABASE nextcloud TO nextclouduser;</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+<div class="command-row"><div class="cmd-number">2.5.2</div><div class="cmd-box"><pre>\c nextcloud</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+<div class="command-row"><div class="cmd-number">2.5.3</div><div class="cmd-box"><pre>GRANT ALL PRIVILEGES ON SCHEMA public TO nextclouduser;</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+<div class="command-row"><div class="cmd-number">2.6.1</div><div class="cmd-box"><pre>\q</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+
+<h3>2.7 Configuración opcional de red (IPv4/IPv6)</h3>
+<div class="command-row"><div class="cmd-number">2.7.1</div><div class="cmd-box"><pre>sudo nano /etc/postgresql/14/main/postgresql.conf</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+<div class="command-row"><div class="cmd-number">2.7.4</div><div class="cmd-box"><pre>sudo systemctl restart postgresql</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+
+<h2>3. Descargar Nextcloud y moverlo</h2>
+<div class="command-row"><div class="cmd-number">3.1</div><div class="cmd-box"><pre>cd /tmp</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+<div class="command-row"><div class="cmd-number">3.2</div><div class="cmd-box"><pre>wget https://download.nextcloud.com/server/releases/latest.zip</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+<div class="command-row"><div class="cmd-number">3.3</div><div class="cmd-box"><pre>unzip latest.zip</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+<div class="command-row"><div class="cmd-number">3.4</div><div class="cmd-box"><pre>sudo mv nextcloud /var/www/html/</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+<div class="command-row"><div class="cmd-number">3.5</div><div class="cmd-box"><pre>cd /var/www/html/</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+<div class="command-row"><div class="cmd-number">3.6</div><div class="cmd-box"><pre>sudo chown -R www-data:www-data nextcloud</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+<div class="command-row"><div class="cmd-number">3.7</div><div class="cmd-box"><pre>sudo chmod -R 755 nextcloud</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+
+<h2>4. Configurar Nginx</h2>
+<div class="command-row"><div class="cmd-number">4.1</div><div class="cmd-box"><pre>sudo systemctl stop apache2</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+<div class="command-row"><div class="cmd-number">4.2</div><div class="cmd-box"><pre>sudo nano /etc/nginx/sites-available/nextcloud</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+
+<p>Contenido del archivo:</p>
+<div class="cmd-box">
+<pre>server {
+    listen 80;
+    server_name localhost;
+
+    root /var/www/html;
+    index index.php index.html;
+
+    client_max_body_size 512M;
+    fastcgi_buffers 64 4K;
+
+    access_log /var/log/nginx/nextcloud_access.log;
+    error_log /var/log/nginx/nextcloud_error.log;
+
+    location /nextcloud/ {
+        try_files $uri $uri/ /nextcloud/index.php$request_uri;
+    }
+
+    location ~ ^/nextcloud/.*\.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.2-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~* ^/nextcloud/\.(?:css|js|woff2?|svg|gif|map)$ {
+        try_files $uri /nextcloud/index.php$request_uri;
+        access_log off;
+        expires 6M;
+        add_header Cache-Control "public";
+    }
+
+    location ~ ^/nextcloud/\.ht {
+        deny all;
+    }
+}</pre>
+<button class="copy-button" onclick="copyCode(this)">Copiar todo</button>
+</div>
+
+<div class="command-row"><div class="cmd-number">4.4.1</div><div class="cmd-box"><pre>sudo ln -s /etc/nginx/sites-available/nextcloud /etc/nginx/sites-enabled/</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+<div class="command-row"><div class="cmd-number">4.5.1</div><div class="cmd-box"><pre>sudo nginx -t</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+<div class="command-row"><div class="cmd-number">4.6.1</div><div class="cmd-box"><pre>sudo systemctl restart nginx</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+
+<h2>5. Configurar PHP</h2>
+<div class="command-row"><div class="cmd-number">5.1</div><div class="cmd-box"><pre>sudo nano /etc/php/8.2/fpm/php.ini</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+
+<p>Modificar los siguientes parámetros dentro de <b>php.ini</b>:</p>
+<div class="cmd-box">
+<pre>memory_limit = 512M
+upload_max_filesize = 512M
+post_max_size = 512M
+max_execution_time = 360</pre>
+<button class="copy-button" onclick="copyCode(this)">Copiar</button>
+</div>
+
+<div class="command-row"><div class="cmd-number">5.3.1</div><div class="cmd-box"><pre>sudo systemctl restart php8.2-fpm</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+
+<h2>6. Finalizar instalación</h2>
+<p>6.1 Acceder a:</p>
+<pre>http://localhost/nextcloud/</pre>
+<p>6.2 Configurar:</p>
+<ul>
+<li>6.2.1 Usuario: <b>nextclouduser</b></li>
+<li>6.2.2 Contraseña: <i>tu_password_segura</i></li>
+<li>6.2.3 Base de datos: <b>nextcloud</b></li>
+<li>6.2.4 Servidor: <b>localhost</b></li>
+</ul>
+
+</body>
+</html>

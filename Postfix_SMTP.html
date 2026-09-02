@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Instalación y configuración básica de Postfix y Dovecot en Debian 12</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0;
+      background: #f4f6f8;
+      color: #222;
+      line-height: 1.55;
+    }
+    header {
+      background: #263238;
+      color: white;
+      padding: 28px 36px;
+    }
+    header h1 {
+      margin: 0 0 8px 0;
+      font-size: 28px;
+    }
+    header p {
+      margin: 0;
+      font-size: 15px;
+    }
+    main {
+      max-width: 1050px;
+      margin: 24px auto;
+      padding: 0 18px 40px;
+    }
+    .intro, .card {
+      background: white;
+      border-radius: 10px;
+      padding: 22px;
+      margin-bottom: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    h2 {
+      margin-top: 0;
+      color: #263238;
+      font-size: 21px;
+    }
+    h3 {
+      color: #263238;
+    }
+    .cmd-row {
+      display: flex;
+      gap: 12px;
+      margin: 14px 0;
+      align-items: flex-start;
+    }
+    .cmd-num {
+      min-width: 48px;
+      font-weight: bold;
+      color: #263238;
+      padding-top: 10px;
+    }
+    .cmd-content {
+      flex: 1;
+    }
+    .cmd-desc {
+      margin-bottom: 6px;
+      font-size: 14px;
+      color: #444;
+    }
+    .code-wrap {
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+    }
+    code {
+      flex: 1;
+      display: block;
+      background: #111827;
+      color: #f9fafb;
+      padding: 12px;
+      border-radius: 7px;
+      overflow-x: auto;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 14px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    button {
+      background: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 7px;
+      padding: 0 14px;
+      cursor: pointer;
+      font-weight: bold;
+      min-width: 78px;
+    }
+    button:hover {
+      background: #0d47a1;
+    }
+    .note {
+      background: #fff8e1;
+      border-left: 5px solid #f9a825;
+      padding: 12px 14px;
+      margin: 14px 0;
+      border-radius: 6px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #eceff1;
+    }
+    footer {
+      text-align: center;
+      color: #666;
+      font-size: 13px;
+      padding: 22px;
+    }
+    @media print {
+      button {
+        display: none;
+      }
+      body {
+        background: white;
+      }
+      .intro, .card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Instalación y configuración básica de Postfix y Dovecot en Debian 12</h1>
+    <p>Servidor SMTP con Postfix y acceso a buzones con Dovecot.</p>
+  </header>
+
+  <main>
+    <section class="intro">
+      <h2>Propósito de la práctica</h2>
+      <p>Instalar y configurar de manera básica un servidor de correo local en Debian 12 utilizando Postfix como servidor SMTP y Dovecot como servidor IMAP/POP3, con el fin de comprender la función de cada componente dentro del modelo cliente-servidor.</p>
+
+
+<h3>Arquitectura real del sistema de correo (flujo completo)</h3>
+<p>En un sistema de correo electrónico moderno intervienen varios agentes especializados que trabajan en conjunto para garantizar el envío, transporte, validación y entrega de los mensajes.</p>
+
+<div style="text-align:center; margin:20px 0;">
+  <img src="https://cms.elasticemail.com/wp-content/uploads/2021/11/Elastic-Email-MTA-Mail-Transfer-Agent-diagram.jpg"
+       alt="Arquitectura MTA MSA MDA"
+       style="max-width:100%; border-radius:8px;">
+</div>
+
+<p><strong>Flujo del correo:</strong><br>
+MUA → MSA → MTA → MTA (Internet) → MDA → Dovecot → MUA</p>
+
+<h3>Agentes del sistema de correo</h3>
+
+<p><strong>MUA (Mail User Agent)</strong>: Es el cliente de correo utilizado por el usuario final para redactar, enviar y leer mensajes. Ejemplo: Thunderbird.</p>
+
+<p><strong>MSA (Mail Submission Agent)</strong>: Recibe el correo desde el cliente (MUA), valida credenciales y prepara el mensaje antes de enviarlo al servidor de transporte. Generalmente opera en el puerto 587.</p>
+
+<p><strong>MTA (Mail Transfer Agent)</strong>: Es el encargado de enrutar y transferir los correos entre servidores utilizando SMTP. Puede pasar por varios MTAs hasta llegar al destino. Ejemplo: Postfix.</p>
+
+<p><strong>MDA (Mail Delivery Agent)</strong>: Recibe el correo del MTA y lo almacena en el buzón del usuario (Maildir). Aquí es donde realmente “llega” el correo al servidor destino.</p>
+
+<p><strong>Servidor de acceso (Dovecot)</strong>: Permite al usuario consultar su buzón mediante IMAP o POP3.</p>
+
+<h3>Elementos adicionales de la imagen (nivel producción)</h3>
+
+<p><strong>IP Warmup(Acondicionamiento de la IP)</strong>: Es el proceso de aumentar gradualmente el volumen de envío de correos desde una dirección IP nueva para generar reputación y evitar que los mensajes sean marcados como spam.</p>
+
+<p><strong>Email Throttling(Control de envío de correos)</strong>: Técnica que controla la cantidad de correos enviados por unidad de tiempo para evitar bloqueos por parte de servidores receptores o sistemas anti-spam.</p>
+
+<p><strong>DKIM (DomainKeys Identified Mail, Autenticación de correo por firma digital del dominio)</strong>: Método de autenticación que firma digitalmente los correos electrónicos para verificar que el mensaje no ha sido alterado y que proviene del dominio legítimo.</p>
+
+
+      <h2>Fundamentos de protocolos y agentes de correo</h2>
+      <p><strong>SMTP (Simple Mail Transfer Protocol)</strong> es el protocolo utilizado para el envío de correos electrónicos entre servidores y desde clientes hacia el servidor. Es el protocolo que utiliza Postfix para transferir mensajes.</p>
+
+      <p><strong>IMAP (Internet Message Access Protocol)</strong> es el protocolo que permite a los usuarios acceder y gestionar sus correos directamente en el servidor sin descargarlos completamente. Es el método más utilizado actualmente para consultar el correo desde múltiples dispositivos.</p>
+
+      <p><strong>POP3 (Post Office Protocol versión 3)</strong> es un protocolo que permite descargar los correos del servidor al equipo local, generalmente eliminándolos del servidor después de la descarga.</p>
+
+      <p>En la arquitectura de correo electrónico intervienen distintos agentes:</p>
+
+      <p><strong>MTA (Mail Transfer Agent)</strong>: Es el encargado de enviar y enrutar los correos entre servidores. En esta práctica, <strong>Postfix</strong> cumple esta función utilizando SMTP.</p>
+
+      <p><strong>MDA (Mail Delivery Agent)</strong>: Es el encargado de entregar el correo al buzón del usuario dentro del sistema. En esta práctica, la entrega se realiza en formato <strong>Maildir</strong>, donde cada mensaje se almacena como un archivo individual.</p>
+
+      <p><strong>MUA (Mail User Agent)</strong>: Es el cliente de correo que utiliza el usuario final para leer y enviar mensajes. En esta práctica, <strong>Thunderbird</strong> cumple este rol.</p>
+
+      <p><strong>Servidor de acceso a correo</strong>: Permite que el usuario consulte sus mensajes almacenados en el servidor mediante protocolos como IMAP o POP3. En esta práctica, <strong>Dovecot</strong> cumple esta función.</p>
+
+      <h2>Conceptos clave</h2>
+      <table>
+        <tr>
+          <th>Componente</th>
+          <th>Función</th>
+          <th>Protocolos relacionados</th>
+        </tr>
+        <tr>
+          <td>Postfix</td>
+          <td>Servidor de correo saliente y de transferencia de mensajes. Permite enviar y recibir correos mediante SMTP.</td>
+          <td>SMTP, puerto 25; envío autenticado comúnmente en 587.</td>
+        </tr>
+        <tr>
+          <td>Dovecot</td>
+          <td>Servidor de correo entrante. Permite que los usuarios lean sus buzones desde clientes como Thunderbird.</td>
+          <td>IMAP, puerto 143; IMAPS, puerto 993; POP3, puerto 110.</td>
+        </tr>
+        <tr>
+          <td>Maildir</td>
+          <td>Formato de almacenamiento donde cada correo se guarda como archivo dentro del directorio del usuario.</td>
+          <td>Usado por Postfix para guardar mensajes y por Dovecot para leerlos.</td>
+        </tr>
+        <tr>
+          <td>Thunderbird</td>
+          <td>Cliente de correo que permite comprobar gráficamente el envío y recepción de mensajes.</td>
+          <td>IMAP/POP3 para recibir y SMTP para enviar.</td>
+        </tr>
+      </table>
+
+      <h2>Escenario de laboratorio</h2>
+      <p>Esta guía está pensada para una máquina virtual con Debian 12. La práctica usa el usuario local <strong>juan</strong> como cuenta de correo de prueba. En un escenario de producción se requiere configuración adicional de dominio, DNS, certificados SSL/TLS, antispam, antivirus, SPF, DKIM y DMARC.</p>
+</section>
+
+    
+    <section class="card">
+      <h2>1. Actualizar el sistema</h2>
+      <p>Antes de instalar los servicios de correo, se actualizan los repositorios y paquetes del sistema.</p>
+    
+
+        <div class="cmd-row">
+          <div class="cmd-num">1.1</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Actualiza la lista de paquetes disponibles desde los repositorios configurados.</div>
+            <div class="code-wrap">
+              <code>sudo apt update</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="cmd-row">
+          <div class="cmd-num">1.2</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Instala las actualizaciones disponibles de los paquetes ya instalados.</div>
+            <div class="code-wrap">
+              <code>sudo apt upgrade -y</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+</section>
+
+    <section class="card">
+      <h2>2. Instalar Postfix y Dovecot</h2>
+      <p>Postfix funcionará como servidor SMTP para enviar y recibir mensajes. Dovecot permitirá acceder a los buzones mediante IMAP y POP3.</p>
+    
+<div class="note"><strong>Nota:</strong> Durante la instalación de Postfix, selecciona Sitio de Internet. En nombre de correo del sistema puedes usar localhost o un dominio de laboratorio como correo.local.</div>
+
+        <div class="cmd-row">
+          <div class="cmd-num">2.1</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Instala Postfix y los componentes principales de Dovecot para IMAP y POP3.</div>
+            <div class="code-wrap">
+              <code>sudo apt install postfix dovecot-core dovecot-imapd dovecot-pop3d -y</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+</section>
+
+    <section class="card">
+      <h2>3. Verificar el estado de los servicios</h2>
+      <p>Después de la instalación, se revisa si los servicios quedaron activos correctamente.</p>
+    
+
+        <div class="cmd-row">
+          <div class="cmd-num">3.1</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Muestra el estado actual del servicio Postfix.</div>
+            <div class="code-wrap">
+              <code>sudo systemctl status postfix</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="cmd-row">
+          <div class="cmd-num">3.2</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Muestra el estado actual del servicio Dovecot.</div>
+            <div class="code-wrap">
+              <code>sudo systemctl status dovecot</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+</section>
+
+    <section class="card">
+      <h2>4. Habilitar servicios al inicio del sistema</h2>
+      <p>Esto permite que Postfix y Dovecot inicien automáticamente cada vez que Debian arranque.</p>
+    
+
+        <div class="cmd-row">
+          <div class="cmd-num">4.1</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Habilita Postfix para iniciar automáticamente.</div>
+            <div class="code-wrap">
+              <code>sudo systemctl enable postfix</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="cmd-row">
+          <div class="cmd-num">4.2</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Habilita Dovecot para iniciar automáticamente.</div>
+            <div class="code-wrap">
+              <code>sudo systemctl enable dovecot</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+</section>
+
+    <section class="card">
+      <h2>5. Configurar el formato Maildir en Postfix</h2>
+      <p>Maildir guarda los mensajes en carpetas individuales dentro del directorio personal del usuario. Es un formato recomendado para prácticas con Dovecot.</p>
+    
+
+        <div class="cmd-row">
+          <div class="cmd-num">5.1</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Indica a Postfix que almacene los correos en la carpeta Maildir del usuario.</div>
+            <div class="code-wrap">
+              <code>sudo postconf -e &#x27;home_mailbox = Maildir/&#x27;</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="cmd-row">
+          <div class="cmd-num">5.2</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Reinicia Postfix para aplicar el cambio.</div>
+            <div class="code-wrap">
+              <code>sudo systemctl restart postfix</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+</section>
+
+    <section class="card">
+      <h2>6. Crear la estructura Maildir para el usuario juan</h2>
+      <p>Se crea la carpeta de buzón donde se almacenarán los mensajes recibidos por el usuario.</p>
+    
+
+        <div class="cmd-row">
+          <div class="cmd-num">6.1</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Crea la estructura básica de Maildir para el usuario juan.</div>
+            <div class="code-wrap">
+              <code>sudo mkdir -p /home/juan/Maildir/{cur,new,tmp}</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="cmd-row">
+          <div class="cmd-num">6.2</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Asigna la propiedad de la carpeta Maildir al usuario juan.</div>
+            <div class="code-wrap">
+              <code>sudo chown -R juan:juan /home/juan/Maildir</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="cmd-row">
+          <div class="cmd-num">6.3</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Restringe el acceso al buzón para proteger los mensajes del usuario.</div>
+            <div class="code-wrap">
+              <code>sudo chmod -R 700 /home/juan/Maildir</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+</section>
+
+    <section class="card">
+      <h2>7. Configurar Dovecot para usar Maildir</h2>
+      <p>Se edita la configuración principal de Dovecot para que lea los buzones en formato Maildir.</p>
+    
+<div class="note"><strong>Nota:</strong> Busca la línea mail_location. Si está comentada con #, elimínalo y deja el valor exactamente como se muestra en el punto 7.2.</div>
+
+        <div class="cmd-row">
+          <div class="cmd-num">7.1</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Abre el archivo de configuración de ubicación de buzones.</div>
+            <div class="code-wrap">
+              <code>sudo nano /etc/dovecot/conf.d/10-mail.conf</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="cmd-row">
+          <div class="cmd-num">7.2</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Línea que debe quedar configurada dentro del archivo 10-mail.conf.</div>
+            <div class="code-wrap">
+              <code>mail_location = maildir:~/Maildir</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+</section>
+
+    <section class="card">
+      <h2>8. Configurar autenticación básica en Dovecot</h2>
+      <p>Para esta práctica se utilizarán usuarios locales de Linux como cuentas de correo.</p>
+    
+<div class="note"><strong>Nota:</strong> Esta configuración es aceptable para laboratorio local. En producción debe usarse SSL/TLS y mayor endurecimiento de seguridad.</div>
+
+        <div class="cmd-row">
+          <div class="cmd-num">8.1</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Abre el archivo de configuración de autenticación.</div>
+            <div class="code-wrap">
+              <code>sudo nano /etc/dovecot/conf.d/10-auth.conf</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="cmd-row">
+          <div class="cmd-num">8.2</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Permite autenticación en texto plano para pruebas locales de laboratorio.</div>
+            <div class="code-wrap">
+              <code>disable_plaintext_auth = no</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="cmd-row">
+          <div class="cmd-num">8.3</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Habilita los mecanismos de autenticación plain y login.</div>
+            <div class="code-wrap">
+              <code>auth_mechanisms = plain login</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+</section>
+
+    <section class="card">
+      <h2>9. Revisar protocolos habilitados en Dovecot</h2>
+      <p>Se confirma que Dovecot tenga habilitados los protocolos IMAP y POP3.</p>
+    
+
+        <div class="cmd-row">
+          <div class="cmd-num">9.1</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Abre la configuración general de Dovecot.</div>
+            <div class="code-wrap">
+              <code>sudo nano /etc/dovecot/dovecot.conf</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="cmd-row">
+          <div class="cmd-num">9.2</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Línea sugerida para habilitar IMAP, POP3 y LMTP.</div>
+            <div class="code-wrap">
+              <code>protocols = imap pop3 lmtp</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+</section>
+
+    <section class="card">
+      <h2>10. Reiniciar Dovecot</h2>
+      <p>Después de modificar la configuración, se reinicia Dovecot.</p>
+    
+
+        <div class="cmd-row">
+          <div class="cmd-num">10.1</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Reinicia el servicio Dovecot.</div>
+            <div class="code-wrap">
+              <code>sudo systemctl restart dovecot</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="cmd-row">
+          <div class="cmd-num">10.2</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Verifica que Dovecot esté activo y sin errores.</div>
+            <div class="code-wrap">
+              <code>sudo systemctl status dovecot</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+</section>
+
+    <section class="card">
+      <h2>11. Enviar un correo local de prueba</h2>
+      <p>Para probar Postfix, se puede enviar un mensaje local al usuario juan.</p>
+    
+
+        <div class="cmd-row">
+          <div class="cmd-num">11.1</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Instala herramientas básicas para enviar correos desde terminal.</div>
+            <div class="code-wrap">
+              <code>sudo apt install mailutils -y</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="cmd-row">
+          <div class="cmd-num">11.2</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Envía un mensaje de prueba al usuario juan.</div>
+            <div class="code-wrap">
+              <code>echo &#x27;Correo de prueba desde Postfix en Debian 12&#x27; | mail -s &#x27;Prueba Postfix&#x27; juan</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+</section>
+
+    <section class="card">
+      <h2>12. Verificar si el mensaje llegó al buzón</h2>
+      <p>Se revisa la carpeta Maildir del usuario para comprobar si el mensaje fue recibido.</p>
+    
+
+        <div class="cmd-row">
+          <div class="cmd-num">12.1</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Lista los mensajes nuevos recibidos por el usuario juan.</div>
+            <div class="code-wrap">
+              <code>sudo ls -l /home/juan/Maildir/new</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="cmd-row">
+          <div class="cmd-num">12.2</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Muestra el contenido del mensaje recibido.</div>
+            <div class="code-wrap">
+              <code>sudo cat /home/juan/Maildir/new/*</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+</section>
+
+    <section class="card">
+      <h2>13. Verificar puertos de correo</h2>
+      <p>Se revisan los puertos usados por Postfix y Dovecot.</p>
+    
+
+        <div class="cmd-row">
+          <div class="cmd-num">13.1</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Verifica si Postfix está escuchando en el puerto SMTP 25.</div>
+            <div class="code-wrap">
+              <code>sudo ss -tulpn | grep master</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="cmd-row">
+          <div class="cmd-num">13.2</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Verifica si Dovecot está escuchando en puertos IMAP o POP3.</div>
+            <div class="code-wrap">
+              <code>sudo ss -tulpn | grep dovecot</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+</section>
+
+  <section class="card">
+      <h2>14. Configurar Thunderbird como cliente de correo</h2>
+      <p>Thunderbird puede usarse como cliente para probar la lectura de correos mediante Dovecot y el envío mediante Postfix.</p>
+    
+        <div class="cmd-row">
+          <div class="cmd-num">14.1</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Cambia al directorio temporal para descargar el instalador oficial de Thunderbird.</div>
+            <div class="code-wrap">
+              <code>cd /tmp</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="cmd-row">
+          <div class="cmd-num">14.2</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Descarga el instalador oficial de Thunderbird.</div>
+            <div class="code-wrap">
+              <code>wget https://download.mozilla.org/?product=thunderbird-latest&amp;os=linux64&amp;lang=es-ES -O thunderbird.tar.bz2</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="cmd-row">
+          <div class="cmd-num">14.3</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Extrae el paquete descargado.</div>
+            <div class="code-wrap">
+              <code>tar -xjf thunderbird.tar.bz2</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="cmd-row">
+          <div class="cmd-num">14.4</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Mueve la carpeta a /opt para instalación global.</div>
+            <div class="code-wrap">
+              <code>sudo mv thunderbird /opt/</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="cmd-row">
+          <div class="cmd-num">14.5</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Crea un enlace simbólico para ejecutar Thunderbird desde terminal.</div>
+            <div class="code-wrap">
+              <code>sudo ln -s /opt/thunderbird/thunderbird /usr/bin/thunderbird</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="cmd-row">
+          <div class="cmd-num">14.6</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Ejecuta Thunderbird.</div>
+            <div class="code-wrap">
+              <code>thunderbird</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="cmd-row">
+          <div class="cmd-num">14.7</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Dato de configuración para recibir correo mediante Dovecot.</div>
+            <div class="code-wrap">
+              <code>Servidor entrante IMAP: localhost, puerto 143, usuario juan</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="cmd-row">
+          <div class="cmd-num">14.8</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Dato de configuración para enviar correo mediante Postfix.</div>
+            <div class="code-wrap">
+              <code>Servidor saliente SMTP: localhost, puerto 25, usuario juan</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="cmd-row">
+          <div class="cmd-num">14.9</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Usa la contraseña asignada al crear el usuario con adduser.</div>
+            <div class="code-wrap">
+              <code>Contraseña: la contraseña del usuario Linux juan</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+</section>
+
+    <section class="card">
+      <h2>15. Comandos útiles de diagnóstico</h2>
+      <p>Estos comandos ayudan a revisar errores y registros del sistema de correo.</p>
+    
+
+        <div class="cmd-row">
+          <div class="cmd-num">15.1</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Muestra los últimos registros del servicio Postfix.</div>
+            <div class="code-wrap">
+              <code>sudo journalctl -u postfix -n 50 --no-pager</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="cmd-row">
+          <div class="cmd-num">15.2</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Muestra los últimos registros del servicio Dovecot.</div>
+            <div class="code-wrap">
+              <code>sudo journalctl -u dovecot -n 50 --no-pager</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="cmd-row">
+          <div class="cmd-num">15.3</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Muestra en tiempo real el registro general de correo, si está disponible.</div>
+            <div class="code-wrap">
+              <code>sudo tail -f /var/log/mail.log</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="cmd-row">
+          <div class="cmd-num">15.4</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Muestra la configuración activa y modificada de Postfix.</div>
+            <div class="code-wrap">
+              <code>postconf -n</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="cmd-row">
+          <div class="cmd-num">15.5</div>
+          <div class="cmd-content">
+            <div class="cmd-desc">Muestra la configuración activa y modificada de Dovecot.</div>
+            <div class="code-wrap">
+              <code>doveconf -n</code>
+              <button onclick="copyCommand(this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        
+</section>
+
+    <section class="card">
+      <h2>Conclusión didáctica</h2>
+      <p>Postfix y Dovecot trabajan juntos para construir un servidor de correo funcional. Postfix se encarga del envío y transferencia de mensajes mediante SMTP, mientras que Dovecot permite que los usuarios consulten sus buzones mediante IMAP o POP3. En un laboratorio local, esta configuración permite comprender la arquitectura básica de un sistema de correo electrónico en Linux.</p>
+
+      <table>
+        <tr>
+          <th>Servicio</th>
+          <th>Rol</th>
+          <th>Ejemplo en la práctica</th>
+        </tr>
+        <tr>
+          <td>Postfix</td>
+          <td>Envía y entrega mensajes</td>
+          <td>Recibe el correo enviado a juan y lo guarda en Maildir.</td>
+        </tr>
+        <tr>
+          <td>Dovecot</td>
+          <td>Permite leer mensajes</td>
+          <td>Thunderbird se conecta a Dovecot para mostrar el buzón de juan.</td>
+        </tr>
+        <tr>
+          <td>Thunderbird</td>
+          <td>Cliente de correo</td>
+          <td>Permite probar visualmente el envío y recepción de mensajes.</td>
+        </tr>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    Material didáctico para práctica de laboratorio en Debian 12.
+  </footer>
+
+  <script>
+    function copyCommand(button) {
+      const code = button.parentElement.querySelector("code").innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        const original = button.innerText;
+        button.innerText = "Copiado";
+        setTimeout(() => {
+          button.innerText = original;
+        }, 1400);
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Instalación y configuración básica de Gunicorn en Debian 12</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0;
+      background: #f4f6f8;
+      color: #222;
+      line-height: 1.55;
+    }
+    header {
+      background: #263238;
+      color: white;
+      padding: 28px 36px;
+    }
+    header h1 {
+      margin: 0 0 8px 0;
+      font-size: 28px;
+    }
+    header p {
+      margin: 0;
+      font-size: 15px;
+    }
+    main {
+      max-width: 1050px;
+      margin: 24px auto;
+      padding: 0 18px 40px;
+    }
+    .intro, .card {
+      background: white;
+      border-radius: 10px;
+      padding: 22px;
+      margin-bottom: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    h2 {
+      margin-top: 0;
+      color: #263238;
+      font-size: 21px;
+    }
+    h3 {
+      color: #263238;
+    }
+    .cmd-row {
+      display: flex;
+      gap: 12px;
+      margin: 14px 0;
+      align-items: flex-start;
+    }
+    .cmd-num {
+      min-width: 48px;
+      font-weight: bold;
+      color: #263238;
+      padding-top: 10px;
+    }
+    .cmd-content {
+      flex: 1;
+    }
+    .cmd-desc {
+      margin-bottom: 6px;
+      font-size: 14px;
+      color: #444;
+    }
+    .code-wrap {
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+    }
+    code {
+      flex: 1;
+      display: block;
+      background: #111827;
+      color: #f9fafb;
+      padding: 12px;
+      border-radius: 7px;
+      overflow-x: auto;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 14px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    button {
+      background: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 7px;
+      padding: 0 14px;
+      cursor: pointer;
+      font-weight: bold;
+      min-width: 78px;
+    }
+    button:hover {
+      background: #0d47a1;
+    }
+    .note {
+      background: #fff8e1;
+      border-left: 5px solid #f9a825;
+      padding: 12px 14px;
+      margin: 14px 0;
+      border-radius: 6px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #eceff1;
+    }
+    footer {
+      text-align: center;
+      color: #666;
+      font-size: 13px;
+      padding: 22px;
+    }
+    @media print {
+      button {
+        display: none;
+      }
+      body {
+        background: white;
+      }
+      .intro, .card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Instalación y configuración básica de Gunicorn en Debian 12</h1>
+    <p>Servidor de aplicaciones Python WSGI para ejecutar aplicaciones Flask en laboratorio.</p>
+  </header>
+
+  <main>
+    <section class="intro">
+      <h2>Propósito de la práctica</h2>
+      <p>Instalar y ejecutar una aplicación web básica en Debian 12 utilizando Flask y Gunicorn, con el fin de comprender la función de un servidor de aplicaciones dentro de la arquitectura cliente-servidor y su relación con un servidor web como Nginx.</p>
+
+      <h2>Conceptos clave</h2>
+      <p><strong>Gunicorn</strong> significa Green Unicorn. Es un servidor HTTP WSGI para aplicaciones Python. Su función principal es ejecutar aplicaciones desarrolladas con frameworks como Flask o Django en un entorno más adecuado que el servidor de desarrollo incluido por Flask.</p>
+
+      <p><strong>Flask</strong> es un microframework de Python que permite crear aplicaciones web de forma sencilla. En esta práctica se usa una aplicación mínima para comprobar el funcionamiento de Gunicorn.</p>
+
+      <p><strong>WSGI (Web Server Gateway Interface)</strong> es una especificación que permite la comunicación entre un servidor de aplicaciones Python y una aplicación web. Gunicorn usa WSGI para comunicarse con Flask.</p>
+
+      <p><strong>Entorno virtual</strong> es una carpeta aislada donde se instalan las dependencias de un proyecto Python sin afectar el sistema global. En esta práctica se utiliza un entorno llamado <strong>gunicorn_env</strong>.</p>
+
+      <p><strong>Proxy inverso</strong> es la función que puede cumplir Nginx cuando recibe las solicitudes del navegador y las reenvía internamente a Gunicorn. Esto permite que Nginx atienda el tráfico web público, archivos estáticos y HTTPS, mientras Gunicorn ejecuta la aplicación Python.</p>
+
+      <h3>Arquitectura de despliegue</h3>
+      <p>En una instalación profesional, Gunicorn normalmente no se expone directamente al usuario final. Primero se coloca un servidor web como Nginx, que funciona como intermediario.</p>
+
+      <table>
+        <tr>
+          <th>Capa</th>
+          <th>Componente</th>
+          <th>Función</th>
+        </tr>
+        <tr>
+          <td>Cliente</td>
+          <td>Navegador web</td>
+          <td>Solicita la página mediante HTTP o HTTPS.</td>
+        </tr>
+        <tr>
+          <td>Servidor web</td>
+          <td>Nginx</td>
+          <td>Recibe la solicitud, sirve archivos estáticos y puede reenviar la petición a Gunicorn.</td>
+        </tr>
+        <tr>
+          <td>Servidor de aplicaciones</td>
+          <td>Gunicorn</td>
+          <td>Ejecuta la aplicación Python mediante WSGI.</td>
+        </tr>
+        <tr>
+          <td>Framework</td>
+          <td>Flask</td>
+          <td>Contiene las rutas, vistas y lógica de la aplicación.</td>
+        </tr>
+      </table>
+
+      <h3>Flujo de solicitud</h3>
+      <p><strong>Cliente/Navegador → Nginx → Gunicorn → Flask → Respuesta al navegador</strong></p>
+
+      <div class="note"><strong>Nota:</strong> Esta práctica primero ejecuta Gunicorn directamente en el puerto 8000 para facilitar la comprensión. Al final se incluye una configuración opcional con Nginx como proxy inverso.</div>
+    </section>
+
+    <section class="card">
+      <h2>1. Actualizar el sistema</h2>
+      <p>Antes de instalar las herramientas necesarias, se actualizan los repositorios y los paquetes del sistema.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">1.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Actualiza la lista de paquetes disponibles desde los repositorios configurados.</div>
+          <div class="code-wrap">
+            <code>sudo apt update</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">1.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Instala las actualizaciones disponibles de los paquetes ya instalados.</div>
+          <div class="code-wrap">
+            <code>sudo apt upgrade -y</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>2. Instalar Python, pip y herramientas para entornos virtuales</h2>
+      <p>Gunicorn trabaja con aplicaciones Python, por lo que se requiere Python 3, pip y el módulo venv.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">2.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Instala Python 3, pip y la herramienta para crear entornos virtuales.</div>
+          <div class="code-wrap">
+            <code>sudo apt install python3 python3-pip python3-venv -y</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">2.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Verifica la versión de Python instalada.</div>
+          <div class="code-wrap">
+            <code>python3 --version</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>3. Crear la carpeta del proyecto</h2>
+      <p>La aplicación se guardará en una carpeta de trabajo. La tilde (~) representa el directorio personal del usuario actual, por ejemplo /home/juan.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">3.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Crea una carpeta llamada gunicorn_test dentro del directorio personal del usuario.</div>
+          <div class="code-wrap">
+            <code>mkdir ~/gunicorn_test</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">3.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Entra a la carpeta del proyecto.</div>
+          <div class="code-wrap">
+            <code>cd ~/gunicorn_test</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">3.3</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Muestra la ruta absoluta de la carpeta actual para confirmar la ubicación.</div>
+          <div class="code-wrap">
+            <code>pwd</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>4. Crear y activar el entorno virtual</h2>
+      <p>El entorno virtual permite instalar Flask y Gunicorn de forma aislada para este proyecto.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">4.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Crea un entorno virtual llamado gunicorn_env.</div>
+          <div class="code-wrap">
+            <code>python3 -m venv gunicorn_env</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">4.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Activa el entorno virtual. Al activarse, la terminal mostrará el nombre del entorno entre paréntesis.</div>
+          <div class="code-wrap">
+            <code>source gunicorn_env/bin/activate</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">4.3</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Actualiza pip dentro del entorno virtual.</div>
+          <div class="code-wrap">
+            <code>pip install --upgrade pip</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="note"><strong>Nota:</strong> La aplicación no debe guardarse dentro de la carpeta gunicorn_env. El entorno virtual solo contiene Python, pip y las dependencias del proyecto.</div>
+    </section>
+
+    <section class="card">
+      <h2>5. Instalar Flask y Gunicorn</h2>
+      <p>Flask será el framework de la aplicación y Gunicorn será el servidor de aplicaciones que la ejecutará.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">5.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Instala Flask y Gunicorn dentro del entorno virtual activo.</div>
+          <div class="code-wrap">
+            <code>pip install flask gunicorn</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">5.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Verifica la versión instalada de Gunicorn.</div>
+          <div class="code-wrap">
+            <code>gunicorn --version</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">5.3</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Guarda las dependencias instaladas en un archivo requirements.txt.</div>
+          <div class="code-wrap">
+            <code>pip freeze &gt; requirements.txt</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+  <h2>6. Crear una aplicación básica con Flask</h2>
+
+  <p>En este paso se creará una aplicación web sencilla utilizando Flask. El archivo principal de la aplicación se almacenará dentro de la carpeta principal del proyecto y fuera del entorno virtual.</p>
+
+  <div class="note">
+    <strong>Nota:</strong> El archivo <strong>miapp.py</strong> debe guardarse dentro de la carpeta principal del proyecto.  
+    Ejemplo:
+    <br><br>
+    <code>/home/juan/gunicorn_test/miapp.py</code>
+    <br><br>
+    También puede utilizarse la ruta abreviada:
+    <br><br>
+    <code>~/gunicorn_test/miapp.py</code>
+  </div>
+
+  <p>Estructura esperada del proyecto:</p>
+
+  <div class="cmd-row">
+    <div class="cmd-num">6.1</div>
+    <div class="cmd-content">
+      <div class="cmd-desc">Entra a la carpeta principal del proyecto donde se almacenará la aplicación Flask.</div>
+      <div class="code-wrap">
+        <code>cd ~/gunicorn_test</code>
+        <button onclick="copyCommand(this)">Copiar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cmd-row">
+    <div class="cmd-num">6.2</div>
+    <div class="cmd-content">
+      <div class="cmd-desc">Crea el archivo principal de la aplicación Flask.</div>
+      <div class="code-wrap">
+        <code>nano miapp.py</code>
+        <button onclick="copyCommand(this)">Copiar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cmd-row">
+    <div class="cmd-num">6.3</div>
+    <div class="cmd-content">
+      <div class="cmd-desc">Agrega el siguiente contenido básico al archivo miapp.py.</div>
+      <div class="code-wrap">
+        <code>from flask import Flask
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Servidor funcionando con Gunicorn"
+
+if __name__ == "__main__":
+    app.run()</code>
+        <button onclick="copyCommand(this)">Copiar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cmd-row">
+    <div class="cmd-num">6.4</div>
+    <div class="cmd-content">
+      <div class="cmd-desc">Guarda el archivo utilizando CTRL + O, presiona ENTER y después CTRL + X para salir de nano.</div>
+      <div class="code-wrap">
+        <code>Archivo guardado en: ~/gunicorn_test/miapp.py</code>
+      </div>
+    </div>
+  </div>
+
+  <div class="cmd-row">
+    <div class="cmd-num">6.5</div>
+    <div class="cmd-content">
+      <div class="cmd-desc">Estructura esperada del proyecto después de crear la aplicación.</div>
+      <div class="code-wrap">
+        <code>gunicorn_test/
+├── gunicorn_env/
+├── miapp.py
+├── templates/
+└── static/</code>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+    <section class="card">
+      <h2>7. Ejecutar la aplicación con Flask para prueba inicial</h2>
+      <p>Antes de usar Gunicorn, se puede probar que la aplicación funcione con el servidor de desarrollo de Flask.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">7.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Ejecuta la aplicación directamente con Python.</div>
+          <div class="code-wrap">
+            <code>python3 miapp.py</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">7.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Abre esta dirección en el navegador para comprobar la aplicación Flask.</div>
+          <div class="code-wrap">
+            <code>http://localhost:5000</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="note"><strong>Nota:</strong> Para detener el servidor de Flask en la terminal, presiona Ctrl + C.</div>
+    </section>
+
+    <section class="card">
+      <h2>8. Ejecutar la aplicación con Gunicorn</h2>
+      <p>Ahora se ejecuta la aplicación con Gunicorn. En el comando miapp:app, miapp corresponde al archivo miapp.py y app corresponde al objeto Flask creado dentro del archivo.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">8.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Ejecuta Gunicorn en el puerto 8000 escuchando en todas las interfaces de red.</div>
+          <div class="code-wrap">
+            <code>gunicorn --bind 0.0.0.0:8000 miapp:app</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">8.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Abre esta dirección en el navegador del mismo equipo.</div>
+          <div class="code-wrap">
+            <code>http://localhost:8000</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">8.3</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Prueba la segunda ruta de la aplicación.</div>
+          <div class="code-wrap">
+            <code>http://localhost:8000/saludo</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="note"><strong>Nota:</strong> Usa http:// y no https://. Gunicorn no configura certificados SSL/TLS automáticamente. En producción, HTTPS normalmente se configura en Nginx.</div>
+    </section>
+
+    <section class="card">
+      <h2>9. Ejecutar Gunicorn con varios workers</h2>
+      <p>Los workers son procesos que permiten atender más solicitudes. Para laboratorio se pueden usar 2 o 3 workers.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">9.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Ejecuta la aplicación con 3 workers en el puerto 8000.</div>
+          <div class="code-wrap">
+            <code>gunicorn --workers 3 --bind 0.0.0.0:8000 miapp:app</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">9.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Verifica procesos relacionados con Gunicorn.</div>
+          <div class="code-wrap">
+            <code>ps aux | grep gunicorn</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>10. Probar con otro puerto</h2>
+      <p>Gunicorn puede ejecutarse en otro puerto libre, por ejemplo 8080. Esto es útil si el puerto 8000 ya está ocupado.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">10.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Ejecuta Gunicorn en el puerto 8080.</div>
+          <div class="code-wrap">
+            <code>gunicorn --bind 0.0.0.0:8080 miapp:app</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">10.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Abre la aplicación usando el puerto 8080.</div>
+          <div class="code-wrap">
+            <code>http://localhost:8080</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">10.3</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Revisa si el puerto 8000 está ocupado por otro proceso.</div>
+          <div class="code-wrap">
+            <code>sudo ss -tulnp | grep :8000</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>11. Crear un servicio systemd para Gunicorn</h2>
+      <p>Para que Gunicorn se pueda iniciar, detener y reiniciar como servicio del sistema, se crea una unidad systemd.</p>
+
+      <div class="note"><strong>Nota:</strong> Reemplaza <strong>juan</strong> por el nombre real del usuario de Linux si estás trabajando con otro usuario.</div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">11.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Muestra el usuario actual para identificar qué nombre usar en el servicio.</div>
+          <div class="code-wrap">
+            <code>whoami</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">11.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Crea el archivo de servicio para Gunicorn.</div>
+          <div class="code-wrap">
+            <code>sudo nano /etc/systemd/system/gunicorn-miapp.service</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">11.3</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Contenido sugerido para el archivo gunicorn-miapp.service. Cambia juan si tu usuario es diferente.</div>
+          <div class="code-wrap">
+            <code>[Unit]
+Description=Servicio Gunicorn para aplicacion Flask miapp
+After=network.target
+
+[Service]
+User=juan
+Group=www-data
+WorkingDirectory=/home/juan/gunicorn_test
+Environment="PATH=/home/juan/gunicorn_test/gunicorn_env/bin"
+ExecStart=/home/juan/gunicorn_test/gunicorn_env/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 miapp:app
+
+[Install]
+WantedBy=multi-user.target</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">11.4</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Recarga systemd para reconocer el nuevo servicio.</div>
+          <div class="code-wrap">
+            <code>sudo systemctl daemon-reload</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">11.5</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Inicia el servicio de Gunicorn.</div>
+          <div class="code-wrap">
+            <code>sudo systemctl start gunicorn-miapp</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">11.6</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Habilita el servicio para que inicie automáticamente con el sistema.</div>
+          <div class="code-wrap">
+            <code>sudo systemctl enable gunicorn-miapp</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">11.7</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Verifica el estado del servicio.</div>
+          <div class="code-wrap">
+            <code>sudo systemctl status gunicorn-miapp</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>12. Instalar Nginx como proxy inverso</h2>
+      <p>Nginx recibirá las solicitudes web por el puerto 80 y las reenviará internamente a Gunicorn en 127.0.0.1:8000.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">12.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Instala Nginx.</div>
+          <div class="code-wrap">
+            <code>sudo apt install nginx -y</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">12.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Crea un archivo de configuración para la aplicación Flask.</div>
+          <div class="code-wrap">
+            <code>sudo nano /etc/nginx/sites-available/miapp</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">12.3</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Configuración básica de Nginx para reenviar solicitudes a Gunicorn.</div>
+          <div class="code-wrap">
+            <code>server {
+    listen 80;
+    server_name localhost;
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">12.4</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Habilita el sitio creando un enlace simbólico en sites-enabled.</div>
+          <div class="code-wrap">
+            <code>sudo ln -s /etc/nginx/sites-available/miapp /etc/nginx/sites-enabled/</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">12.5</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Opcional: elimina el sitio predeterminado de Nginx para evitar conflictos.</div>
+          <div class="code-wrap">
+            <code>sudo rm /etc/nginx/sites-enabled/default</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">12.6</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Verifica que la configuración de Nginx no tenga errores de sintaxis.</div>
+          <div class="code-wrap">
+            <code>sudo nginx -t</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">12.7</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Reinicia Nginx para aplicar la configuración.</div>
+          <div class="code-wrap">
+            <code>sudo systemctl restart nginx</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">12.8</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Abre la aplicación desde Nginx usando el puerto HTTP normal.</div>
+          <div class="code-wrap">
+            <code>http://localhost</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>13. Comandos útiles de diagnóstico</h2>
+      <p>Estos comandos ayudan a revisar errores, puertos y registros del servicio.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">13.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Muestra los últimos registros del servicio Gunicorn.</div>
+          <div class="code-wrap">
+            <code>sudo journalctl -u gunicorn-miapp -n 50 --no-pager</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">13.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Muestra en tiempo real los registros del servicio Gunicorn.</div>
+          <div class="code-wrap">
+            <code>sudo journalctl -u gunicorn-miapp -f</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">13.3</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Revisa si Nginx está activo.</div>
+          <div class="code-wrap">
+            <code>sudo systemctl status nginx</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">13.4</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Verifica qué servicios están escuchando en los puertos 80 y 8000.</div>
+          <div class="code-wrap">
+            <code>sudo ss -tulnp | grep -E ':80|:8000'</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">13.5</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Muestra los últimos errores registrados por Nginx.</div>
+          <div class="code-wrap">
+            <code>sudo tail -n 50 /var/log/nginx/error.log</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">13.6</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Reinicia el servicio de Gunicorn después de modificar la aplicación.</div>
+          <div class="code-wrap">
+            <code>sudo systemctl restart gunicorn-miapp</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>14. Detener y desactivar servicios si se requiere</h2>
+      <p>Estos comandos pueden usarse para detener temporalmente la práctica o limpiar la configuración.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">14.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Detiene el servicio de Gunicorn.</div>
+          <div class="code-wrap">
+            <code>sudo systemctl stop gunicorn-miapp</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">14.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Desactiva el inicio automático del servicio de Gunicorn.</div>
+          <div class="code-wrap">
+            <code>sudo systemctl disable gunicorn-miapp</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">14.3</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Desactiva el sitio de Nginx creado para la práctica.</div>
+          <div class="code-wrap">
+            <code>sudo rm /etc/nginx/sites-enabled/miapp</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">14.4</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Reinicia Nginx después de desactivar el sitio.</div>
+          <div class="code-wrap">
+            <code>sudo systemctl restart nginx</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Conclusión didáctica</h2>
+      <p>Gunicorn permite ejecutar aplicaciones Python de manera más adecuada que el servidor de desarrollo de Flask. En esta práctica se observa la separación entre framework, servidor de aplicaciones y servidor web. Flask contiene la lógica de la aplicación, Gunicorn la ejecuta mediante WSGI y Nginx puede recibir las solicitudes públicas para reenviarlas a Gunicorn como proxy inverso.</p>
+
+      <table>
+        <tr>
+          <th>Componente</th>
+          <th>Rol</th>
+          <th>Ejemplo en la práctica</th>
+        </tr>
+        <tr>
+          <td>Flask</td>
+          <td>Framework web</td>
+          <td>Define las rutas / y /saludo dentro de miapp.py.</td>
+        </tr>
+        <tr>
+          <td>Gunicorn</td>
+          <td>Servidor de aplicaciones</td>
+          <td>Ejecuta miapp:app en el puerto 8000.</td>
+        </tr>
+        <tr>
+          <td>Nginx</td>
+          <td>Servidor web y proxy inverso</td>
+          <td>Recibe solicitudes en el puerto 80 y las reenvía a 127.0.0.1:8000.</td>
+        </tr>
+        <tr>
+          <td>systemd</td>
+          <td>Administrador de servicios</td>
+          <td>Permite iniciar, detener y habilitar Gunicorn como servicio del sistema.</td>
+        </tr>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    Material didáctico para práctica de laboratorio en Debian 12.
+  </footer>
+
+  <script>
+    function copyCommand(button) {
+      const code = button.parentElement.querySelector("code").innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        const original = button.innerText;
+        button.innerText = "Copiado";
+        setTimeout(() => {
+          button.innerText = original;
+        }, 1400);
+      });
+    }
+  </script>
+</body>
+</html>

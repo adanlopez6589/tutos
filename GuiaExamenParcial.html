@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guía de estudio: Servidores y servicios de infraestructura</title>
+  <style>
+    :root {
+      --bg: #eef3f8;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #5f6b7a;
+      --primary: #1d4ed8;
+      --primary-dark: #123a9b;
+      --border: #d8e0ea;
+      --soft: #f6f9fc;
+      --code: #111827;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    header {
+      background: linear-gradient(135deg, #0f172a, #1d4ed8);
+      color: white;
+      padding: 34px 20px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0 0 10px;
+      font-size: 2rem;
+    }
+
+    header p {
+      margin: 0 auto;
+      max-width: 980px;
+      color: #e5e7eb;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 24px auto;
+      padding: 0 16px 40px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+    }
+
+    .card h2 {
+      margin-top: 0;
+      color: var(--primary-dark);
+      border-bottom: 2px solid #dbeafe;
+      padding-bottom: 8px;
+    }
+
+    .card h3 {
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+
+    .logo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .logo-box {
+      background: var(--soft);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      text-align: center;
+      min-height: 130px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .logo-box img {
+      max-width: 95px;
+      max-height: 54px;
+      object-fit: contain;
+      margin-bottom: 10px;
+    }
+
+    .logo-box span {
+      font-weight: bold;
+      font-size: 0.94rem;
+    }
+
+    .service {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 18px;
+      align-items: start;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .service:last-child { border-bottom: 0; }
+
+    .service-logo {
+      background: var(--soft);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .service-logo img {
+      max-width: 80px;
+      max-height: 60px;
+      object-fit: contain;
+    }
+
+    .tag {
+      display: inline-block;
+      background: #dbeafe;
+      color: #1e3a8a;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: bold;
+      margin: 2px 4px 2px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      overflow: hidden;
+      border-radius: 12px;
+      font-size: 0.95rem;
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px;
+      vertical-align: top;
+    }
+
+    th {
+      background: #e8f0fe;
+      color: #102a5c;
+      text-align: left;
+    }
+
+    tr:nth-child(even) td { background: #fafcff; }
+
+    ul { margin-top: 8px; }
+
+    .note {
+      background: #fff7ed;
+      border-left: 5px solid #f97316;
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin-top: 12px;
+    }
+
+    .summary {
+      background: #ecfdf5;
+      border-left: 5px solid #10b981;
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin-top: 12px;
+    }
+
+    .flow {
+      background: #f8fafc;
+      border: 1px dashed #94a3b8;
+      border-radius: 12px;
+      padding: 12px;
+      font-family: Consolas, 'Courier New', monospace;
+      color: var(--code);
+      overflow-x: auto;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      padding: 18px;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 680px) {
+      .service {
+        grid-template-columns: 1fr;
+      }
+      .service-logo {
+        width: 130px;
+      }
+    }
+
+    @media print {
+      body { background: white; }
+      .card { box-shadow: none; break-inside: avoid; }
+      header { background: #0f172a; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Guía de estudio: Servidores y servicios de infraestructura</h1>
+    <p>Preparación para examen de opción múltiple sobre instalación de Debian como servidor, servidores web, bases de datos, lenguajes de programación, aplicaciones web open source, correo electrónico, archivos y servidores de aplicaciones.</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Propósito de la guía</h2>
+      <p>Repasar los conceptos principales de los servicios instalados y configurados en prácticas de laboratorio, identificando su función dentro del modelo cliente-servidor, sus características, protocolos relacionados, componentes de despliegue y diferencias principales entre tecnologías.</p>
+      <div class="summary"><strong>Resultado esperado:</strong> el estudiante debe reconocer qué servicio se utiliza, para qué sirve, con qué protocolos trabaja, qué componentes requiere y cómo se integra en una solución web o de infraestructura.</div>
+    </section>
+
+    <section class="card">
+      <h2>Mapa general de tecnologías</h2>
+      <div class="logo-grid">
+        <div class="logo-box"><img src="https://upload.wikimedia.org/wikipedia/commons/6/66/Openlogo-debianV2.svg" alt="Debian"><span>Debian</span></div>
+        <div class="logo-box"><img src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Apache_Feather_Logo.svg" alt="Apache"><span>Apache HTTP Server</span></div>
+        <div class="logo-box"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c5/Nginx_logo.svg" alt="Nginx"><span>Nginx</span></div>
+        <div class="logo-box"><img src="https://upload.wikimedia.org/wikipedia/en/d/dd/MySQL_logo.svg" alt="MySQL"><span>MySQL</span></div>
+        <div class="logo-box"><img src="https://upload.wikimedia.org/wikipedia/commons/2/29/Postgresql_elephant.svg" alt="PostgreSQL"><span>PostgreSQL</span></div>
+        <div class="logo-box"><img src="https://upload.wikimedia.org/wikipedia/commons/9/93/MongoDB_Logo.svg" alt="MongoDB"><span>MongoDB</span></div>
+        <div class="logo-box"><img src="https://upload.wikimedia.org/wikipedia/commons/2/27/PHP-logo.svg" alt="PHP"><span>PHP</span></div>
+        <div class="logo-box"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c3/Python-logo-notext.svg" alt="Python"><span>Python</span></div>
+        <div class="logo-box"><img src="https://upload.wikimedia.org/wikipedia/commons/2/20/WordPress_logo.svg" alt="WordPress"><span>WordPress</span></div>
+        <div class="logo-box"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c6/Moodle-logo.svg" alt="Moodle"><span>Moodle</span></div>
+        <div class="logo-box"><img src="https://upload.wikimedia.org/wikipedia/commons/5/50/PrestaShop_Logo.svg" alt="PrestaShop"><span>PrestaShop</span></div>
+        <div class="logo-box"><img src="https://upload.wikimedia.org/wikipedia/commons/6/60/Nextcloud_Logo.svg" alt="Nextcloud"><span>Nextcloud</span></div>
+        <div class="logo-box"><img src="https://upload.wikimedia.org/wikipedia/commons/2/2b/Postfix-logo.svg" alt="Postfix"><span>Postfix</span></div>
+        <div class="logo-box"><img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Thunderbird_2023_icon.svg" alt="Thunderbird"><span>Thunderbird</span></div>
+        <div class="logo-box"><img src="https://upload.wikimedia.org/wikipedia/commons/0/0a/Gunicorn_logo_2010.svg" alt="Gunicorn"><span>Gunicorn</span></div>
+        <div class="logo-box"><img src="https://upload.wikimedia.org/wikipedia/commons/f/fe/Apache_Tomcat_logo.svg" alt="Apache Tomcat"><span>Apache Tomcat</span></div>
+      </div>
+      <div class="note">Nota: las imágenes se cargan desde Internet mediante URL externas. Si el equipo no tiene conexión, el texto de la guía seguirá funcionando, pero algunos logos podrían no mostrarse.</div>
+    </section>
+
+    <section class="card">
+      <h2>1. Debian GNU/Linux como sistema operativo servidor</h2>
+      <div class="service">
+        <div class="service-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/6/66/Openlogo-debianV2.svg" alt="Debian"></div>
+        <div>
+          <h3>Definición</h3>
+          <p>Debian GNU/Linux es una distribución de sistema operativo libre basada en el kernel Linux. En un servidor, funciona como plataforma base para instalar, configurar y administrar servicios como servidores web, bases de datos, correo, archivos y aplicaciones.</p>
+          <p><span class="tag">Sistema operativo</span><span class="tag">Linux</span><span class="tag">Servidor</span><span class="tag">Software libre</span></p>
+          <h3>Características principales</h3>
+          <ul>
+            <li>Estabilidad y seguridad para entornos de producción y laboratorio.</li>
+            <li>Administración mediante terminal y comandos.</li>
+            <li>Gestión de paquetes con apt.</li>
+            <li>Control de servicios con systemctl.</li>
+            <li>Uso de usuarios, grupos y permisos para proteger archivos y procesos.</li>
+          </ul>
+          <h3>Conceptos que debe dominar el estudiante</h3>
+          <ul>
+            <li>Kernel, distribución, repositorio, paquete, servicio y demonio.</li>
+            <li>Directorios importantes: /etc, /var, /home, /usr, /opt, /root y /tmp.</li>
+            <li>Comandos básicos: pwd, ls, cd, mkdir, cp, mv, rm, chmod, chown, sudo, apt y systemctl.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>2. Modelo cliente-servidor y protocolos base</h2>
+      <p>El modelo cliente-servidor organiza la comunicación entre un cliente que solicita un recurso o servicio y un servidor que procesa la solicitud y devuelve una respuesta. La comunicación ocurre mediante direcciones IP, nombres de dominio, puertos y protocolos.</p>
+      <table>
+        <thead><tr><th>Concepto</th><th>Definición para examen</th><th>Ejemplo</th></tr></thead>
+        <tbody>
+          <tr><td>Cliente</td><td>Equipo o aplicación que solicita un servicio.</td><td>Navegador web, Thunderbird, app móvil.</td></tr>
+          <tr><td>Servidor</td><td>Equipo o software que atiende solicitudes y ofrece recursos.</td><td>Apache, Nginx, MySQL, Postfix.</td></tr>
+          <tr><td>IP</td><td>Dirección lógica que identifica un equipo en una red.</td><td>192.168.1.10</td></tr>
+          <tr><td>Puerto</td><td>Número que identifica el servicio que atiende una conexión.</td><td>80 HTTP, 443 HTTPS, 22 SSH.</td></tr>
+          <tr><td>DNS</td><td>Servicio que traduce nombres de dominio en direcciones IP.</td><td>midominio.com → IP del servidor.</td></tr>
+          <tr><td>SSH</td><td>Protocolo seguro para administrar servidores de forma remota.</td><td>ssh usuario@servidor</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>3. Servidores web: Apache y Nginx</h2>
+      <div class="service">
+        <div class="service-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Apache_Feather_Logo.svg" alt="Apache"></div>
+        <div>
+          <h3>Apache HTTP Server</h3>
+          <p>Apache es un servidor web que recibe solicitudes HTTP o HTTPS y entrega páginas web, archivos estáticos o respuestas generadas por aplicaciones. Es muy utilizado por su compatibilidad, modularidad y facilidad de integración con PHP.</p>
+          <ul>
+            <li>Usa archivos de configuración y sitios virtuales.</li>
+            <li>Puede trabajar con módulos como mod_php, mod_ssl y mod_rewrite.</li>
+            <li>Su directorio raíz común en Debian es /var/www/html.</li>
+            <li>Permite alojar varios sitios mediante Virtual Hosts.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="service">
+        <div class="service-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c5/Nginx_logo.svg" alt="Nginx"></div>
+        <div>
+          <h3>Nginx</h3>
+          <p>Nginx es un servidor web de alto rendimiento, frecuentemente usado para servir contenido estático, actuar como proxy inverso, balanceador de carga y puerta de entrada hacia aplicaciones ejecutadas por Gunicorn, PHP-FPM u otros servicios.</p>
+          <ul>
+            <li>Utiliza una arquitectura eficiente basada en eventos.</li>
+            <li>Consume pocos recursos en comparación con modelos tradicionales por proceso.</li>
+            <li>Es común en despliegues modernos en la nube.</li>
+            <li>Puede reenviar solicitudes a Gunicorn, Tomcat u otros servidores internos.</li>
+          </ul>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Aspecto</th><th>Apache</th><th>Nginx</th></tr></thead>
+        <tbody>
+          <tr><td>Uso común</td><td>Sitios PHP, CMS, hosting tradicional.</td><td>Proxy inverso, alto rendimiento, nube.</td></tr>
+          <tr><td>Integración con PHP</td><td>Puede usar mod_php o PHP-FPM.</td><td>Usa normalmente PHP-FPM.</td></tr>
+          <tr><td>Concepto clave</td><td>Módulos y Virtual Hosts.</td><td>Bloques server y proxy inverso.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>4. Lenguajes de programación web: PHP y Python</h2>
+      <div class="service">
+        <div class="service-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/2/27/PHP-logo.svg" alt="PHP"></div>
+        <div>
+          <h3>PHP</h3>
+          <p>PHP es un lenguaje de programación del lado del servidor orientado principalmente al desarrollo web. Se ejecuta en el servidor, genera contenido dinámico y puede conectarse con bases de datos como MySQL o PostgreSQL.</p>
+          <ul>
+            <li>Muy usado en aplicaciones open source como WordPress, Moodle, PrestaShop y Nextcloud.</li>
+            <li>Puede ejecutarse con Apache mediante módulos o con Nginx/Apache mediante PHP-FPM.</li>
+            <li>Permite mezclar código con HTML para generar páginas dinámicas.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="service">
+        <div class="service-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c3/Python-logo-notext.svg" alt="Python"></div>
+        <div>
+          <h3>Python</h3>
+          <p>Python es un lenguaje interpretado, de sintaxis clara y uso general. En servidores web se utiliza con frameworks como Flask o Django para construir aplicaciones dinámicas conectadas a bases de datos.</p>
+          <ul>
+            <li>Se usa en desarrollo web, automatización, ciencia de datos e inteligencia artificial.</li>
+            <li>Las aplicaciones Flask suelen ejecutarse mediante Gunicorn y publicarse detrás de Nginx.</li>
+            <li>Su ecosistema permite instalar librerías con pip y aislar proyectos con venv.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>5. Servidores de bases de datos</h2>
+      <div class="service">
+        <div class="service-logo"><img src="https://upload.wikimedia.org/wikipedia/en/d/dd/MySQL_logo.svg" alt="MySQL"></div>
+        <div>
+          <h3>MySQL</h3>
+          <p>MySQL es un sistema gestor de bases de datos relacional. Organiza la información en tablas, registros, columnas y relaciones. Es común en aplicaciones web PHP y plataformas como WordPress y PrestaShop.</p>
+          <ul>
+            <li>Utiliza SQL para crear, consultar, modificar y administrar datos.</li>
+            <li>Trabaja con claves primarias y foráneas.</li>
+            <li>Es frecuente en la pila LAMP/LEMP.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="service">
+        <div class="service-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/2/29/Postgresql_elephant.svg" alt="PostgreSQL"></div>
+        <div>
+          <h3>PostgreSQL</h3>
+          <p>PostgreSQL es un sistema gestor de bases de datos relacional avanzado, reconocido por su integridad, apego a estándares SQL, soporte para transacciones y extensibilidad.</p>
+          <ul>
+            <li>Soporta transacciones ACID.</li>
+            <li>Puede manejar datos relacionales y tipos avanzados como JSON.</li>
+            <li>Es apropiado para aplicaciones que requieren consistencia y reglas complejas.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="service">
+        <div class="service-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/9/93/MongoDB_Logo.svg" alt="MongoDB"></div>
+        <div>
+          <h3>MongoDB</h3>
+          <p>MongoDB es una base de datos NoSQL orientada a documentos. En lugar de almacenar datos en tablas, utiliza documentos con estructura similar a JSON y los agrupa en colecciones.</p>
+          <ul>
+            <li>Documento: estructura flexible parecida a JSON.</li>
+            <li>Colección: conjunto de documentos relacionados.</li>
+            <li>BSON: formato binario usado internamente para almacenar documentos.</li>
+            <li>No requiere un esquema rígido como una base relacional tradicional.</li>
+          </ul>
+          <div class="flow">Ejemplo conceptual: { "nombre": "Ana", "edad": 18, "curso": "Servidores" }</div>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Tipo</th><th>Tecnologías</th><th>Organización de datos</th></tr></thead>
+        <tbody>
+          <tr><td>Relacional</td><td>MySQL, PostgreSQL</td><td>Tablas, filas, columnas y relaciones.</td></tr>
+          <tr><td>NoSQL documental</td><td>MongoDB</td><td>Colecciones y documentos tipo JSON/BSON.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>6. Aplicaciones web open source en despliegue</h2>
+      <div class="service">
+        <div class="service-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/2/20/WordPress_logo.svg" alt="WordPress"></div>
+        <div>
+          <h3>WordPress</h3>
+          <p>WordPress es un CMS, es decir, un sistema de gestión de contenidos. Permite crear sitios web, blogs, páginas institucionales y portales mediante temas, plugins, entradas y páginas.</p>
+          <ul>
+            <li>Usa principalmente PHP y MySQL/MariaDB.</li>
+            <li>Permite ampliar funciones mediante plugins.</li>
+            <li>Es útil para comprender despliegue de CMS en servidores web.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="service">
+        <div class="service-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c6/Moodle-logo.svg" alt="Moodle"></div>
+        <div>
+          <h3>Moodle</h3>
+          <p>Moodle es un LMS, es decir, una plataforma para administrar cursos, usuarios, actividades, recursos, evaluaciones y seguimiento del aprendizaje.</p>
+          <ul>
+            <li>Se utiliza en educación presencial, híbrida y virtual.</li>
+            <li>Requiere servidor web, PHP y base de datos.</li>
+            <li>Maneja roles como administrador, profesor y estudiante.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="service">
+        <div class="service-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/5/50/PrestaShop_Logo.svg" alt="PrestaShop"></div>
+        <div>
+          <h3>PrestaShop</h3>
+          <p>PrestaShop es una aplicación web open source para comercio electrónico. Permite crear tiendas en línea con catálogo de productos, carrito de compras, pedidos, clientes, pagos y administración de inventario.</p>
+          <ul>
+            <li>Usa PHP y base de datos MySQL/MariaDB.</li>
+            <li>Permite gestionar productos, categorías, clientes y pedidos.</li>
+            <li>Es útil para estudiar aplicaciones web con front office y back office.</li>
+          </ul>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Aplicación</th><th>Tipo</th><th>Finalidad</th><th>Tecnologías comunes</th></tr></thead>
+        <tbody>
+          <tr><td>WordPress</td><td>CMS</td><td>Crear y administrar sitios web.</td><td>PHP + MySQL + Apache/Nginx.</td></tr>
+          <tr><td>Moodle</td><td>LMS</td><td>Administrar cursos y aprendizaje.</td><td>PHP + MySQL/PostgreSQL + Apache/Nginx.</td></tr>
+          <tr><td>PrestaShop</td><td>E-commerce</td><td>Crear tiendas en línea.</td><td>PHP + MySQL + Apache/Nginx.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>7. Nextcloud como servidor de archivos</h2>
+      <div class="service">
+        <div class="service-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/6/60/Nextcloud_Logo.svg" alt="Nextcloud"></div>
+        <div>
+          <h3>Definición</h3>
+          <p>Nextcloud es una plataforma open source para crear una nube privada de archivos. Permite almacenar, sincronizar, compartir y administrar documentos desde una interfaz web o aplicaciones cliente.</p>
+          <h3>Características</h3>
+          <ul>
+            <li>Gestión de usuarios y permisos.</li>
+            <li>Compartición de archivos y carpetas.</li>
+            <li>Acceso vía navegador y clientes de sincronización.</li>
+            <li>Integración con calendario, contactos y extensiones.</li>
+          </ul>
+          <h3>Componentes comunes de despliegue</h3>
+          <p><span class="tag">Debian</span><span class="tag">Apache/Nginx</span><span class="tag">PHP</span><span class="tag">MySQL/PostgreSQL</span></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>8. Correo electrónico: Postfix y Thunderbird</h2>
+      <div class="service">
+        <div class="service-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/2/2b/Postfix-logo.svg" alt="Postfix"></div>
+        <div>
+          <h3>Postfix</h3>
+          <p>Postfix es un servidor de correo que cumple la función de MTA, es decir, agente de transferencia de correo. Su tarea principal es enviar, recibir y enrutar mensajes mediante el protocolo SMTP.</p>
+          <ul>
+            <li>SMTP se usa para enviar y transferir correos entre servidores.</li>
+            <li>Puede combinarse con Dovecot para ofrecer acceso IMAP o POP3 al buzón.</li>
+            <li>Puede integrarse con clientes de correo como Thunderbird.</li>
+          </ul>
+          <h3>Agentes del correo</h3>
+          <ul>
+            <li>MUA: Mail User Agent, aplicación cliente usada por el usuario.</li>
+            <li>MSA: Mail Submission Agent, recibe el correo enviado por el usuario.</li>
+            <li>MTA: Mail Transfer Agent, transfiere correos entre servidores.</li>
+            <li>MDA: Mail Delivery Agent, entrega el mensaje al buzón local.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="service">
+        <div class="service-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Thunderbird_2023_icon.svg" alt="Thunderbird"></div>
+        <div>
+          <h3>Thunderbird</h3>
+          <p>Thunderbird es una aplicación cliente de correo electrónico. Permite al usuario configurar cuentas, enviar mensajes por SMTP y recibir mensajes mediante IMAP o POP3.</p>
+          <ul>
+            <li>No es servidor, es cliente de correo.</li>
+            <li>Permite probar cuentas creadas en el servidor.</li>
+            <li>Puede configurarse con servidor entrante IMAP/POP3 y servidor saliente SMTP.</li>
+          </ul>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Protocolo</th><th>Función</th><th>Puerto común</th></tr></thead>
+        <tbody>
+          <tr><td>SMTP</td><td>Envío y transferencia de correo.</td><td>25 / 587</td></tr>
+          <tr><td>POP3</td><td>Descarga de mensajes desde el servidor.</td><td>110 / 995</td></tr>
+          <tr><td>IMAP</td><td>Consulta y sincronización de buzones en el servidor.</td><td>143 / 993</td></tr>
+        </tbody>
+      </table>
+      <div class="flow">Usuario → Thunderbird → SMTP → Postfix → Servidor destino / buzón local</div>
+    </section>
+
+    <section class="card">
+      <h2>9. Servidores de aplicaciones: Gunicorn y Tomcat</h2>
+      <div class="service">
+        <div class="service-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/0/0a/Gunicorn_logo_2010.svg" alt="Gunicorn"></div>
+        <div>
+          <h3>Gunicorn</h3>
+          <p>Gunicorn es un servidor de aplicaciones Python compatible con WSGI. Se utiliza para ejecutar aplicaciones web creadas con frameworks como Flask o Django.</p>
+          <ul>
+            <li>WSGI es una especificación que permite comunicar servidores web con aplicaciones Python.</li>
+            <li>Gunicorn ejecuta la aplicación y atiende solicitudes mediante procesos llamados workers.</li>
+            <li>Normalmente se coloca detrás de Nginx, que recibe la solicitud pública y la reenvía a Gunicorn.</li>
+          </ul>
+          <div class="flow">Cliente → Nginx → Gunicorn → Aplicación Flask → Base de datos</div>
+        </div>
+      </div>
+      <div class="service">
+        <div class="service-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/f/fe/Apache_Tomcat_logo.svg" alt="Apache Tomcat"></div>
+        <div>
+          <h3>Apache Tomcat</h3>
+          <p>Apache Tomcat es un servidor de aplicaciones Java. Funciona como contenedor de Servlets y permite ejecutar aplicaciones web desarrolladas con tecnologías Java.</p>
+          <ul>
+            <li>Servlet: componente Java que procesa solicitudes y genera respuestas.</li>
+            <li>JSP: JavaServer Pages, tecnología para crear páginas web dinámicas con Java.</li>
+            <li>Tomcat no es lo mismo que Apache HTTP Server; Apache HTTP Server es principalmente servidor web, mientras que Tomcat ejecuta aplicaciones Java.</li>
+          </ul>
+          <div class="flow">Cliente → Tomcat → Aplicación Java → Base de datos</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>10. Integración de servicios por solución</h2>
+      <table>
+        <thead><tr><th>Solución</th><th>Componentes frecuentes</th><th>Qué debe identificar el estudiante</th></tr></thead>
+        <tbody>
+          <tr><td>WordPress</td><td>Debian + Apache/Nginx + PHP + MySQL</td><td>CMS para publicar contenido web.</td></tr>
+          <tr><td>Moodle</td><td>Debian + Apache/Nginx + PHP + MySQL/PostgreSQL</td><td>LMS para cursos, roles y evaluaciones.</td></tr>
+          <tr><td>PrestaShop</td><td>Debian + Apache/Nginx + PHP + MySQL</td><td>Tienda en línea con catálogo, carrito y pedidos.</td></tr>
+          <tr><td>Nextcloud</td><td>Debian + Apache/Nginx + PHP + MySQL/PostgreSQL</td><td>Nube privada para archivos y colaboración.</td></tr>
+          <tr><td>Aplicación Flask</td><td>Debian + Nginx + Gunicorn + Python + MySQL/PostgreSQL</td><td>Aplicación Python ejecutada por servidor WSGI.</td></tr>
+          <tr><td>Aplicación Java</td><td>Debian + Tomcat + Java + Base de datos</td><td>Aplicación web Java ejecutada en contenedor de Servlets.</td></tr>
+          <tr><td>Correo local</td><td>Debian + Postfix + Dovecot + Thunderbird</td><td>Servidor y cliente de correo con SMTP, IMAP y POP3.</td></tr>
+          <tr><td>Base documental</td><td>Debian + MongoDB + aplicación backend</td><td>Almacenamiento NoSQL en documentos tipo JSON/BSON.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>11. Puertos y protocolos indispensables</h2>
+      <table>
+        <thead><tr><th>Servicio</th><th>Protocolo</th><th>Puerto</th><th>Uso</th></tr></thead>
+        <tbody>
+          <tr><td>Administración remota</td><td>SSH</td><td>22</td><td>Acceso seguro a la terminal del servidor.</td></tr>
+          <tr><td>Web</td><td>HTTP</td><td>80</td><td>Acceso web sin cifrado.</td></tr>
+          <tr><td>Web segura</td><td>HTTPS</td><td>443</td><td>Acceso web cifrado con TLS/SSL.</td></tr>
+          <tr><td>Correo saliente/transferencia</td><td>SMTP</td><td>25</td><td>Transferencia entre servidores.</td></tr>
+          <tr><td>Envío autenticado</td><td>SMTP Submission</td><td>587</td><td>Envío de correo desde cliente.</td></tr>
+          <tr><td>Correo entrante</td><td>POP3</td><td>110</td><td>Descarga de mensajes.</td></tr>
+          <tr><td>Correo sincronizado</td><td>IMAP</td><td>143</td><td>Consulta y sincronización del buzón.</td></tr>
+          <tr><td>IMAP seguro</td><td>IMAPS</td><td>993</td><td>IMAP cifrado.</td></tr>
+          <tr><td>POP3 seguro</td><td>POP3S</td><td>995</td><td>POP3 cifrado.</td></tr>
+          <tr><td>MySQL</td><td>MySQL Protocol</td><td>3306</td><td>Conexión al servidor MySQL.</td></tr>
+          <tr><td>PostgreSQL</td><td>PostgreSQL Protocol</td><td>5432</td><td>Conexión al servidor PostgreSQL.</td></tr>
+          <tr><td>MongoDB</td><td>MongoDB Wire Protocol</td><td>27017</td><td>Conexión al servidor MongoDB.</td></tr>
+          <tr><td>Tomcat</td><td>HTTP</td><td>8080</td><td>Puerto común de pruebas para aplicaciones Java.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>12. Preguntas guía para estudiar</h2>
+      <ol>
+        <li>¿Qué función cumple Debian dentro de un servidor?</li>
+        <li>¿Cuál es la diferencia entre Apache y Nginx?</li>
+        <li>¿Qué es un Virtual Host?</li>
+        <li>¿Qué es un proxy inverso?</li>
+        <li>¿Qué diferencia existe entre PHP como lenguaje y PHP-FPM como servicio?</li>
+        <li>¿Qué diferencias hay entre MySQL, PostgreSQL y MongoDB?</li>
+        <li>¿Qué es una base de datos relacional?</li>
+        <li>¿Qué es un documento JSON?</li>
+        <li>¿Qué tipo de aplicación es WordPress?</li>
+        <li>¿Qué tipo de aplicación es Moodle?</li>
+        <li>¿Qué tipo de aplicación es PrestaShop?</li>
+        <li>¿Qué función cumple Nextcloud?</li>
+        <li>¿Cuál es la diferencia entre Postfix y Thunderbird?</li>
+        <li>¿Para qué sirven SMTP, IMAP y POP3?</li>
+        <li>¿Qué es Gunicorn y por qué se usa con Flask?</li>
+        <li>¿Qué es WSGI?</li>
+        <li>¿Qué es Tomcat?</li>
+        <li>¿Qué diferencia existe entre Apache HTTP Server y Apache Tomcat?</li>
+        <li>¿Qué puerto se asocia con HTTP, HTTPS, SSH, SMTP, MySQL y PostgreSQL?</li>
+        <li>¿Qué componentes intervienen en el despliegue de una aplicación web moderna?</li>
+      </ol>
+    </section>
+  </main>
+
+  <footer>
+    Guía elaborada para estudio previo a examen de opción múltiple. Módulo: Servidores y servicios de infraestructura.
+  </footer>
+</body>
+</html>

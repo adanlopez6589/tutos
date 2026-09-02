@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>50 comandos de Debian 12 · Referencia de laboratorio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EFEDF0;
+    --paper-2:#E5E2E8;
+    --ink:#2A1B25;
+    --muted:#6E5C68;
+    --rubine:#D70A53;
+    --teal:#0F6E78;
+    --term-bg:#2A1B25;
+    --term-fg:#F3E9EE;
+    --term-dim:#A78E9C;
+    --rule:#CFC9D3;
+    --sans:'Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,'DejaVu Sans Mono',Consolas,monospace;
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;scroll-padding-top:88px}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:940px;margin:0 auto;padding:0 20px}
+
+  /* ---------- Encabezado: la línea de comandos como protagonista ---------- */
+  header.top{
+    background:var(--term-bg);
+    color:var(--term-fg);
+    padding:56px 0 44px;
+  }
+  .prompt{
+    font-family:var(--mono);
+    font-size:clamp(14px,3.2vw,19px);
+    color:var(--term-dim);
+    margin-bottom:18px;
+  }
+  .prompt .user{color:#8FD3C9}
+  .prompt .path{color:#9BB8E8}
+  .prompt .sig{color:var(--rubine);font-weight:600}
+  .cursor{
+    display:inline-block;
+    width:.62em;height:1.05em;
+    background:var(--rubine);
+    vertical-align:-.18em;
+    margin-left:.15em;
+    animation:blink 1.05s steps(1) infinite;
+  }
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+
+  header.top h1{
+    font-size:clamp(30px,6vw,52px);
+    line-height:1.06;
+    font-weight:700;
+    letter-spacing:-.02em;
+    margin:0 0 10px;
+    max-width:16ch;
+  }
+  .sub{
+    font-family:var(--mono);
+    font-size:13px;
+    color:var(--term-dim);
+    margin:0;
+  }
+
+  /* ---------- Introducción ---------- */
+  .intro{padding:44px 0 30px;border-bottom:1px solid var(--rule)}
+  .intro p{max-width:68ch;margin:0 0 16px;font-size:17px}
+  .intro p:last-child{margin-bottom:0}
+  .intro strong{font-weight:600}
+  .intro .lead{font-size:19px;line-height:1.5; text-align: justify;}
+  .nota{
+    margin-top:26px;
+    border-left:3px solid var(--rubine);
+    padding:2px 0 2px 16px;
+    max-width:68ch;
+  }
+  .nota h2{font-size:15px;margin:0 0 6px;font-weight:600}
+  .nota p{font-size:15px;color:var(--muted);margin:0}
+  code.inl{font-family:var(--mono);font-size:.9em;background:var(--paper-2);padding:1px 5px;border-radius:3px}
+
+  /* ---------- Barra de búsqueda ---------- */
+  .toolbar{
+    position:sticky;top:0;z-index:20;
+    background:var(--paper);
+    border-bottom:1px solid var(--rule);
+    padding:12px 0;
+  }
+  .toolbar .wrap{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  #buscar{
+    flex:1 1 240px;
+    font-family:var(--mono);
+    font-size:15px;
+    color:var(--ink);
+    background:#fff;
+    border:1px solid var(--rule);
+    border-radius:4px;
+    padding:9px 12px;
+  }
+  #buscar::placeholder{color:#9C90A2}
+  #buscar:focus{outline:2px solid var(--rubine);outline-offset:1px;border-color:transparent}
+  #conteo{font-family:var(--mono);font-size:13px;color:var(--muted);white-space:nowrap}
+
+  /* ---------- Grupos ---------- */
+  .grupo{margin:44px 0 0}
+  .grupo > h2{
+    font-family:var(--mono);
+    font-size:14px;
+    font-weight:600;
+    color:var(--rubine);
+    margin:0 0 4px;
+    padding-bottom:10px;
+    border-bottom:2px solid var(--rubine);
+  }
+
+  /* ---------- Fila de comando ---------- */
+  .cmd{
+    border-bottom:1px solid var(--rule);
+    padding:22px 0;
+  }
+  .cmd-head{
+    display:grid;
+    grid-template-columns:44px 1fr auto;
+    gap:14px;
+    align-items:baseline;
+  }
+  .num{
+    font-family:var(--mono);
+    font-size:14px;
+    color:var(--muted);
+    font-variant-numeric:tabular-nums;
+    padding-top:4px;
+  }
+  .nombre{
+    font-family:var(--mono);
+    font-size:22px;
+    font-weight:600;
+    letter-spacing:-.01em;
+    margin:0;
+  }
+  .desc{margin:4px 0 0;color:var(--muted);font-size:15px;max-width:62ch}
+
+  /* ---------- Botón copiar ---------- */
+  .copiar{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--ink);
+    background:transparent;
+    border:1px solid var(--rule);
+    border-radius:3px;
+    padding:5px 11px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .copiar:hover{border-color:var(--ink)}
+  .copiar:focus-visible{outline:2px solid var(--rubine);outline-offset:2px}
+  .copiar.ok{background:var(--rubine);border-color:var(--rubine);color:#fff}
+
+  /* ---------- Subíndice: opciones y ejemplos ---------- */
+  .detalle{margin:16px 0 0 58px}
+  @media (max-width:640px){.detalle{margin-left:0}}
+
+  .opciones{
+    display:grid;
+    grid-template-columns:auto 1fr;
+    gap:5px 14px;
+    margin:0 0 16px;
+    font-size:14px;
+  }
+  .opciones dt{font-family:var(--mono);font-weight:500;color:var(--teal);white-space:nowrap}
+  .opciones dd{margin:0;color:var(--muted)}
+
+  .ejemplo{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    background:var(--term-bg);
+    border-radius:4px;
+    padding:9px 10px 9px 12px;
+    margin-bottom:6px;
+  }
+  .ejemplo pre{
+    margin:0;
+    flex:1;
+    font-family:var(--mono);
+    font-size:13.5px;
+    line-height:1.5;
+    color:var(--term-fg);
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
+  .ejemplo pre .p{color:var(--rubine);user-select:none;margin-right:.5em}
+  .ejemplo .copiar{
+    color:var(--term-dim);
+    border-color:#4B3742;
+    flex:none;
+  }
+  .ejemplo .copiar:hover{color:var(--term-fg);border-color:var(--term-dim)}
+  .ejemplo .copiar.ok{background:var(--rubine);border-color:var(--rubine);color:#fff}
+  .pie-ej{
+    font-size:13px;
+    color:var(--muted);
+    margin:-2px 0 12px 12px;
+  }
+  .aviso{
+    font-size:13px;
+    color:var(--rubine);
+    font-weight:500;
+    margin:0 0 12px;
+  }
+
+  .oculto{display:none !important}
+  #vacio{padding:60px 0;color:var(--muted);font-family:var(--mono);font-size:15px}
+
+  footer{
+    margin-top:56px;
+    padding:30px 0 60px;
+    border-top:1px solid var(--rule);
+    color:var(--muted);
+    font-size:14px;
+  }
+  footer p{max-width:68ch;margin:0 0 8px}
+
+  #aviso-copia{
+    position:fixed;left:-9999px;
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <p class="prompt"><span class="user">alumno</span>@<span class="path">debian12</span>:~<span class="sig">$</span> man 50-comandos<span class="cursor"></span></p>
+    <h1>50 comandos de Debian 12</h1>
+    <p class="sub">Referencia de laboratorio · Administración y Configuración Cliente/Servidor</p>
+  </div>
+</header>
+
+<section class="intro">
+  <div class="wrap">
+    <p class="lead">La interfaz de línea de comandos constituye el medio principal de administración de los sistemas operativos tipo Unix. En un entorno de servidor, donde el entorno gráfico se omite deliberadamente para reducir el consumo de recursos y la superficie de exposición, la terminal no es una alternativa: es la única vía de operación disponible.</p>
+    <p class="lead">El dominio de la línea de comandos es una competencia profesional exigible a todo estudiante del área de informática. De ella dependen cuatro capacidades que definen el trabajo del administrador de sistemas: la <strong>operación remota</strong> de equipos mediante protocolos seguros como SSH; la <strong>reproducibilidad</strong> de las configuraciones, que permite aplicar procedimientos idénticos en múltiples servidores; la <strong>documentación verificable</strong> de las tareas realizadas, dado que un comando puede registrarse, auditarse y compartirse, mientras que una secuencia de clics no; y la <strong>automatización</strong> de procesos rutinarios mediante guiones de shell y tareas programadas.</p>
+    <p class="lead">Existe además una razón formativa. La línea de comandos exige comprender el modelo conceptual del sistema operativo. Al ejecutar <code class="inl">chmod 640 /etc/app.conf</code> el estudiante debe conocer el esquema de permisos, la propiedad de los archivos y sus implicaciones de seguridad; la interfaz gráfica abstrae esos elementos, en tanto que la terminal los hace explícitos y por lo tanto comprensibles.</p>
+    <p class="lead">Los cincuenta comandos que integran esta referencia corresponden a las operaciones de uso más frecuente en la administración de un servidor Debian 12. Se recomienda abordarlos de manera progresiva, en el contexto de las prácticas de laboratorio del módulo, y consultar las páginas de manual del sistema mediante <code class="inl">man</code> para profundizar en cada caso.</p>
+
+    <div class="nota">
+      <h2>Un par de aclaraciones sobre Debian 12</h2>
+      <p>Esta lista está adaptada a Debian 12 (Bookworm), no a cualquier Linux. Por eso aparece <code class="inl">apt</code> y no <code class="inl">pacman</code>, <code class="inl">yum</code> ni <code class="inl">rpm</code>, que son de otras distribuciones. También verás <code class="inl">ip</code> en lugar de <code class="inl">ifconfig</code> y <code class="inl">systemctl</code> en lugar de <code class="inl">service</code>: los segundos son heredados y ya no vienen instalados por defecto.</p>
+    </div>
+  </div>
+</section>
+
+<div class="toolbar">
+  <div class="wrap">
+    <label for="buscar" class="oculto">Buscar comando</label>
+    <input id="buscar" type="search" placeholder="Buscar comando, opción o descripción…" autocomplete="off">
+    <span id="conteo">50 comandos</span>
+  </div>
+</div>
+
+<main class="wrap" id="lista"></main>
+<p id="vacio" class="wrap oculto">Sin resultados. Prueba con otra palabra.</p>
+
+<footer>
+  <div class="wrap">
+    <p>Cada comando tiene página de manual: <code class="inl">man ls</code>. Si no recuerdas el nombre del comando pero sí lo que quieres hacer, usa <code class="inl">apropos permisos</code>.</p>
+    <p>Escuela Politécnica «Ing. Jorge Matute Remus» · Academia de Redes de Cómputo</p>
+  </div>
+</footer>
+
+<div id="aviso-copia" role="status" aria-live="polite"></div>
+
+<script>
+const GRUPOS = [
+  {
+    titulo: "Navegación y archivos",
+    comandos: [
+      { n:1, cmd:"ls", desc:"Lista el contenido de un directorio.",
+        opciones:[["-l","formato largo: permisos, dueño, tamaño y fecha"],["-a","muestra también los archivos ocultos (los que empiezan con punto)"],["-h","tamaños legibles (K, M, G) — se usa junto con -l"],["-t","ordena por fecha de modificación, lo más reciente primero"],["-R","recorre los subdirectorios de forma recursiva"]],
+        ejemplos:[["ls -lah /etc","Listado completo de /etc con ocultos y tamaños legibles."],["ls -lt ~/practicas | head","Los archivos modificados más recientemente en tu carpeta de prácticas."]] },
+
+      { n:2, cmd:"pwd", desc:"Imprime la ruta absoluta del directorio actual.",
+        opciones:[["-P","muestra la ruta física, resolviendo los enlaces simbólicos"],["-L","muestra la ruta lógica, tal como la ves (predeterminado)"]],
+        ejemplos:[["pwd","¿Dónde estoy parado?"],["pwd -P","Útil cuando llegaste ahí por un enlace simbólico."]] },
+
+      { n:3, cmd:"cd", desc:"Cambia de directorio de trabajo.",
+        opciones:[["~","tu directorio personal (/home/usuario)"],["-","regresa al directorio anterior"],["..","sube un nivel"],["-P","al entrar, resuelve el enlace simbólico a su ruta real"]],
+        ejemplos:[["cd /var/log","Entrar a la carpeta de bitácoras del sistema."],["cd -","Volver de un salto al directorio donde estabas antes."],["cd ../../etc","Subir dos niveles y entrar a /etc."]] },
+
+      { n:4, cmd:"mkdir", desc:"Crea directorios.",
+        opciones:[["-p","crea los directorios padre que hagan falta y no marca error si ya existen"],["-m","asigna permisos al momento de crearlo"],["-v","informa cada directorio creado"]],
+        ejemplos:[["mkdir -p /srv/www/sitio/publico","Crea toda la ruta de un jalón, aunque no exista ningún nivel."],["mkdir -m 700 ~/privado","Carpeta que solo el dueño puede abrir."]] },
+
+      { n:5, cmd:"cp", desc:"Copia archivos y directorios.",
+        opciones:[["-r","copia directorios completos (recursivo)"],["-a","modo archivo: recursivo y conserva permisos, dueño y fechas"],["-i","pregunta antes de sobrescribir"],["-u","copia solo si el origen es más nuevo que el destino"],["-v","muestra lo que va copiando"]],
+        ejemplos:[["cp -a /etc/apache2 /respaldo/apache2-$(date +%F)","Respaldo íntegro de la configuración de Apache con la fecha en el nombre."],["cp -iv nota.txt ~/documentos/","Copia avisando y preguntando antes de pisar algo."]] },
+
+      { n:6, cmd:"mv", desc:"Mueve o renombra archivos y directorios.",
+        opciones:[["-i","pregunta antes de sobrescribir"],["-n","nunca sobrescribe"],["-u","mueve solo si el origen es más nuevo"],["-v","muestra cada operación"]],
+        ejemplos:[["mv informe.txt informe-final.txt","Renombrar: mover al mismo lugar con otro nombre."],["mv -n *.log /var/log/practica/","Mueve todos los .log sin arriesgarte a pisar los que ya estén ahí."]] },
+
+      { n:7, cmd:"rm", desc:"Borra archivos y directorios. No hay papelera.",
+        opciones:[["-r","borra directorios y su contenido"],["-f","fuerza el borrado y no reclama si el archivo no existe"],["-i","pide confirmación por cada archivo"],["-v","dice qué fue borrando"],["--","marca el fin de las opciones, útil con nombres que empiezan con guion"]],
+        ejemplos:[["rm -i temporal.txt","La forma segura de empezar: que te pregunte."],["rm -rf /tmp/prueba/","Borra la carpeta completa sin preguntar. Revisa la ruta DOS veces antes de dar Enter."]],
+        aviso:"Nunca escribas rm -rf / ni rm -rf /* . Ese comando destruye el sistema y no se puede deshacer." },
+
+      { n:8, cmd:"touch", desc:"Crea archivos vacíos o actualiza su fecha.",
+        opciones:[["-c","no crea el archivo si no existe, solo actualiza"],["-t","fija una fecha específica (formato AAAAMMDDhhmm)"],["-a","cambia solo la fecha de último acceso"],["-m","cambia solo la fecha de modificación"]],
+        ejemplos:[["touch practica1.txt practica2.txt","Crea dos archivos vacíos de un tiro."],["touch -t 202601151430 reporte.txt","Le pone al archivo la fecha 15/ene/2026 a las 14:30."]] },
+
+      { n:9, cmd:"ln", desc:"Crea enlaces entre archivos.",
+        opciones:[["-s","crea un enlace simbólico (el que casi siempre vas a usar)"],["-f","reemplaza el enlace si ya existía"],["-r","crea el enlace con ruta relativa"],["sin -s","crea un enlace duro: otro nombre para los mismos datos"]],
+        ejemplos:[["ln -s /var/www/html ~/sitio","Un acceso directo a la carpeta del sitio desde tu home."],["ln -sf /etc/nginx/sites-available/mi.conf /etc/nginx/sites-enabled/mi.conf","Así es como se habilita un sitio en Nginx: enlazando la configuración."]] },
+
+      { n:10, cmd:"clear", desc:"Limpia la pantalla de la terminal.",
+        opciones:[["Ctrl + L","el atajo de teclado que hace lo mismo, más rápido"],["reset","cuando la terminal se descompone tras abrir un binario por error"]],
+        ejemplos:[["clear","Borrón y cuenta nueva antes de empezar un ejercicio."]] }
+    ]
+  },
+  {
+    titulo: "Ver y procesar texto",
+    comandos: [
+      { n:11, cmd:"cat", desc:"Muestra el contenido de un archivo o concatena varios.",
+        opciones:[["-n","numera todas las líneas"],["-b","numera solo las líneas no vacías"],["-A","hace visibles tabuladores y saltos de línea"],["-s","colapsa las líneas en blanco repetidas"]],
+        ejemplos:[["cat -n /etc/hosts","Ver el archivo con número de línea, ideal para señalar un error."],["cat parte1.txt parte2.txt > completo.txt","Une dos archivos en uno solo."]] },
+
+      { n:12, cmd:"echo", desc:"Imprime texto o el valor de una variable.",
+        opciones:[["-n","no agrega el salto de línea final"],["-e","interpreta secuencias como \\n (salto) y \\t (tabulador)"]],
+        ejemplos:[["echo $PATH","Ver las rutas donde el sistema busca los programas."],["echo -e 'linea1\\nlinea2' > archivo.txt","Escribe dos líneas en un archivo nuevo."]] },
+
+      { n:13, cmd:"less", desc:"Lee archivos largos página por página, sin cargarlos completos.",
+        opciones:[["-N","muestra el número de línea"],["-S","corta las líneas largas en lugar de doblarlas"],["+F","sigue el archivo en vivo, como tail -f (sales con Ctrl+C)"],["/texto","busca hacia adelante; n para el siguiente resultado"],["q","salir"]],
+        ejemplos:[["less -N /var/log/syslog","Recorrer la bitácora del sistema con numeración."],["journalctl -u ssh | less","Encadenar la salida de otro comando para leerla con calma."]] },
+
+      { n:14, cmd:"man", desc:"Abre el manual de un comando. El primer lugar donde buscar.",
+        opciones:[["-k","busca por palabra clave en todos los manuales"],["-f","descripción corta de una página"],["sección 1","comandos de usuario"],["sección 5","formatos de archivos de configuración"],["sección 8","comandos de administración"]],
+        ejemplos:[["man 5 fstab","El manual del formato del archivo /etc/fstab, no del comando."],["man -k permission","Buscar qué manuales hablan de permisos."]] },
+
+      { n:15, cmd:"grep", desc:"Busca líneas que coincidan con un patrón.",
+        opciones:[["-i","ignora mayúsculas y minúsculas"],["-r","busca recursivamente dentro de un directorio"],["-n","muestra el número de línea de cada coincidencia"],["-v","invierte: muestra las líneas que NO coinciden"],["-c","solo cuenta cuántas coincidencias hubo"],["-E","usa expresiones regulares extendidas"],["-l","solo lista los nombres de archivo"]],
+        ejemplos:[["grep -rn 'ServerName' /etc/apache2/","Encontrar en qué archivo y línea está configurado el nombre del servidor."],["grep -v '^#' /etc/ssh/sshd_config | grep -v '^$'","La configuración real de SSH, sin comentarios ni líneas vacías."]] },
+
+      { n:16, cmd:"head", desc:"Muestra el principio de un archivo.",
+        opciones:[["-n","cuántas líneas mostrar (10 por defecto)"],["-c","cuántos bytes mostrar"],["-n -5","todo menos las últimas 5 líneas"]],
+        ejemplos:[["head -n 20 /var/log/auth.log","Las primeras 20 líneas de la bitácora de autenticación."],["head -c 100 archivo.bin","Asomarse a los primeros 100 bytes de un binario."]] },
+
+      { n:17, cmd:"tail", desc:"Muestra el final de un archivo. Imprescindible para bitácoras.",
+        opciones:[["-n","cuántas líneas mostrar"],["-f","se queda en vivo mostrando lo nuevo que se escriba"],["-F","como -f, pero sigue funcionando si el archivo se rota"],["-n +5","muestra desde la línea 5 hasta el final"]],
+        ejemplos:[["tail -f /var/log/apache2/access.log","Ver las peticiones al servidor web en tiempo real mientras pruebas."],["tail -n 50 /var/log/syslog","Las últimas 50 líneas del sistema, para ver qué falló recién."]] },
+
+      { n:18, cmd:"sort", desc:"Ordena líneas de texto.",
+        opciones:[["-n","orden numérico (si no, 10 va antes que 9)"],["-r","orden inverso"],["-u","elimina duplicados"],["-k","ordena por una columna específica"],["-t","define el separador de columnas"],["-h","ordena tamaños legibles como 4K, 2M, 1G"]],
+        ejemplos:[["sort -u alumnos.txt","Lista ordenada y sin repetidos."],["sort -t: -k3 -n /etc/passwd","Ordena las cuentas del sistema por número de usuario (UID)."]] },
+
+      { n:19, cmd:"diff", desc:"Compara dos archivos línea por línea.",
+        opciones:[["-u","formato unificado, el mismo que usa git"],["-r","compara directorios completos"],["-y","muestra las diferencias en dos columnas"],["-q","solo dice si difieren, sin detallar"],["-i","ignora mayúsculas y minúsculas"]],
+        ejemplos:[["diff -u /etc/ssh/sshd_config.bak /etc/ssh/sshd_config","Qué exactamente le cambiaste a la configuración de SSH."],["diff -rq /respaldo/www /var/www","Qué archivos difieren entre el respaldo y el sitio en producción."]] },
+
+      { n:20, cmd:"cmp", desc:"Compara dos archivos byte por byte. Sirve para binarios.",
+        opciones:[["-l","lista todos los bytes que difieren"],["-s","no imprime nada, solo devuelve el código de salida"],["-i","salta los primeros N bytes"]],
+        ejemplos:[["cmp imagen1.iso imagen2.iso","Verificar si dos ISO son idénticas y en qué byte dejan de serlo."],["cmp -s a.conf b.conf && echo 'iguales'","Comparación silenciosa para usar dentro de un script."]] },
+
+      { n:21, cmd:"comm", desc:"Compara dos archivos ORDENADOS y muestra qué tienen en común.",
+        opciones:[["-1","oculta la columna 1 (solo del primer archivo)"],["-2","oculta la columna 2 (solo del segundo)"],["-3","oculta la columna 3 (las líneas en común)"],["-12","muestra únicamente lo que está en ambos"]],
+        ejemplos:[["comm -12 lista-a.txt lista-b.txt","Los alumnos que aparecen en las dos listas."],["comm -23 lista-a.txt lista-b.txt","Los que están solo en la primera lista."]] }
+    ]
+  },
+  {
+    titulo: "Compresión y transferencia",
+    comandos: [
+      { n:22, cmd:"tar", desc:"Empaqueta y desempaqueta archivos. El formato de respaldo de Linux.",
+        opciones:[["-c","crear un paquete"],["-x","extraer"],["-t","listar el contenido sin extraer"],["-f","indica el nombre del archivo (va siempre pegado al final)"],["-z","comprime o descomprime con gzip (.tar.gz)"],["-j","lo mismo con bzip2 (.tar.bz2)"],["-v","muestra los archivos que va procesando"],["-C","extrae en el directorio que le indiques"]],
+        ejemplos:[["tar -czvf respaldo-www.tar.gz /var/www","Empaquetar y comprimir el sitio web completo."],["tar -xzvf respaldo-www.tar.gz -C /srv/restaurado","Extraer ese respaldo en otra carpeta."],["tar -tzf respaldo-www.tar.gz | head","Ver qué trae adentro antes de extraerlo."]] },
+
+      { n:23, cmd:"zip", desc:"Comprime en formato .zip, compatible con Windows.",
+        opciones:[["-r","incluye directorios de forma recursiva"],["-e","pide contraseña para cifrar el contenido"],["-9","máxima compresión (más lento)"],["-x","excluye archivos que coincidan con un patrón"]],
+        ejemplos:[["zip -r practica3.zip practica3/","Comprimir la carpeta de la práctica para entregarla."],["zip -r -x '*.log' sitio.zip sitio/","Comprimir todo excepto las bitácoras."]] },
+
+      { n:24, cmd:"unzip", desc:"Descomprime archivos .zip.",
+        opciones:[["-d","extrae en el directorio que indiques, no en el actual"],["-l","lista el contenido sin extraer nada"],["-o","sobrescribe sin preguntar"],["-n","nunca sobrescribe"],["-q","modo silencioso"]],
+        ejemplos:[["unzip practica3.zip -d /home/alumno/entregas","Extraer directamente en la carpeta de entregas."],["unzip -l paquete.zip","Revisar qué contiene antes de soltarlo en tu disco."]] },
+
+      { n:25, cmd:"wget", desc:"Descarga archivos desde la web, sin navegador.",
+        opciones:[["-O","guarda con el nombre que tú decidas"],["-c","continúa una descarga interrumpida"],["-q","sin mensajes"],["--limit-rate","limita el ancho de banda usado"],["-r","descarga recursivamente un sitio"]],
+        ejemplos:[["wget -c https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12-netinst.iso","Bajar la ISO de Debian y poder reanudar si se corta la red."],["wget -O config.txt https://ejemplo.mx/base.conf","Descargar guardando con otro nombre."]] },
+
+      { n:26, cmd:"ssh", desc:"Abre una sesión de terminal en otra máquina, de forma cifrada.",
+        opciones:[["-p","puerto, si el servidor no usa el 22"],["-i","llave privada específica"],["-L","túnel: reenvía un puerto local hacia el servidor"],["-v","modo detallado, para diagnosticar por qué falla"],["-X","permite abrir aplicaciones gráficas remotas"]],
+        ejemplos:[["ssh alumno@192.168.1.50","Conectarte a tu servidor virtual."],["ssh -p 2222 -i ~/.ssh/id_ed25519 admin@servidor.mx","Conexión con puerto y llave personalizados."],["ssh-copy-id alumno@192.168.1.50","Instalar tu llave pública para entrar sin escribir contraseña."]] }
+    ]
+  },
+  {
+    titulo: "Usuarios y permisos",
+    comandos: [
+      { n:27, cmd:"whoami", desc:"Dice con qué usuario estás trabajando ahora.",
+        opciones:[["id","versión completa: UID, GID y grupos a los que perteneces"],["id -u","solo el número de usuario (0 significa root)"],["who","quién más está conectado a la máquina"]],
+        ejemplos:[["whoami","Confirmar si estás como root o como tu usuario normal."],["id alumno","Ver a qué grupos pertenece una cuenta."]] },
+
+      { n:28, cmd:"sudo", desc:"Ejecuta un comando con privilegios de otro usuario, normalmente root.",
+        opciones:[["-i","abre una sesión interactiva como root"],["-u","ejecuta como un usuario específico"],["-l","lista qué tienes permitido ejecutar"],["-k","olvida la contraseña recordada"],["visudo","la forma correcta y segura de editar /etc/sudoers"]],
+        ejemplos:[["sudo apt update","Actualizar la lista de paquetes: requiere privilegios."],["sudo -u www-data ls /var/www","Comprobar si el usuario del servidor web sí puede leer esa carpeta."],["sudo visudo","Editar los permisos de sudo con validación de sintaxis."]] },
+
+      { n:29, cmd:"chmod", desc:"Cambia los permisos de lectura, escritura y ejecución.",
+        opciones:[["-R","aplica el cambio a todo el subárbol"],["u g o a","usuario dueño, grupo, otros, todos"],["+ - =","agrega, quita o fija el permiso exacto"],["4 2 1","lectura, escritura, ejecución en notación octal"],["755","dueño todo; grupo y otros leer y ejecutar"],["640","dueño lee y escribe; grupo lee; otros nada"]],
+        ejemplos:[["chmod +x instalar.sh","Hacer ejecutable un script."],["chmod 640 /etc/mi-app/credenciales.conf","Un archivo con datos sensibles que solo el dueño escribe."],["chmod -R 755 /var/www/html","Permisos típicos de un sitio web servido por Apache."]] },
+
+      { n:30, cmd:"chown", desc:"Cambia el dueño y el grupo de archivos y directorios.",
+        opciones:[["-R","recursivo, incluye todo el contenido"],["usuario:grupo","cambia ambos de una vez"],[":grupo","cambia solo el grupo"],["--reference","copia el dueño de otro archivo"],["-v","informa cada cambio"]],
+        ejemplos:[["sudo chown -R www-data:www-data /var/www/html","Entregarle el sitio al usuario con el que corre Apache."],["sudo chown alumno:alumnos tarea.txt","Cambiar dueño y grupo del archivo."]] },
+
+      { n:31, cmd:"useradd", desc:"Crea cuentas de usuario. En Debian se prefiere adduser.",
+        opciones:[["-m","crea el directorio /home del usuario"],["-s","define el shell (/bin/bash)"],["-G","agrega a grupos adicionales"],["-c","comentario o nombre completo"],["adduser","script interactivo de Debian que hace todo con las opciones correctas"]],
+        ejemplos:[["sudo adduser alumno1","La forma recomendada en Debian: pregunta y configura todo."],["sudo useradd -m -s /bin/bash -G sudo alumno2","Crear la cuenta con home, shell y permisos de sudo."],["sudo deluser --remove-home alumno2","Eliminar la cuenta junto con su directorio personal."]] },
+
+      { n:32, cmd:"passwd", desc:"Cambia y administra contraseñas de cuentas.",
+        opciones:[["-l","bloquea la cuenta"],["-u","la desbloquea"],["-e","obliga a cambiar la contraseña en el próximo ingreso"],["-S","muestra el estado de la contraseña"],["-d","elimina la contraseña (peligroso)"]],
+        ejemplos:[["passwd","Cambiar tu propia contraseña."],["sudo passwd -e alumno1","Forzar a que el alumno defina su contraseña al entrar."],["sudo passwd -S alumno1","Revisar si la cuenta está activa o bloqueada."]] }
+    ]
+  },
+  {
+    titulo: "Procesos y sistema",
+    comandos: [
+      { n:33, cmd:"ps", desc:"Muestra una foto de los procesos en ejecución.",
+        opciones:[["aux","todos los procesos de todos los usuarios, con detalle"],["-ef","el mismo listado en formato estándar"],["-u","filtra por usuario"],["--forest","dibuja el árbol de padres e hijos"],["-p","información de un PID específico"]],
+        ejemplos:[["ps aux | grep apache2","Ver si el servidor web está corriendo y con qué PID."],["ps -u alumno --forest","Los procesos de un usuario, en forma de árbol."]] },
+
+      { n:34, cmd:"top", desc:"Monitor de procesos en tiempo real: CPU, memoria y carga.",
+        opciones:[["-u","muestra solo los procesos de un usuario"],["-p","vigila un PID en particular"],["-d","segundos entre actualizaciones"],["k","dentro de top, mata un proceso"],["q","salir"],["htop","alternativa con colores; se instala con apt"]],
+        ejemplos:[["top -d 2","Actualizar cada 2 segundos."],["top -u www-data","Vigilar solo los procesos del servidor web."]] },
+
+      { n:35, cmd:"kill", desc:"Envía señales a un proceso, normalmente para terminarlo.",
+        opciones:[["-15","SIGTERM: pide terminar ordenadamente (el predeterminado)"],["-9","SIGKILL: mata sin negociar, último recurso"],["-1","SIGHUP: pide recargar la configuración"],["-l","lista todas las señales"],["killall","mata por nombre en lugar de por PID"],["pkill -f","mata buscando en la línea de comandos completa"]],
+        ejemplos:[["kill -15 4821","Pedirle al proceso 4821 que cierre bien."],["killall -9 firefox","Cerrar a la fuerza todas las instancias de un programa."],["kill -1 $(pgrep -f nginx)","Hacer que Nginx relea su configuración sin reiniciarse."]] },
+
+      { n:36, cmd:"systemctl", desc:"Administra servicios y unidades de systemd. Sustituye a service.",
+        opciones:[["status","estado actual y últimas líneas de bitácora"],["start / stop","arranca o detiene el servicio ahora"],["restart","lo reinicia"],["enable","lo activa al arrancar el sistema"],["--now","combina enable/disable con start/stop"],["list-units --failed","lista los servicios que fallaron"]],
+        ejemplos:[["sudo systemctl status apache2","Diagnóstico rápido: ¿está corriendo? ¿por qué no?"],["sudo systemctl enable --now ssh","Activar SSH ahora y también en cada arranque."],["systemctl list-units --failed","El primer comando que corres cuando algo no levanta."]] },
+
+      { n:37, cmd:"uname", desc:"Información del núcleo y la arquitectura del sistema.",
+        opciones:[["-a","toda la información junta"],["-r","versión del kernel"],["-m","arquitectura (x86_64, aarch64)"],["-n","nombre del equipo en la red"],["lsb_release -a","versión de Debian; en Bookworm también sirve cat /etc/os-release"]],
+        ejemplos:[["uname -a","La radiografía completa del sistema en una línea."],["cat /etc/os-release","Confirmar que efectivamente estás en Debian 12 (Bookworm)."]] },
+
+      { n:38, cmd:"df", desc:"Espacio libre y usado en los sistemas de archivos montados.",
+        opciones:[["-h","tamaños legibles en G y M"],["-T","muestra el tipo de sistema de archivos"],["-i","muestra los inodos en lugar del espacio"],["--total","agrega una línea con el total"]],
+        ejemplos:[["df -hT","La revisión de rutina: cuánto disco queda y de qué tipo es cada partición."],["df -i /","Cuando dice «disco lleno» pero df -h muestra espacio: se acabaron los inodos."]] },
+
+      { n:39, cmd:"du", desc:"Mide cuánto ocupa un directorio y su contenido.",
+        opciones:[["-h","tamaños legibles"],["-s","solo el total, sin desglosar"],["-d 1","desglosa hasta un nivel de profundidad"],["-a","incluye archivos, no solo carpetas"]],
+        ejemplos:[["du -sh /var/log","Cuánto pesan las bitácoras en total."],["du -h -d 1 /var | sort -h","Encontrar quién se está comiendo el disco, ordenado de menor a mayor."]] },
+
+      { n:40, cmd:"mount", desc:"Monta sistemas de archivos en un punto del árbol de directorios.",
+        opciones:[["-t","tipo de sistema de archivos (ext4, vfat, nfs)"],["-o","opciones: ro, rw, noexec, remount"],["-a","monta todo lo declarado en /etc/fstab"],["umount","desmonta"],["lsblk","lista los discos y particiones disponibles"]],
+        ejemplos:[["lsblk","Primero: ver qué discos existen y cómo se llaman."],["sudo mount /dev/sdb1 /mnt/usb","Montar una USB en /mnt/usb."],["sudo mount -o remount,ro /dev/sda2 /","Volver a montar la raíz en solo lectura."]] },
+
+      { n:41, cmd:"dd", desc:"Copia datos a bajo nivel, bloque por bloque. Poderoso y peligroso.",
+        opciones:[["if=","archivo de entrada (input file)"],["of=","archivo de salida (output file)"],["bs=","tamaño de bloque, por ejemplo 4M"],["status=progress","muestra el avance"],["count=","cuántos bloques copiar"]],
+        ejemplos:[["sudo dd if=debian-12.iso of=/dev/sdb bs=4M status=progress","Grabar la ISO de Debian en una memoria USB."],["dd if=/dev/zero of=prueba.img bs=1M count=100","Crear un archivo de 100 MB para practicar."]],
+        aviso:"Si te equivocas de destino en of=, borras el disco sin aviso ni recuperación. Verifica con lsblk antes." }
+    ]
+  },
+  {
+    titulo: "Red",
+    comandos: [
+      { n:42, cmd:"ip", desc:"Configura y consulta la red. Reemplaza a ifconfig en Debian 12.",
+        opciones:[["a","direcciones IP de todas las interfaces (ip addr)"],["r","tabla de rutas, incluida la puerta de enlace (ip route)"],["-br a","salida breve, en una línea por interfaz"],["link set","activa o desactiva una interfaz"],["addr add","asigna una IP temporal"]],
+        ejemplos:[["ip -br a","Ver de un vistazo qué IP tiene cada interfaz."],["ip r","Confirmar cuál es la puerta de enlace de tu VM."],["sudo ip link set ens33 up","Levantar una interfaz que quedó apagada."]] },
+
+      { n:43, cmd:"ping", desc:"Prueba si otro equipo responde y cuánto tarda.",
+        opciones:[["-c","cuántos paquetes enviar antes de parar"],["-i","intervalo entre paquetes"],["-4 / -6","forzar IPv4 o IPv6"],["-s","tamaño del paquete"]],
+        ejemplos:[["ping -c 4 192.168.1.1","Cuatro paquetes a la puerta de enlace: ¿hay red local?"],["ping -c 3 debian.org","Si esto funciona pero por IP no, el problema es de DNS."]] },
+
+      { n:44, cmd:"traceroute", desc:"Muestra por qué saltos pasa el tráfico hasta llegar a un destino.",
+        opciones:[["-n","no resuelve nombres, imprime solo IP (más rápido)"],["-I","usa ICMP en lugar de UDP"],["-m","máximo de saltos"],["tracepath","alternativa que ya viene instalada en Debian"]],
+        ejemplos:[["traceroute -n 8.8.8.8","Ver dónde se corta la ruta hacia internet."],["tracepath debian.org","Misma idea sin instalar nada extra."]] },
+
+      { n:45, cmd:"ss", desc:"Muestra los sockets y puertos abiertos. Reemplaza a netstat.",
+        opciones:[["-t","conexiones TCP"],["-u","conexiones UDP"],["-l","solo los que están escuchando"],["-n","puertos en número, sin resolver nombres"],["-p","muestra qué proceso usa cada puerto"]],
+        ejemplos:[["sudo ss -tulpn","El comando clave: qué servicios están escuchando y en qué puerto."],["ss -t state established","Las conexiones TCP activas en este momento."]] },
+
+      { n:46, cmd:"ufw", desc:"Cortafuegos sencillo, capa amigable sobre iptables.",
+        opciones:[["enable / disable","activa o desactiva el cortafuegos"],["status verbose","estado y reglas con detalle"],["allow / deny","permite o bloquea un puerto o servicio"],["delete","elimina una regla existente"],["default deny incoming","política base recomendada"]],
+        ejemplos:[["sudo ufw allow OpenSSH","Abre SSH ANTES de activar el cortafuegos, o te quedas fuera."],["sudo ufw default deny incoming && sudo ufw enable","Bloquear todo lo entrante y encender el cortafuegos."],["sudo ufw status verbose","Revisar qué reglas quedaron aplicadas."]] },
+
+      { n:47, cmd:"iptables", desc:"Reglas de filtrado a bajo nivel. En Debian 12 el motor real es nftables.",
+        opciones:[["-L -n -v","lista las reglas con contadores y sin resolver nombres"],["-A","agrega una regla al final de una cadena"],["-I","la inserta al principio"],["-D","elimina una regla"],["-P","define la política por defecto de la cadena"],["nft list ruleset","el equivalente moderno en nftables"]],
+        ejemplos:[["sudo iptables -L -n -v","Ver las reglas activas y cuánto tráfico ha tocado cada una."],["sudo nft list ruleset","La forma nativa de consultar el cortafuegos en Debian 12."]] }
+    ]
+  },
+  {
+    titulo: "Paquetes y utilidades",
+    comandos: [
+      { n:48, cmd:"apt", desc:"Instala, actualiza y elimina paquetes. El gestor de Debian.",
+        opciones:[["update","actualiza la lista de paquetes disponibles"],["upgrade","instala las actualizaciones disponibles"],["install","instala un paquete"],["remove","lo desinstala conservando la configuración"],["purge","lo desinstala junto con su configuración"],["search / show","busca o muestra información de un paquete"],["-y","responde sí automáticamente"],["dpkg -i","instala un .deb descargado a mano"]],
+        ejemplos:[["sudo apt update && sudo apt upgrade -y","La rutina de mantenimiento: primero actualizar la lista, luego los paquetes."],["sudo apt install -y apache2 mariadb-server php","Instalar la base de un servidor web en un solo comando."],["apt show nginx","Ver de qué trata un paquete antes de instalarlo."],["dpkg -l | grep apache","Comprobar qué paquetes relacionados ya están instalados."]] },
+
+      { n:49, cmd:"alias", desc:"Crea atajos para comandos que usas mucho.",
+        opciones:[["-p","lista todos los alias definidos"],["unalias","elimina un alias"],["~/.bashrc","archivo donde se guardan para que sobrevivan al reinicio"],["\\comando","antepón la diagonal para ignorar el alias una vez"]],
+        ejemplos:[["alias ll='ls -lah'","El atajo clásico para el listado completo."],["echo \"alias ll='ls -lah'\" >> ~/.bashrc && source ~/.bashrc","Guardarlo de forma permanente y aplicarlo de inmediato."]] },
+
+      { n:50, cmd:"whereis", desc:"Localiza el binario, el código fuente y el manual de un programa.",
+        opciones:[["-b","solo el ejecutable"],["-m","solo la página del manual"],["-s","solo el código fuente"],["which","muestra únicamente la ruta del ejecutable que se usará"],["whatis","descripción de una línea de un comando"],["apropos","busca comandos por lo que hacen"]],
+        ejemplos:[["whereis apache2","Dónde vive el binario, su manual y su configuración."],["which python3","Qué versión se ejecuta cuando escribes python3."],["apropos 'copy files'","Cuando no recuerdas el nombre del comando pero sí la tarea."]] }
+    ]
+  }
+];
+
+/* ---------- Render ---------- */
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function botonCopiar(texto, etiqueta){
+  return `<button class="copiar" type="button" data-copiar="${esc(texto)}" aria-label="Copiar ${esc(etiqueta)}">Copiar</button>`;
+}
+
+function render(){
+  const lista = document.getElementById('lista');
+  lista.innerHTML = GRUPOS.map(g => `
+    <section class="grupo">
+      <h2>${esc(g.titulo)}</h2>
+      ${g.comandos.map(c => `
+        <article class="cmd" data-busca="${esc((c.cmd + ' ' + c.desc + ' ' + c.opciones.map(o=>o[0]+' '+o[1]).join(' ')).toLowerCase())}">
+          <div class="cmd-head">
+            <span class="num">${c.n}.</span>
+            <div>
+              <h3 class="nombre">${esc(c.cmd)}</h3>
+              <p class="desc">${esc(c.desc)}</p>
+            </div>
+            ${botonCopiar(c.cmd, 'el comando ' + c.cmd)}
+          </div>
+          <div class="detalle">
+            ${c.aviso ? `<p class="aviso">⚠ ${esc(c.aviso)}</p>` : ''}
+            <dl class="opciones">
+              ${c.opciones.map(([f,d]) => `<dt>${esc(f)}</dt><dd>${esc(d)}</dd>`).join('')}
+            </dl>
+            ${c.ejemplos.map(([code,nota]) => `
+              <div class="ejemplo">
+                <pre><span class="p">$</span>${esc(code)}</pre>
+                ${botonCopiar(code, 'el ejemplo ' + code)}
+              </div>
+              <p class="pie-ej">${esc(nota)}</p>
+            `).join('')}
+          </div>
+        </article>
+      `).join('')}
+    </section>
+  `).join('');
+}
+render();
+
+/* ---------- Copiar ---------- */
+async function copiar(texto){
+  try{
+    await navigator.clipboard.writeText(texto);
+    return true;
+  }catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = texto;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try{ ok = document.execCommand('copy'); }catch(_){ ok = false; }
+    document.body.removeChild(ta);
+    return ok;
+  }
+}
+
+document.addEventListener('click', async ev => {
+  const btn = ev.target.closest('.copiar');
+  if(!btn) return;
+  const texto = btn.dataset.copiar;
+  const ok = await copiar(texto);
+  btn.textContent = ok ? 'Copiado' : 'Selecciona y copia';
+  btn.classList.toggle('ok', ok);
+  document.getElementById('aviso-copia').textContent = ok ? 'Copiado: ' + texto : 'No se pudo copiar';
+  setTimeout(() => { btn.textContent = 'Copiar'; btn.classList.remove('ok'); }, 1600);
+});
+
+/* ---------- Buscador ---------- */
+const buscar = document.getElementById('buscar');
+const conteo = document.getElementById('conteo');
+const vacio = document.getElementById('vacio');
+
+buscar.addEventListener('input', () => {
+  const q = buscar.value.trim().toLowerCase();
+  let visibles = 0;
+  document.querySelectorAll('.cmd').forEach(el => {
+    const coincide = !q || el.dataset.busca.includes(q);
+    el.classList.toggle('oculto', !coincide);
+    if(coincide) visibles++;
+  });
+  document.querySelectorAll('.grupo').forEach(g => {
+    const hay = g.querySelectorAll('.cmd:not(.oculto)').length > 0;
+    g.classList.toggle('oculto', !hay);
+  });
+  conteo.textContent = visibles === 1 ? '1 comando' : visibles + ' comandos';
+  vacio.classList.toggle('oculto', visibles > 0);
+});
+</script>
+</body>
+</html>

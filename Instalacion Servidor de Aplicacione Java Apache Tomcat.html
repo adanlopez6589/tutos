@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Instalación de Apache Tomcat en Debian 12</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.5;
+    padding: 20px;
+    color: #111;
+}
+.header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+.header img {
+    width: 110px;
+    height: auto;
+}
+h1 {
+    margin-bottom: 4px;
+}
+h2 {
+    color: #2c3e50;
+    background: #eaeaea;
+    padding: 8px;
+    margin-top: 24px;
+}
+h3 {
+    color: #2c3e50;
+    margin-top: 16px;
+}
+p {
+    margin: 8px 0;
+}
+ul {
+    margin-top: 6px;
+}
+li {
+    margin-bottom: 5px;
+}
+.step {
+    margin-bottom: 10px;
+}
+.code-container {
+    display: flex;
+    align-items: center;
+    margin-top: 4px;
+}
+.number {
+    font-weight: bold;
+    margin-right: 4px;
+    min-width: 36px;
+    text-align: right;
+}
+code {
+    background: #f4f4f4;
+    padding: 8px;
+    display: block;
+    width: 76%;
+    white-space: pre-wrap;
+}
+pre {
+    background: #f4f4f4;
+    padding: 12px;
+    overflow: auto;
+}
+button {
+    margin-left: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+}
+.info {
+    background: #eef6ff;
+    padding: 10px;
+    border-left: 4px solid #3b82f6;
+}
+.note {
+    background: #fff8dc;
+    padding: 10px;
+    border-left: 4px solid #d4a017;
+}
+.logo-grid {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin: 12px 0;
+}
+.logo-card {
+    width: 150px;
+    height: 78px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #fafafa;
+    text-align: center;
+}
+.logo-card img {
+    max-width: 105px;
+    max-height: 36px;
+    margin-bottom: 6px;
+}
+.logo-card span {
+    font-size: 12px;
+    font-weight: bold;
+}
+.logo-fallback {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    display: none;
+}
+.small {
+    font-size: 0.95em;
+    color: #333;
+}
+</style>
+
+<script>
+function copyCode(id, btn){
+    var text = document.getElementById(id).innerText;
+    navigator.clipboard.writeText(text);
+    btn.innerText = "Copiado";
+    setTimeout(()=>btn.innerText="Copiar",2000);
+}
+
+function logoFallback(img){
+    img.style.display = "none";
+    var fallback = img.parentElement.querySelector(".logo-fallback");
+    if(fallback){
+        fallback.style.display = "block";
+    }
+}
+</script>
+</head>
+
+<body>
+
+<div class="header">
+<img src="https://cdn.jsdelivr.net/gh/apache/tomcat@main/webapps/docs/images/tomcat.gif" alt="Apache Tomcat">
+<div>
+<h1>Instalación de Apache Tomcat en Debian 12</h1>
+<p class="small">Práctica de laboratorio para instalar y probar un servidor de aplicaciones Java.</p>
+</div>
+</div>
+
+<h3>¿Qué es Apache Tomcat?</h3>
+<p>Apache Tomcat es un servidor de aplicaciones ligero para Java. Su función principal es ejecutar aplicaciones web desarrolladas con tecnologías Java, especialmente Servlets y JSP.</p>
+
+<h3>Conceptos clave</h3>
+<ul>
+<li><strong>Servidor de aplicaciones:</strong> software que ejecuta la lógica de una aplicación web y responde a las solicitudes de los clientes.</li>
+<li><strong>Servlet:</strong> clase Java que recibe una petición web, la procesa en el servidor y genera una respuesta, por ejemplo HTML, JSON o texto.</li>
+<li><strong>JSP:</strong> JavaServer Pages. Tecnología que permite crear páginas web dinámicas usando HTML combinado con código Java.</li>
+<li><strong>WAR:</strong> Web Application Archive. Archivo empaquetado que contiene una aplicación web Java lista para desplegarse en Tomcat.</li>
+</ul>
+
+<h3>Características de Tomcat</h3>
+<ul>
+<li>Es open source y ampliamente utilizado en ambientes educativos y empresariales.</li>
+<li>Permite desplegar aplicaciones Java empaquetadas en formato <strong>.war</strong>.</li>
+<li>Puede ejecutarse como servicio del sistema en Linux mediante <strong>systemd</strong>.</li>
+<li>Trabaja comúnmente en el puerto <strong>8080</strong>.</li>
+<li>Puede integrarse con Nginx o Apache HTTP Server mediante proxy reverso.</li>
+<li>Es útil para comprender la arquitectura cliente-servidor en aplicaciones web.</li>
+</ul>
+
+<h3>¿Por qué es importante instalarlo actualmente?</h3>
+<p>Instalar Tomcat sigue siendo importante porque permite entender cómo se despliegan aplicaciones Java en un servidor real. Aunque actualmente muchos proyectos modernos usan Spring Boot con servidor embebido, Tomcat continúa siendo una base técnica relevante para comprender el despliegue tradicional de aplicaciones Java, la administración de servicios en Linux y la relación entre servidor web, servidor de aplicaciones y aplicación web.</p>
+
+<p>Ejemplos de organizaciones y empresas relacionadas con ecosistemas Java o plataformas empresariales donde este tipo de tecnología sigue siendo relevante:</p>
+
+<div class="logo-grid">
+    <div class="logo-card">
+        <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/ibm.svg" alt="IBM" onerror="logoFallback(this)">
+        <div class="logo-fallback">IBM</div>
+        <span>IBM</span>
+    </div>
+
+    <div class="logo-card">
+        <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/bbva.svg" alt="BBVA" onerror="logoFallback(this)">
+        <div class="logo-fallback">BBVA</div>
+        <span>BBVA</span>
+    </div>
+
+    <div class="logo-card">
+        <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/telefonica.svg" alt="Telefónica" onerror="logoFallback(this)">
+        <div class="logo-fallback">Telefónica</div>
+        <span>Telefónica</span>
+    </div>
+
+    <div class="logo-card">
+        <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/nasa.svg" alt="NASA" onerror="logoFallback(this)">
+        <div class="logo-fallback">NASA</div>
+        <span>NASA</span>
+    </div>
+</div>
+
+<p class="note">Nota didáctica: los logotipos se cargan desde CDN. Si algún equipo escolar bloquea imágenes externas, el recuadro mostrará el nombre de la organización como respaldo.</p>
+
+<h2>1. Actualizar sistema</h2>
+<p class="info">Antes de instalar servicios, se actualizan los repositorios y paquetes del sistema para evitar errores por dependencias antiguas.</p>
+
+<div class="step">
+<div class="code-container">
+<span class="number">1.1</span>
+<code id="c1">sudo apt update && sudo apt upgrade -y</code>
+<button onclick="copyCode('c1', this)">Copiar</button>
+</div>
+</div>
+
+<h2>2. Instalar Java</h2>
+<p class="info">Tomcat necesita Java para ejecutarse, porque las aplicaciones que atiende están desarrolladas con esta tecnología.</p>
+
+<div class="step">
+<div class="code-container">
+<span class="number">2.1</span>
+<code id="c2">sudo apt install default-jdk -y</code>
+<button onclick="copyCode('c2', this)">Copiar</button>
+</div>
+</div>
+
+<p>Verifica que Java quedó instalado correctamente.</p>
+
+<div class="step">
+<div class="code-container">
+<span class="number">2.2</span>
+<code id="c3">java -version</code>
+<button onclick="copyCode('c3', this)">Copiar</button>
+</div>
+</div>
+
+<h2>3. Crear usuario del sistema para Tomcat</h2>
+<p class="info">Se crea un usuario llamado <strong>tomcatuser</strong>. Este usuario será utilizado por el servicio de Tomcat para ejecutarse de forma más segura, evitando que el servicio trabaje directamente como root.</p>
+
+<div class="step">
+<div class="code-container">
+<span class="number">3.1</span>
+<code id="c4">sudo useradd -m -U -d /opt/tomcat -s /bin/false tomcatuser</code>
+<button onclick="copyCode('c4', this)">Copiar</button>
+</div>
+</div>
+
+<h2>4. Descargar Apache Tomcat</h2>
+<p class="info">Se descarga Tomcat desde el sitio oficial de Apache. Primero se cambia al directorio temporal <strong>/tmp</strong> para trabajar con el archivo descargado.</p>
+
+<div class="step">
+<div class="code-container">
+<span class="number">4.1</span>
+<code id="c5">cd /tmp</code>
+<button onclick="copyCode('c5', this)">Copiar</button>
+</div>
+</div>
+
+<div class="step">
+<div class="code-container">
+<span class="number">4.2</span>
+<code id="c6">wget https://downloads.apache.org/tomcat/tomcat-10/v10.1.28/bin/apache-tomcat-10.1.28.tar.gz</code>
+<button onclick="copyCode('c6', this)">Copiar</button>
+</div>
+</div>
+
+<h2>5. Instalar Tomcat en /opt/tomcat</h2>
+<p class="info">Se crea la carpeta de instalación y se extrae el contenido del archivo comprimido dentro de <strong>/opt/tomcat</strong>. Esta ubicación es común para instalar aplicaciones adicionales del sistema.</p>
+
+<div class="step">
+<div class="code-container">
+<span class="number">5.1</span>
+<code id="c7">sudo mkdir /opt/tomcat</code>
+<button onclick="copyCode('c7', this)">Copiar</button>
+</div>
+</div>
+
+<div class="step">
+<div class="code-container">
+<span class="number">5.2</span>
+<code id="c8">sudo tar -xzf apache-tomcat-10.1.28.tar.gz -C /opt/tomcat --strip-components=1</code>
+<button onclick="copyCode('c8', this)">Copiar</button>
+</div>
+</div>
+
+<h2>6. Asignar permisos y propietario</h2>
+<p class="info">Se asigna la carpeta de Tomcat al usuario <strong>tomcatuser</strong> y se otorgan permisos de ejecución a los scripts de arranque y apagado.</p>
+
+<div class="step">
+<div class="code-container">
+<span class="number">6.1</span>
+<code id="c9">sudo chown -R tomcatuser:tomcatuser /opt/tomcat</code>
+<button onclick="copyCode('c9', this)">Copiar</button>
+</div>
+</div>
+
+<div class="step">
+<div class="code-container">
+<span class="number">6.2</span>
+<code id="c10">sudo chmod +x /opt/tomcat/bin/*.sh</code>
+<button onclick="copyCode('c10', this)">Copiar</button>
+</div>
+</div>
+
+<h2>7. Crear el servicio systemd para Tomcat</h2>
+<p class="info">En este punto se debe <strong>crear un archivo nuevo</strong> llamado <strong>/etc/systemd/system/tomcat.service</strong> y agregar dentro los parámetros indicados. Si el archivo ya existiera, entonces se edita.</p>
+
+<div class="step">
+<div class="code-container">
+<span class="number">7.1</span>
+<code id="c11">sudo nano /etc/systemd/system/tomcat.service</code>
+<button onclick="copyCode('c11', this)">Copiar</button>
+</div>
+</div>
+
+<p>Agregar el siguiente contenido dentro del archivo:</p>
+
+<pre id="c12">[Unit]
+Description=Apache Tomcat
+After=network.target
+
+[Service]
+Type=forking
+User=tomcatuser
+Group=tomcatuser
+Environment=JAVA_HOME=/usr/lib/jvm/default-java
+Environment=CATALINA_HOME=/opt/tomcat
+Environment=CATALINA_BASE=/opt/tomcat
+ExecStart=/opt/tomcat/bin/startup.sh
+ExecStop=/opt/tomcat/bin/shutdown.sh
+
+[Install]
+WantedBy=multi-user.target</pre>
+<button onclick="copyCode('c12', this)">Copiar contenido del servicio</button>
+
+<p>Después de guardar el archivo, se recargan los servicios de systemd para que Debian reconozca el nuevo servicio de Tomcat.</p>
+
+<div class="step">
+<div class="code-container">
+<span class="number">7.2</span>
+<code id="c13">sudo systemctl daemon-reload</code>
+<button onclick="copyCode('c13', this)">Copiar</button>
+</div>
+</div>
+
+<p>Se inicia el servicio de Tomcat.</p>
+
+<div class="step">
+<div class="code-container">
+<span class="number">7.3</span>
+<code id="c14">sudo systemctl start tomcat</code>
+<button onclick="copyCode('c14', this)">Copiar</button>
+</div>
+</div>
+
+<p>Se habilita Tomcat para que inicie automáticamente cuando arranque el sistema.</p>
+
+<div class="step">
+<div class="code-container">
+<span class="number">7.4</span>
+<code id="c15">sudo systemctl enable tomcat</code>
+<button onclick="copyCode('c15', this)">Copiar</button>
+</div>
+</div>
+
+<h2>8. Verificar el servicio</h2>
+<p class="info">Se revisa el estado del servicio para confirmar que Tomcat está activo y sin errores.</p>
+
+<div class="step">
+<div class="code-container">
+<span class="number">8.1</span>
+<code id="c16">sudo systemctl status tomcat</code>
+<button onclick="copyCode('c16', this)">Copiar</button>
+</div>
+</div>
+
+<h2>9. Probar Tomcat en el navegador</h2>
+<p class="info">Si Tomcat está funcionando correctamente, se mostrará la página inicial del servidor en el navegador.</p>
+
+<div class="step">
+<div class="code-container">
+<span class="number">9.1</span>
+<code id="c17">http://localhost:8080</code>
+<button onclick="copyCode('c17', this)">Copiar</button>
+</div>
+</div>
+
+</body>
+</html>

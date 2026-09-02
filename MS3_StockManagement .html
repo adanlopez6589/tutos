@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Instalación de MS3 Stock Management en Debian 12</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0;
+      background: #f4f6f8;
+      color: #222;
+      line-height: 1.55;
+    }
+    header {
+      background: #263238;
+      color: white;
+      padding: 28px 36px;
+    }
+    header h1 {
+      margin: 0 0 8px 0;
+      font-size: 28px;
+    }
+    header p {
+      margin: 0;
+      font-size: 15px;
+    }
+    main {
+      max-width: 1050px;
+      margin: 24px auto;
+      padding: 0 18px 40px;
+    }
+    .intro, .card {
+      background: white;
+      border-radius: 10px;
+      padding: 22px;
+      margin-bottom: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    h2 {
+      margin-top: 0;
+      color: #263238;
+      font-size: 21px;
+    }
+    h3 {
+      color: #263238;
+    }
+    .cmd-row {
+      display: flex;
+      gap: 12px;
+      margin: 14px 0;
+      align-items: flex-start;
+    }
+    .cmd-num {
+      min-width: 48px;
+      font-weight: bold;
+      color: #263238;
+      padding-top: 10px;
+    }
+    .cmd-content {
+      flex: 1;
+    }
+    .cmd-desc {
+      margin-bottom: 6px;
+      font-size: 14px;
+      color: #444;
+    }
+    .code-wrap {
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+    }
+    code {
+      flex: 1;
+      display: block;
+      background: #111827;
+      color: #f9fafb;
+      padding: 12px;
+      border-radius: 7px;
+      overflow-x: auto;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 14px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    button {
+      background: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 7px;
+      padding: 0 14px;
+      cursor: pointer;
+      font-weight: bold;
+      min-width: 78px;
+    }
+    button:hover {
+      background: #0d47a1;
+    }
+    .note {
+      background: #fff8e1;
+      border-left: 5px solid #f9a825;
+      padding: 12px 14px;
+      margin: 14px 0;
+      border-radius: 6px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #eceff1;
+    }
+    footer {
+      text-align: center;
+      color: #666;
+      font-size: 13px;
+      padding: 22px;
+    }
+    @media print {
+      button { display: none; }
+      body { background: white; }
+      .intro, .card { box-shadow: none; border: 1px solid #ddd; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Instalación de MS3 Stock Management en Debian 12</h1>
+    <p>Aplicación web Python Flask para gestión básica de inventario con MongoDB.</p>
+  </header>
+
+  <main>
+    <section class="intro">
+      <h2>Propósito de la práctica</h2>
+      <p>Instalar y ejecutar la aplicación <strong>MS3 Stock Management</strong> en un servidor Debian 12, con el fin de comprender el despliegue de una aplicación web Python Flask conectada a una base de datos NoSQL MongoDB.</p>
+
+      <h2>Conceptos clave</h2>
+      <p><strong>MS3 Stock Management</strong> es una aplicación web educativa para control de inventario. Permite manejar productos, categorías, proveedores, usuarios, existencias y órdenes pendientes de entrada de mercancía.</p>
+
+      <p><strong>Flask</strong> es un microframework de Python utilizado para crear aplicaciones web. En esta app contiene las rutas, vistas, formularios y lógica principal del sistema.</p>
+
+      <p><strong>MongoDB</strong> es un sistema gestor de base de datos NoSQL orientado a documentos. A diferencia de MySQL o PostgreSQL, no trabaja principalmente con tablas, sino con colecciones y documentos en formato similar a JSON.</p>
+
+      <p><strong>MongoEngine</strong> es una herramienta ODM para Python. Cumple una función parecida a un ORM, pero para MongoDB: permite trabajar con clases de Python que se guardan como documentos en la base de datos.</p>
+
+      <p><strong>Entorno virtual</strong> es una carpeta aislada donde se instalan las dependencias Python de la aplicación sin afectar el sistema global.</p>
+
+      <h3>Arquitectura de despliegue</h3>
+      <table>
+        <tr>
+          <th>Capa</th>
+          <th>Componente</th>
+          <th>Función</th>
+        </tr>
+        <tr>
+          <td>Cliente</td>
+          <td>Navegador web</td>
+          <td>Solicita la aplicación mediante HTTP.</td>
+        </tr>
+        <tr>
+          <td>Servidor de aplicación</td>
+          <td>Flask</td>
+          <td>Ejecuta las rutas, formularios y lógica del sistema de inventario.</td>
+        </tr>
+        <tr>
+          <td>Base de datos</td>
+          <td>MongoDB</td>
+          <td>Almacena usuarios, productos, categorías, proveedores y movimientos de inventario.</td>
+        </tr>
+        <tr>
+          <td>ODM</td>
+          <td>MongoEngine</td>
+          <td>Conecta las clases de Python con los documentos de MongoDB.</td>
+        </tr>
+      </table>
+
+      <h3>Flujo de solicitud</h3>
+      <p><strong>Cliente/Navegador → Flask → MongoEngine → MongoDB → Respuesta al navegador</strong></p>
+
+      <div class="note"><strong>Nota:</strong> Esta práctica se plantea para laboratorio. Primero se ejecuta con Flask en el puerto 5000. Al final se incluye una sección opcional para preparar la app con Gunicorn como servicio.</div>
+    </section>
+
+    <section class="card">
+      <h2>1. Actualizar el sistema</h2>
+      <p>Antes de instalar la aplicación se actualizan los repositorios y paquetes del sistema.</p>
+
+      <div class="cmd-row"><div class="cmd-num">1.1</div><div class="cmd-content"><div class="cmd-desc">Actualiza la lista de paquetes disponibles.</div><div class="code-wrap"><code>sudo apt update</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">1.2</div><div class="cmd-content"><div class="cmd-desc">Instala las actualizaciones disponibles.</div><div class="code-wrap"><code>sudo apt upgrade -y</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+    </section>
+
+    
+
+<section class="card">
+  <h2>2. Instalar Python y dependencias necesarias</h2>
+
+  <p>La aplicación MS3 Stock Management está desarrollada con Python y Flask. Para ejecutarla correctamente en Debian 12 se requieren herramientas de desarrollo, compilación y bibliotecas de seguridad.</p>
+
+  <p>Algunas dependencias de Flask y MongoDB necesitan compilar componentes nativos durante su instalación, por lo que se instalan paquetes adicionales del sistema operativo.</p>
+
+  <table>
+    <tr>
+      <th>Paquete</th>
+      <th>Función</th>
+    </tr>
+
+    <tr>
+      <td>python3-pip</td>
+      <td>Administrador de paquetes de Python utilizado para instalar librerías mediante pip.</td>
+    </tr>
+
+    <tr>
+      <td>python3-venv</td>
+      <td>Herramienta para crear entornos virtuales aislados para proyectos Python.</td>
+    </tr>
+
+    <tr>
+      <td>build-essential</td>
+      <td>Conjunto de compiladores y herramientas necesarias para compilar módulos nativos.</td>
+    </tr>
+
+    <tr>
+      <td>python3-dev</td>
+      <td>Archivos de desarrollo y cabeceras necesarias para compilar extensiones de Python.</td>
+    </tr>
+
+    <tr>
+      <td>libffi-dev</td>
+      <td>Biblioteca utilizada por módulos relacionados con cifrado y autenticación.</td>
+    </tr>
+
+    <tr>
+      <td>libssl-dev</td>
+      <td>Biblioteca de desarrollo para conexiones seguras SSL/TLS y funciones criptográficas.</td>
+    </tr>
+  </table>
+
+  <div class="note">
+    <strong>Nota:</strong> Estas herramientas son comunes en servidores Linux utilizados para desplegar aplicaciones Flask, Django y otros servicios Python.
+  </div>
+
+  <div class="cmd-row">
+    <div class="cmd-num">2.1</div>
+
+    <div class="cmd-content">
+      <div class="cmd-desc">
+        Instala Python 3 y las dependencias necesarias para ejecutar y compilar módulos de la aplicación.
+      </div>
+
+      <div class="code-wrap">
+        <code>sudo apt install python3 python3-pip python3-venv git unzip build-essential python3-dev libffi-dev libssl-dev pkg-config -y</code>
+        <button onclick="copyCommand(this)">Copiar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cmd-row">
+    <div class="cmd-num">2.2</div>
+
+    <div class="cmd-content">
+      <div class="cmd-desc">
+        Verifica la versión instalada de Python.
+      </div>
+
+      <div class="code-wrap">
+        <code>python3 --version</code>
+        <button onclick="copyCommand(this)">Copiar</button>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+    <section class="card">
+      <h2>3. Instalar MongoDB Community en Debian 12</h2>
+      <p><strong>MongoDB</strong> es una base de datos NoSQL desarrollada principalmente en <strong>C++</strong>. Aunque no está programada en JavaScript, utiliza estructuras de datos similares a objetos JSON, lo que facilita su integración con aplicaciones web modernas desarrolladas en JavaScript y Node.js.</p>
+
+<p><strong>JSON (JavaScript Object Notation)</strong> es un formato ligero de intercambio de datos derivado de la sintaxis de objetos de JavaScript. Se utiliza para representar información mediante pares clave-valor.</p>
+
+<h3>Ejemplo de objeto JSON</h3>
+
+<div class="code-wrap">
+  <code>{
+  "nombre": "Juan",
+  "edad": 20,
+  "carrera": "Informática"
+}</code>
+</div>
+
+<p>MongoDB almacena información utilizando documentos BSON, que es una versión binaria optimizada de JSON.</p>
+
+      <div class="cmd-row"><div class="cmd-num">3.1</div><div class="cmd-content"><div class="cmd-desc">Instala herramientas para importar la llave del repositorio oficial de MongoDB.</div><div class="code-wrap"><code>sudo apt install gnupg curl -y</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">3.2</div><div class="cmd-content"><div class="cmd-desc">Importa la llave pública de MongoDB 8.0.</div><div class="code-wrap"><code>curl -fsSL https://pgp.mongodb.com/server-8.0.asc | sudo gpg -o /usr/share/keyrings/mongodb-server-8.0.gpg --dearmor</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">3.3</div><div class="cmd-content"><div class="cmd-desc">Crea el archivo del repositorio oficial para Debian 12 Bookworm.</div><div class="code-wrap"><code>echo "deb [ signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/debian bookworm/mongodb-org/8.0 main" | sudo tee /etc/apt/sources.list.d/mongodb-org-8.0.list</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">3.4</div><div class="cmd-content"><div class="cmd-desc">Actualiza los repositorios incluyendo MongoDB.</div><div class="code-wrap"><code>sudo apt update</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">3.5</div><div class="cmd-content"><div class="cmd-desc">Instala MongoDB Community Server.</div><div class="code-wrap"><code>sudo apt install mongodb-org -y</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+    </section>
+
+    <section class="card">
+      <h2>4. Iniciar y verificar MongoDB</h2>
+      <p>MongoDB se ejecuta como servicio del sistema mediante systemd.</p>
+
+      <div class="cmd-row"><div class="cmd-num">4.1</div><div class="cmd-content"><div class="cmd-desc">Recarga systemd si el servicio aún no aparece reconocido.</div><div class="code-wrap"><code>sudo systemctl daemon-reload</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">4.2</div><div class="cmd-content"><div class="cmd-desc">Inicia el servicio de MongoDB.</div><div class="code-wrap"><code>sudo systemctl start mongod</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">4.3</div><div class="cmd-content"><div class="cmd-desc">Habilita MongoDB para que inicie automáticamente con el sistema.</div><div class="code-wrap"><code>sudo systemctl enable mongod</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">4.4</div><div class="cmd-content"><div class="cmd-desc">Verifica el estado del servicio.</div><div class="code-wrap"><code>sudo systemctl status mongod</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">4.5</div><div class="cmd-content"><div class="cmd-desc">Abre la consola de MongoDB para comprobar la conexión local.</div><div class="code-wrap"><code>mongosh</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">4.6</div><div class="cmd-content"><div class="cmd-desc">Dentro de mongosh, muestra las bases de datos existentes.</div><div class="code-wrap"><code>show dbs</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">4.7</div><div class="cmd-content"><div class="cmd-desc">Sal de la consola de MongoDB.</div><div class="code-wrap"><code>exit</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+    </section>
+
+    <section class="card">
+      <h2>5. Descargar la aplicación MS3 Stock Management</h2>
+      <p>Se puede descargar desde GitHub o usar el archivo ZIP que ya se tenga disponible.</p>
+
+      <div class="cmd-row"><div class="cmd-num">5.1</div><div class="cmd-content"><div class="cmd-desc">Entra al directorio personal del usuario.</div><div class="code-wrap"><code>cd ~</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">5.2</div><div class="cmd-content"><div class="cmd-desc">Clona el repositorio público del proyecto.</div><div class="code-wrap"><code>git clone https://github.com/thanh-cao/ms3-stock-management.git</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">5.3</div><div class="cmd-content"><div class="cmd-desc">Entra a la carpeta del proyecto.</div><div class="code-wrap"><code>cd ~/ms3-stock-management</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">5.4</div><div class="cmd-content"><div class="cmd-desc">Confirma que existan los archivos principales de la aplicación.</div><div class="code-wrap"><code>ls</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="note"><strong>Alternativa con ZIP:</strong> Si ya se tiene el archivo <strong>ms3-stock-management-main.zip</strong>, súbelo al servidor, descomprímelo con <strong>unzip ms3-stock-management-main.zip</strong> y entra a la carpeta descomprimida.</div>
+    </section>
+
+    <section class="card">
+      <h2>6. Crear y activar el entorno virtual</h2>
+      <p>El entorno virtual contendrá las dependencias de Python necesarias para esta aplicación.</p>
+
+      <div class="cmd-row"><div class="cmd-num">6.1</div><div class="cmd-content"><div class="cmd-desc">Crea un entorno virtual llamado ms3_env dentro del proyecto.</div><div class="code-wrap"><code>python3 -m venv ms3_env</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">6.2</div><div class="cmd-content"><div class="cmd-desc">Activa el entorno virtual.</div><div class="code-wrap"><code>source ms3_env/bin/activate</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">6.3</div><div class="cmd-content"><div class="cmd-desc">Actualiza pip, setuptools y wheel dentro del entorno virtual.</div><div class="code-wrap"><code>pip install --upgrade pip setuptools wheel</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+    </section>
+
+    <section class="card">
+      <h2>7. Instalar dependencias de la aplicación</h2>
+      <p>El proyecto incluye un archivo requirements.txt con las librerías necesarias.</p>
+
+      <div class="cmd-row"><div class="cmd-num">7.1</div><div class="cmd-content"><div class="cmd-desc">Instala las dependencias indicadas por el proyecto.</div><div class="code-wrap"><code>pip install -r requirements.txt</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">7.2</div><div class="cmd-content"><div class="cmd-desc">Si aparece error con bson, desinstala bson externo para evitar conflicto con pymongo.</div><div class="code-wrap"><code>pip uninstall bson -y</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">7.3</div><div class="cmd-content"><div class="cmd-desc">Reinstala pymongo para asegurar que su paquete bson interno quede correcto.</div><div class="code-wrap"><code>pip install --force-reinstall pymongo==3.12.0</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">7.4</div><div class="cmd-content"><div class="cmd-desc">Verifica que Flask esté instalado.</div><div class="code-wrap"><code>python -m flask --version</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="note"><strong>Nota:</strong> El archivo requirements.txt incluye dependencias antiguas porque el proyecto original fue desarrollado con versiones de Flask y MongoEngine de 2021.</div>
+    </section>
+
+    <section class="card">
+      <h2>8. Crear el archivo de variables de entorno</h2>
+      <p>La aplicación busca un archivo llamado env.py para cargar la conexión a MongoDB, la clave secreta y la configuración general.</p>
+
+      <div class="cmd-row"><div class="cmd-num">8.1</div><div class="cmd-content"><div class="cmd-desc">Crea el archivo env.py dentro de la carpeta principal del proyecto.</div><div class="code-wrap"><code>nano env.py</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">8.2</div><div class="cmd-content"><div class="cmd-desc">Agrega esta configuración básica para trabajar con MongoDB local.</div><div class="code-wrap"><code>import os
+
+os.environ.setdefault('IP', '0.0.0.0')
+os.environ.setdefault('PORT', '5000')
+os.environ.setdefault('SECRET_KEY', 'cambia_esta_clave_en_produccion')
+os.environ.setdefault('MONGO_URI', 'mongodb://127.0.0.1:27017/stockmgmt')
+os.environ.setdefault('MONGO_DBNAME', 'stockmgmt')
+os.environ.setdefault('DEBUG', 'True')
+
+# Variables de correo. En laboratorio se pueden dejar vacías si se desactiva confirmación por correo.
+os.environ.setdefault('MAIL_SERVER', '')
+os.environ.setdefault('MAIL_PORT', '587')
+os.environ.setdefault('MAIL_USERNAME', '')
+os.environ.setdefault('MAIL_PASSWORD', '')
+os.environ.setdefault('USER_EMAIL_SENDER_EMAIL', '')</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">8.3</div><div class="cmd-content"><div class="cmd-desc">Guarda el archivo en nano con CTRL + O, ENTER y CTRL + X.</div><div class="code-wrap"><code>Archivo guardado en: ~/ms3-stock-management/env.py</code></div></div></div>
+    </section>
+
+    <section class="card">
+      <h2>9. Ajustar la configuración para laboratorio sin correo SMTP</h2>
+      <p>El proyecto original solicita confirmación por correo al registrar usuarios. Para laboratorio puede desactivarse esa dependencia y permitir que el registro funcione sin configurar Gmail u otro servidor SMTP.</p>
+
+      <div class="cmd-row"><div class="cmd-num">9.1</div><div class="cmd-content"><div class="cmd-desc">Abre el archivo config.py para modificar la configuración de Flask-User.</div><div class="code-wrap"><code>nano config.py</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">9.2</div><div class="cmd-content"><div class="cmd-desc">Cambia estas dos líneas dentro de ConfigClass para desactivar el envío y confirmación de correo.</div><div class="code-wrap"><code>USER_ENABLE_EMAIL = False
+USER_ENABLE_CONFIRM_EMAIL = False</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">9.3</div><div class="cmd-content"><div class="cmd-desc">Guarda los cambios en nano con CTRL + O, ENTER y CTRL + X.</div><div class="code-wrap"><code>Archivo modificado: config.py</code></div></div></div>
+      <div class="note"><strong>Nota:</strong> En producción sí conviene configurar correo real para recuperación, confirmación de cuentas y notificaciones. Para una primera práctica, desactivarlo reduce la dificultad.</div>
+    </section>
+
+    <section class="card">
+      <h2>10. Ejecutar la aplicación con Flask</h2>
+      <p>Con MongoDB activo, dependencias instaladas y variables configuradas, se puede ejecutar la app.</p>
+
+      <div class="cmd-row"><div class="cmd-num">10.1</div><div class="cmd-content"><div class="cmd-desc">Asegúrate de estar en la carpeta del proyecto.</div><div class="code-wrap"><code>cd ~/ms3-stock-management</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">10.2</div><div class="cmd-content"><div class="cmd-desc">Activa el entorno virtual si no está activo.</div><div class="code-wrap"><code>source ms3_env/bin/activate</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">10.3</div><div class="cmd-content"><div class="cmd-desc">Ejecuta la aplicación.</div><div class="code-wrap"><code>python app.py</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">10.4</div><div class="cmd-content"><div class="cmd-desc">Abre esta dirección en el navegador del mismo equipo.</div><div class="code-wrap"><code>http://localhost:5000</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">10.5</div><div class="cmd-content"><div class="cmd-desc">Si accedes desde otra computadora de la misma red, usa la IP del servidor.</div><div class="code-wrap"><code>http://IP_DEL_SERVIDOR:5000</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="note"><strong>Nota:</strong> Para detener Flask en la terminal, presiona CTRL + C.</div>
+    </section>
+
+    <section class="card">
+      <h2>11. Registrar el primer usuario administrador</h2>
+      <p>Al entrar por primera vez, se debe crear una cuenta. La aplicación crea el negocio y asigna permisos de administrador al usuario registrado.</p>
+
+      <div class="cmd-row"><div class="cmd-num">11.1</div><div class="cmd-content"><div class="cmd-desc">Abre la página principal de la aplicación.</div><div class="code-wrap"><code>http://localhost:5000</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">11.2</div><div class="cmd-content"><div class="cmd-desc">Selecciona la opción de registro o Sign up.</div><div class="code-wrap"><code>Crear cuenta de negocio y usuario administrador</code></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">11.3</div><div class="cmd-content"><div class="cmd-desc">Después del registro, accede al panel y comienza creando categorías, proveedores y productos.</div><div class="code-wrap"><code>Dashboard → Categories → Suppliers → Products</code></div></div></div>
+    </section>
+
+    <section class="card">
+      <h2>12. Consultar la base de datos desde MongoDB</h2>
+      <p>Estos comandos permiten observar cómo se crean las colecciones y documentos conforme se usa la aplicación.</p>
+
+      <div class="cmd-row"><div class="cmd-num">12.1</div><div class="cmd-content"><div class="cmd-desc">Abre la consola de MongoDB.</div><div class="code-wrap"><code>mongosh</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">12.2</div><div class="cmd-content"><div class="cmd-desc">Selecciona la base de datos de la aplicación.</div><div class="code-wrap"><code>use stockmgmt</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">12.3</div><div class="cmd-content"><div class="cmd-desc">Muestra las colecciones creadas.</div><div class="code-wrap"><code>show collections</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">12.4</div><div class="cmd-content"><div class="cmd-desc">Consulta algunos documentos de usuarios.</div><div class="code-wrap"><code>db.user.find().pretty()</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">12.5</div><div class="cmd-content"><div class="cmd-desc">Consulta algunos productos registrados.</div><div class="code-wrap"><code>db.product.find().pretty()</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">12.6</div><div class="cmd-content"><div class="cmd-desc">Sal de mongosh.</div><div class="code-wrap"><code>exit</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+    </section>
+
+    <section class="card">
+      <h2>13. Opción adicional: ejecutar con Gunicorn</h2>
+      <p>Para acercarse más a un despliegue real, la app puede ejecutarse con Gunicorn en lugar del servidor de desarrollo de Flask.</p>
+
+      <div class="cmd-row"><div class="cmd-num">13.1</div><div class="cmd-content"><div class="cmd-desc">Instala Gunicorn dentro del entorno virtual.</div><div class="code-wrap"><code>pip install gunicorn</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">13.2</div><div class="cmd-content"><div class="cmd-desc">Ejecuta la app con Gunicorn en el puerto 8000.</div><div class="code-wrap"><code>gunicorn --bind 0.0.0.0:8000 app:app</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">13.3</div><div class="cmd-content"><div class="cmd-desc">Abre la aplicación ejecutada con Gunicorn.</div><div class="code-wrap"><code>http://localhost:8000</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="note"><strong>Nota:</strong> En el comando <strong>app:app</strong>, el primer <strong>app</strong> corresponde al archivo <strong>app.py</strong> y el segundo <strong>app</strong> corresponde al objeto Flask creado dentro del archivo.</div>
+    </section>
+
+    <section class="card">
+      <h2>14. Opción adicional: crear servicio systemd para Gunicorn</h2>
+      <p>Con systemd se puede iniciar, detener y habilitar la aplicación como servicio del sistema.</p>
+
+      <div class="note"><strong>Nota:</strong> Reemplaza <strong>juan</strong> por el usuario real de Linux. Puedes identificarlo con el comando <strong>whoami</strong>.</div>
+      <div class="cmd-row"><div class="cmd-num">14.1</div><div class="cmd-content"><div class="cmd-desc">Muestra el usuario actual.</div><div class="code-wrap"><code>whoami</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">14.2</div><div class="cmd-content"><div class="cmd-desc">Crea el archivo del servicio.</div><div class="code-wrap"><code>sudo nano /etc/systemd/system/ms3-stock.service</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">14.3</div><div class="cmd-content"><div class="cmd-desc">Contenido sugerido para el servicio. Cambia juan si tu usuario es diferente.</div><div class="code-wrap"><code>[Unit]
+Description=MS3 Stock Management Flask App
+After=network.target mongod.service
+
+[Service]
+User=juan
+Group=www-data
+WorkingDirectory=/home/juan/ms3-stock-management
+Environment="PATH=/home/juan/ms3-stock-management/ms3_env/bin"
+ExecStart=/home/juan/ms3-stock-management/ms3_env/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 app:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">14.4</div><div class="cmd-content"><div class="cmd-desc">Recarga systemd.</div><div class="code-wrap"><code>sudo systemctl daemon-reload</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">14.5</div><div class="cmd-content"><div class="cmd-desc">Inicia el servicio.</div><div class="code-wrap"><code>sudo systemctl start ms3-stock</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">14.6</div><div class="cmd-content"><div class="cmd-desc">Habilita el inicio automático.</div><div class="code-wrap"><code>sudo systemctl enable ms3-stock</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">14.7</div><div class="cmd-content"><div class="cmd-desc">Verifica el estado del servicio.</div><div class="code-wrap"><code>sudo systemctl status ms3-stock</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+    </section>
+
+    <section class="card">
+      <h2>15. Comandos útiles de diagnóstico</h2>
+      <p>Estos comandos ayudan a revisar errores, puertos y servicios.</p>
+
+      <div class="cmd-row"><div class="cmd-num">15.1</div><div class="cmd-content"><div class="cmd-desc">Revisa si MongoDB está activo.</div><div class="code-wrap"><code>sudo systemctl status mongod</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">15.2</div><div class="cmd-content"><div class="cmd-desc">Muestra los últimos registros de MongoDB.</div><div class="code-wrap"><code>sudo tail -n 50 /var/log/mongodb/mongod.log</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">15.3</div><div class="cmd-content"><div class="cmd-desc">Verifica qué servicios escuchan en los puertos 5000, 8000 y 27017.</div><div class="code-wrap"><code>sudo ss -tulnp | grep -E ':5000|:8000|:27017'</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">15.4</div><div class="cmd-content"><div class="cmd-desc">Muestra los últimos registros del servicio systemd de la app.</div><div class="code-wrap"><code>sudo journalctl -u ms3-stock -n 50 --no-pager</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">15.5</div><div class="cmd-content"><div class="cmd-desc">Reinicia la app si se modificó código o configuración.</div><div class="code-wrap"><code>sudo systemctl restart ms3-stock</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+    </section>
+
+    <section class="card">
+      <h2>16. Detener servicios y limpiar la práctica</h2>
+      <p>Estos comandos pueden usarse para detener la app o MongoDB cuando se termine la práctica.</p>
+
+      <div class="cmd-row"><div class="cmd-num">16.1</div><div class="cmd-content"><div class="cmd-desc">Detiene el servicio de la aplicación si fue creado.</div><div class="code-wrap"><code>sudo systemctl stop ms3-stock</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">16.2</div><div class="cmd-content"><div class="cmd-desc">Deshabilita el inicio automático de la app.</div><div class="code-wrap"><code>sudo systemctl disable ms3-stock</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">16.3</div><div class="cmd-content"><div class="cmd-desc">Detiene MongoDB temporalmente.</div><div class="code-wrap"><code>sudo systemctl stop mongod</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+      <div class="cmd-row"><div class="cmd-num">16.4</div><div class="cmd-content"><div class="cmd-desc">Elimina la base de datos de laboratorio desde mongosh si se requiere reiniciar los datos.</div><div class="code-wrap"><code>mongosh --eval "use stockmgmt; db.dropDatabase();"</code><button onclick="copyCommand(this)">Copiar</button></div></div></div>
+    </section>
+
+    <section class="card">
+      <h2>Conclusión didáctica</h2>
+      <p>MS3 Stock Management es más simple que Odoo para una primera práctica porque permite observar una aplicación Python Flask real, con formularios, autenticación, CRUD e integración con base de datos, sin entrar todavía a la complejidad de un ERP empresarial completo.</p>
+
+      <table>
+        <tr>
+          <th>Componente</th>
+          <th>Rol</th>
+          <th>Ejemplo en la práctica</th>
+        </tr>
+        <tr>
+          <td>Flask</td>
+          <td>Framework web</td>
+          <td>Ejecuta las rutas definidas en app.py.</td>
+        </tr>
+        <tr>
+          <td>MongoDB</td>
+          <td>Base de datos NoSQL</td>
+          <td>Guarda usuarios, productos, categorías, proveedores y órdenes pendientes.</td>
+        </tr>
+        <tr>
+          <td>MongoEngine</td>
+          <td>ODM</td>
+          <td>Conecta las clases de models.py con MongoDB.</td>
+        </tr>
+        <tr>
+          <td>Gunicorn</td>
+          <td>Servidor de aplicaciones</td>
+          <td>Ejecuta app:app en el puerto 8000.</td>
+        </tr>
+        <tr>
+          <td>systemd</td>
+          <td>Administrador de servicios</td>
+          <td>Permite iniciar y detener la aplicación como servicio.</td>
+        </tr>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    Material didáctico para práctica de laboratorio en Debian 12.
+  </footer>
+
+  <script>
+    function copyCommand(button) {
+      const code = button.parentElement.querySelector("code").innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        const original = button.innerText;
+        button.innerText = "Copiado";
+        setTimeout(() => {
+          button.innerText = original;
+        }, 1400);
+      });
+    }
+  </script>
+</body>
+</html>

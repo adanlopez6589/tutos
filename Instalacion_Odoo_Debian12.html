@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Instalación y configuración básica de Odoo Community en Debian 12</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0;
+      background: #f4f6f8;
+      color: #222;
+      line-height: 1.55;
+    }
+    header {
+      background: #263238;
+      color: white;
+      padding: 28px 36px;
+    }
+    header h1 {
+      margin: 0 0 8px 0;
+      font-size: 28px;
+    }
+    header p {
+      margin: 0;
+      font-size: 15px;
+    }
+    main {
+      max-width: 1050px;
+      margin: 24px auto;
+      padding: 0 18px 40px;
+    }
+    .intro, .card {
+      background: white;
+      border-radius: 10px;
+      padding: 22px;
+      margin-bottom: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    h2 {
+      margin-top: 0;
+      color: #263238;
+      font-size: 21px;
+    }
+    h3 {
+      color: #263238;
+    }
+    .cmd-row {
+      display: flex;
+      gap: 12px;
+      margin: 14px 0;
+      align-items: flex-start;
+    }
+    .cmd-num {
+      min-width: 48px;
+      font-weight: bold;
+      color: #263238;
+      padding-top: 10px;
+    }
+    .cmd-content {
+      flex: 1;
+    }
+    .cmd-desc {
+      margin-bottom: 6px;
+      font-size: 14px;
+      color: #444;
+    }
+    .code-wrap {
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+    }
+    code {
+      flex: 1;
+      display: block;
+      background: #111827;
+      color: #f9fafb;
+      padding: 12px;
+      border-radius: 7px;
+      overflow-x: auto;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 14px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    button {
+      background: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 7px;
+      padding: 0 14px;
+      cursor: pointer;
+      font-weight: bold;
+      min-width: 78px;
+    }
+    button:hover {
+      background: #0d47a1;
+    }
+    .note {
+      background: #fff8e1;
+      border-left: 5px solid #f9a825;
+      padding: 12px 14px;
+      margin: 14px 0;
+      border-radius: 6px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #eceff1;
+    }
+    footer {
+      text-align: center;
+      color: #666;
+      font-size: 13px;
+      padding: 22px;
+    }
+    @media print {
+      button {
+        display: none;
+      }
+      body {
+        background: white;
+      }
+      .intro, .card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Instalación y configuración básica de Odoo Community en Debian 12</h1>
+    <p>Aplicación empresarial open source desarrollada en Python para instalar en servidor propio.</p>
+  </header>
+
+  <main>
+    <section class="intro">
+      <h2>Propósito de la práctica</h2>
+      <p>Instalar y ejecutar Odoo Community en Debian 12 utilizando PostgreSQL, Python, Git y un servicio systemd, con el fin de comprender el despliegue de una aplicación empresarial Python en un servidor propio.</p>
+
+      <h2>Conceptos clave</h2>
+      <p><strong>Odoo</strong> es una suite de aplicaciones empresariales que integra módulos como CRM, ventas, inventario, compras, contabilidad, punto de venta, sitio web, comercio electrónico, proyectos y recursos humanos.</p>
+
+      <p><strong>Odoo Community</strong> es la edición open source. Puede instalarse en un servidor propio y permite trabajar con módulos comunitarios o desarrollos personalizados.</p>
+
+      <p><strong>ERP (Enterprise Resource Planning)</strong> es un sistema de planificación de recursos empresariales. Su propósito es integrar procesos de una organización en una sola plataforma.</p>
+
+      <p><strong>PostgreSQL</strong> es el sistema gestor de base de datos utilizado por Odoo para almacenar usuarios, módulos, productos, ventas, inventarios y demás información empresarial.</p>
+
+      <p><strong>Python</strong> es el lenguaje principal del backend de Odoo. El servidor de Odoo se ejecuta desde el archivo <strong>odoo-bin</strong>.</p>
+
+      <p><strong>Git</strong> permite descargar el código fuente oficial de Odoo desde GitHub y seleccionar una versión específica mediante ramas como <strong>19.0</strong> o <strong>18.0</strong>.</p>
+
+      <p><strong>systemd</strong> permite ejecutar Odoo como servicio del sistema para iniciar, detener, reiniciar y habilitar su arranque automático.</p>
+
+      <h3>Arquitectura básica de despliegue</h3>
+      <table>
+        <tr>
+          <th>Capa</th>
+          <th>Componente</th>
+          <th>Función</th>
+        </tr>
+        <tr>
+          <td>Cliente</td>
+          <td>Navegador web</td>
+          <td>Accede a Odoo mediante HTTP en el puerto 8069.</td>
+        </tr>
+        <tr>
+          <td>Aplicación</td>
+          <td>Odoo</td>
+          <td>Ejecuta los módulos empresariales y la interfaz web.</td>
+        </tr>
+        <tr>
+          <td>Lenguaje</td>
+          <td>Python</td>
+          <td>Ejecuta el servidor y la lógica del sistema.</td>
+        </tr>
+        <tr>
+          <td>Base de datos</td>
+          <td>PostgreSQL</td>
+          <td>Almacena la información de Odoo.</td>
+        </tr>
+        <tr>
+          <td>Sistema operativo</td>
+          <td>Debian 12</td>
+          <td>Proporciona los servicios, paquetes y seguridad del servidor.</td>
+        </tr>
+      </table>
+
+      <h3>Flujo de solicitud</h3>
+      <p><strong>Cliente/Navegador → Odoo en puerto 8069 → PostgreSQL → Respuesta al navegador</strong></p>
+
+      <div class="note"><strong>Nota:</strong> Esta práctica instala Odoo Community desde código fuente para fines didácticos. En producción también puede agregarse Nginx como proxy inverso, HTTPS, firewall, respaldos y configuración avanzada.</div>
+    </section>
+
+    <section class="card">
+      <h2>1. Actualizar el sistema</h2>
+      <p>Antes de instalar Odoo se actualizan los repositorios y paquetes del sistema.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">1.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Actualiza la lista de paquetes disponibles desde los repositorios configurados.</div>
+          <div class="code-wrap">
+            <code>sudo apt update</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">1.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Instala las actualizaciones disponibles del sistema.</div>
+          <div class="code-wrap">
+            <code>sudo apt upgrade -y</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>2. Instalar dependencias principales</h2>
+      <p>Odoo requiere Python, Git, PostgreSQL, Node.js y varias librerías de compilación para instalar sus dependencias.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">2.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Instala herramientas base, Python, PostgreSQL, Git, Node.js y librerías necesarias.</div>
+          <div class="code-wrap">
+            <code>sudo apt install git python3 python3-pip python3-venv python3-dev build-essential wget curl nodejs npm libxml2-dev libxslt1-dev libldap2-dev libsasl2-dev libpq-dev libjpeg-dev zlib1g-dev libffi-dev libssl-dev postgresql postgresql-client -y</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">2.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Verifica la versión de Python instalada. Odoo requiere Python 3.10 o superior.</div>
+          <div class="code-wrap">
+            <code>python3 --version</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">2.3</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Instala rtlcss, utilizado para generar estilos en idiomas con escritura de derecha a izquierda.</div>
+          <div class="code-wrap">
+            <code>sudo npm install -g rtlcss</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="note"><strong>Nota:</strong> Si solo se usará Odoo en español, rtlcss no se observará directamente en la práctica, pero forma parte de las dependencias comunes del ecosistema Odoo.</div>
+    </section>
+
+    <section class="card">
+      <h2>3. Crear el usuario del sistema para Odoo</h2>
+      <p>Se recomienda no ejecutar Odoo con el usuario root. Por ello se crea un usuario de sistema llamado odoo.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">3.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Crea el usuario del sistema odoo y su directorio personal en /opt/odoo.</div>
+          <div class="code-wrap">
+            <code>sudo adduser --system --home=/opt/odoo --group odoo</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">3.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Verifica que se haya creado el usuario odoo.</div>
+          <div class="code-wrap">
+            <code>id odoo</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>4. Crear el usuario de PostgreSQL para Odoo</h2>
+      <p>Odoo se conecta a PostgreSQL con un usuario propio. Este usuario debe poder crear bases de datos.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">4.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Crea el usuario de PostgreSQL llamado odoo con permiso para crear bases de datos.</div>
+          <div class="code-wrap">
+            <code>sudo -u postgres createuser -s odoo</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">4.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Verifica que PostgreSQL esté activo.</div>
+          <div class="code-wrap">
+            <code>sudo systemctl status postgresql</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="note"><strong>Nota:</strong> El usuario de Linux <strong>odoo</strong> y el usuario de PostgreSQL <strong>odoo</strong> tienen el mismo nombre para simplificar la conexión local.</div>
+    </section>
+
+    <section class="card">
+      <h2>5. Descargar el código fuente de Odoo Community</h2>
+      <p>El código fuente se descargará en /opt/odoo/odoo-server utilizando Git.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">5.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Cambia al usuario odoo para trabajar dentro de su directorio.</div>
+          <div class="code-wrap">
+            <code>sudo su - odoo -s /bin/bash</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">5.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Descarga Odoo Community desde GitHub. Se usa la rama 19.0 como versión estable reciente.</div>
+          <div class="code-wrap">
+            <code>git clone https://github.com/odoo/odoo.git --depth 1 --branch 19.0 /opt/odoo/odoo-server</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">5.3</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Entra a la carpeta donde quedó descargado Odoo.</div>
+          <div class="code-wrap">
+            <code>cd /opt/odoo/odoo-server</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="note"><strong>Nota:</strong> Si se desea trabajar con Odoo 18, se puede cambiar <strong>--branch 19.0</strong> por <strong>--branch 18.0</strong>.</div>
+    </section>
+
+    <section class="card">
+      <h2>6. Crear y activar el entorno virtual de Python</h2>
+      <p>El entorno virtual permite instalar las dependencias de Odoo de forma aislada.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">6.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Crea un entorno virtual llamado odoo-venv dentro de /opt/odoo.</div>
+          <div class="code-wrap">
+            <code>python3 -m venv /opt/odoo/odoo-venv</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">6.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Activa el entorno virtual.</div>
+          <div class="code-wrap">
+            <code>source /opt/odoo/odoo-venv/bin/activate</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">6.3</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Actualiza pip, setuptools y wheel dentro del entorno virtual.</div>
+          <div class="code-wrap">
+            <code>pip install --upgrade pip setuptools wheel</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>7. Instalar dependencias Python de Odoo</h2>
+      <p>Las dependencias de Python están definidas en el archivo requirements.txt del proyecto Odoo.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">7.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Instala los paquetes Python requeridos por Odoo.</div>
+          <div class="code-wrap">
+            <code>pip install -r /opt/odoo/odoo-server/requirements.txt</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">7.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Comprueba que el ejecutable de Python usado pertenece al entorno virtual.</div>
+          <div class="code-wrap">
+            <code>which python</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="note"><strong>Nota:</strong> Si ocurre un error de compilación, normalmente falta alguna librería del sistema. Revisa el mensaje de error e instala la dependencia indicada.</div>
+    </section>
+
+    <section class="card">
+      <h2>8. Crear carpeta para módulos personalizados</h2>
+      <p>Además de los módulos oficiales, Odoo permite agregar módulos propios o comunitarios.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">8.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Crea una carpeta para módulos personalizados.</div>
+          <div class="code-wrap">
+            <code>mkdir /opt/odoo/custom-addons</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">8.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Muestra la estructura principal creada para Odoo.</div>
+          <div class="code-wrap">
+            <code>ls -la /opt/odoo</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">8.3</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Sal del usuario odoo para volver al usuario administrador.</div>
+          <div class="code-wrap">
+            <code>exit</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>9. Instalar wkhtmltopdf para reportes PDF</h2>
+      <p>Odoo utiliza wkhtmltopdf para generar reportes PDF como facturas, cotizaciones y documentos imprimibles.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">9.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Instala dependencias gráficas comunes para wkhtmltopdf.</div>
+          <div class="code-wrap">
+            <code>sudo apt install xfonts-75dpi xfonts-base fontconfig libxrender1 libjpeg62-turbo -y</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">9.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Instala wkhtmltopdf desde los repositorios de Debian.</div>
+          <div class="code-wrap">
+            <code>sudo apt install wkhtmltopdf -y</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">9.3</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Verifica la versión instalada de wkhtmltopdf.</div>
+          <div class="code-wrap">
+            <code>wkhtmltopdf --version</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="note"><strong>Nota:</strong> Para producción, Odoo recomienda usar una versión compatible de wkhtmltopdf que soporte encabezados y pies de página en reportes. Para laboratorio, la versión del repositorio suele ser suficiente para probar el funcionamiento general.</div>
+    </section>
+
+    <section class="card">
+      <h2>10. Crear archivo de configuración de Odoo</h2>
+      <p>El archivo de configuración define el usuario de base de datos, el puerto, las rutas de módulos y la contraseña maestra.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">10.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Crea el archivo de configuración principal de Odoo.</div>
+          <div class="code-wrap">
+            <code>sudo nano /etc/odoo.conf</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">10.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Agrega el siguiente contenido. Cambia la contraseña maestra por una propia.</div>
+          <div class="code-wrap">
+            <code>[options]
+admin_passwd = CambiaEstaClaveMaestra
+db_host = False
+db_port = False
+db_user = odoo
+db_password = False
+addons_path = /opt/odoo/odoo-server/addons,/opt/odoo/custom-addons
+xmlrpc_port = 8069
+logfile = /var/log/odoo/odoo.log</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">10.3</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Crea la carpeta de logs de Odoo.</div>
+          <div class="code-wrap">
+            <code>sudo mkdir /var/log/odoo</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">10.4</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Asigna la propiedad de la carpeta de logs al usuario odoo.</div>
+          <div class="code-wrap">
+            <code>sudo chown odoo:odoo /var/log/odoo</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">10.5</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Protege el archivo de configuración para que solo root y odoo puedan leerlo.</div>
+          <div class="code-wrap">
+            <code>sudo chown odoo:odoo /etc/odoo.conf && sudo chmod 640 /etc/odoo.conf</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="note"><strong>Nota:</strong> La contraseña <strong>admin_passwd</strong> no es la contraseña de acceso a Odoo. Es la clave maestra para crear, respaldar o eliminar bases de datos desde el administrador web.</div>
+    </section>
+
+    <section class="card">
+      <h2>11. Probar Odoo manualmente</h2>
+      <p>Antes de crear el servicio systemd, se recomienda ejecutar Odoo manualmente para comprobar que inicia correctamente.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">11.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Cambia al usuario odoo.</div>
+          <div class="code-wrap">
+            <code>sudo su - odoo -s /bin/bash</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">11.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Activa el entorno virtual de Odoo.</div>
+          <div class="code-wrap">
+            <code>source /opt/odoo/odoo-venv/bin/activate</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">11.3</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Ejecuta Odoo usando el archivo de configuración.</div>
+          <div class="code-wrap">
+            <code>/opt/odoo/odoo-server/odoo-bin -c /etc/odoo.conf</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">11.4</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Abre Odoo desde el navegador del servidor o desde otra computadora de la red.</div>
+          <div class="code-wrap">
+            <code>http://localhost:8069</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">11.5</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Para detener Odoo en la terminal, presiona Ctrl + C y después sal del usuario odoo.</div>
+          <div class="code-wrap">
+            <code>exit</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="note"><strong>Nota:</strong> En la primera entrada al navegador se crea la base de datos de Odoo. Se debe indicar la contraseña maestra definida en <strong>admin_passwd</strong>.</div>
+    </section>
+
+    <section class="card">
+      <h2>12. Crear un servicio systemd para Odoo</h2>
+      <p>El servicio permite iniciar Odoo automáticamente y administrarlo con systemctl.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">12.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Crea el archivo de servicio de Odoo.</div>
+          <div class="code-wrap">
+            <code>sudo nano /etc/systemd/system/odoo.service</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">12.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Agrega el siguiente contenido al archivo odoo.service.</div>
+          <div class="code-wrap">
+            <code>[Unit]
+Description=Odoo Community
+Documentation=https://www.odoo.com/documentation
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=odoo
+Group=odoo
+ExecStart=/opt/odoo/odoo-venv/bin/python3 /opt/odoo/odoo-server/odoo-bin -c /etc/odoo.conf
+Restart=always
+
+[Install]
+WantedBy=multi-user.target</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">12.3</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Recarga systemd para reconocer el nuevo servicio.</div>
+          <div class="code-wrap">
+            <code>sudo systemctl daemon-reload</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">12.4</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Inicia el servicio de Odoo.</div>
+          <div class="code-wrap">
+            <code>sudo systemctl start odoo</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">12.5</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Habilita Odoo para que inicie automáticamente con el sistema.</div>
+          <div class="code-wrap">
+            <code>sudo systemctl enable odoo</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">12.6</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Verifica el estado del servicio.</div>
+          <div class="code-wrap">
+            <code>sudo systemctl status odoo</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>13. Acceder a Odoo desde el navegador</h2>
+      <p>Una vez iniciado el servicio, Odoo debe estar disponible en el puerto 8069.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">13.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Acceso desde el mismo servidor.</div>
+          <div class="code-wrap">
+            <code>http://localhost:8069</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">13.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Acceso desde otra computadora de la misma red. Cambia la IP por la del servidor.</div>
+          <div class="code-wrap">
+            <code>http://IP_DEL_SERVIDOR:8069</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">13.3</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Muestra la dirección IP local del servidor.</div>
+          <div class="code-wrap">
+            <code>hostname -I</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="note"><strong>Nota:</strong> Si el navegador no abre Odoo desde otra computadora, revisa firewall, conexión de red y que el puerto 8069 esté escuchando.</div>
+    </section>
+
+    <section class="card">
+      <h2>14. Crear la primera base de datos de Odoo</h2>
+      <p>Al entrar por primera vez se muestra el administrador de bases de datos.</p>
+
+      <table>
+        <tr>
+          <th>Campo</th>
+          <th>Ejemplo</th>
+          <th>Descripción</th>
+        </tr>
+        <tr>
+          <td>Master Password</td>
+          <td>CambiaEstaClaveMaestra</td>
+          <td>Contraseña definida en admin_passwd dentro de /etc/odoo.conf.</td>
+        </tr>
+        <tr>
+          <td>Database Name</td>
+          <td>empresa_demo</td>
+          <td>Nombre de la base de datos que se creará en PostgreSQL.</td>
+        </tr>
+        <tr>
+          <td>Email</td>
+          <td>admin@empresa.local</td>
+          <td>Usuario administrador inicial de Odoo.</td>
+        </tr>
+        <tr>
+          <td>Password</td>
+          <td>Una contraseña segura</td>
+          <td>Contraseña para ingresar al panel de Odoo.</td>
+        </tr>
+        <tr>
+          <td>Language</td>
+          <td>Spanish / Español</td>
+          <td>Idioma de la interfaz.</td>
+        </tr>
+        <tr>
+          <td>Country</td>
+          <td>Mexico</td>
+          <td>País para configurar opciones regionales.</td>
+        </tr>
+      </table>
+
+      <div class="note"><strong>Nota:</strong> El usuario administrador de Odoo no es el mismo que el usuario Linux ni el usuario PostgreSQL. Es una cuenta interna de la aplicación.</div>
+    </section>
+
+    <section class="card">
+      <h2>15. Comandos útiles de diagnóstico</h2>
+      <p>Estos comandos ayudan a revisar errores, puertos y registros del servicio.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">15.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Verifica si Odoo está activo.</div>
+          <div class="code-wrap">
+            <code>sudo systemctl status odoo</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">15.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Muestra los últimos registros generados por Odoo.</div>
+          <div class="code-wrap">
+            <code>sudo tail -n 80 /var/log/odoo/odoo.log</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">15.3</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Muestra los registros de systemd asociados al servicio Odoo.</div>
+          <div class="code-wrap">
+            <code>sudo journalctl -u odoo -n 80 --no-pager</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">15.4</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Verifica si el puerto 8069 está escuchando.</div>
+          <div class="code-wrap">
+            <code>sudo ss -tulnp | grep :8069</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">15.5</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Reinicia Odoo después de modificar la configuración.</div>
+          <div class="code-wrap">
+            <code>sudo systemctl restart odoo</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">15.6</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Revisa las bases de datos existentes en PostgreSQL.</div>
+          <div class="code-wrap">
+            <code>sudo -u postgres psql -c "\l"</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>16. Instalar Nginx como proxy inverso opcional</h2>
+      <p>En producción, lo más común es publicar Odoo mediante Nginx en el puerto 80 o 443 y dejar Odoo funcionando internamente en el puerto 8069.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">16.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Instala Nginx.</div>
+          <div class="code-wrap">
+            <code>sudo apt install nginx -y</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">16.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Crea el archivo de configuración del sitio para Odoo.</div>
+          <div class="code-wrap">
+            <code>sudo nano /etc/nginx/sites-available/odoo</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">16.3</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Configuración básica de Nginx para reenviar solicitudes a Odoo.</div>
+          <div class="code-wrap">
+            <code>server {
+    listen 80;
+    server_name localhost;
+
+    proxy_read_timeout 720s;
+    proxy_connect_timeout 720s;
+    proxy_send_timeout 720s;
+
+    location / {
+        proxy_pass http://127.0.0.1:8069;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">16.4</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Habilita el sitio de Odoo.</div>
+          <div class="code-wrap">
+            <code>sudo ln -s /etc/nginx/sites-available/odoo /etc/nginx/sites-enabled/</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">16.5</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Opcional: elimina el sitio predeterminado de Nginx para evitar conflictos.</div>
+          <div class="code-wrap">
+            <code>sudo rm /etc/nginx/sites-enabled/default</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">16.6</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Verifica que la configuración de Nginx no tenga errores de sintaxis.</div>
+          <div class="code-wrap">
+            <code>sudo nginx -t</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">16.7</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Reinicia Nginx.</div>
+          <div class="code-wrap">
+            <code>sudo systemctl restart nginx</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">16.8</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Abre Odoo mediante Nginx usando el puerto HTTP normal.</div>
+          <div class="code-wrap">
+            <code>http://localhost</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="note"><strong>Nota:</strong> Si se usa Nginx, es recomendable agregar <strong>proxy_mode = True</strong> en /etc/odoo.conf y reiniciar Odoo.</div>
+    </section>
+
+    <section class="card">
+      <h2>17. Detener y desactivar servicios si se requiere</h2>
+      <p>Estos comandos pueden utilizarse para detener temporalmente Odoo o desactivar el arranque automático.</p>
+
+      <div class="cmd-row">
+        <div class="cmd-num">17.1</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Detiene el servicio de Odoo.</div>
+          <div class="code-wrap">
+            <code>sudo systemctl stop odoo</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">17.2</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Desactiva el inicio automático de Odoo.</div>
+          <div class="code-wrap">
+            <code>sudo systemctl disable odoo</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">17.3</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Desactiva el sitio de Nginx creado para Odoo.</div>
+          <div class="code-wrap">
+            <code>sudo rm /etc/nginx/sites-enabled/odoo</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-num">17.4</div>
+        <div class="cmd-content">
+          <div class="cmd-desc">Reinicia Nginx después de desactivar el sitio.</div>
+          <div class="code-wrap">
+            <code>sudo systemctl restart nginx</code>
+            <button onclick="copyCommand(this)">Copiar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Conclusión didáctica</h2>
+      <p>Odoo permite observar una aplicación empresarial Python instalada en un servidor propio. En esta práctica se identifica la relación entre sistema operativo, lenguaje de programación, base de datos, servicio del sistema y acceso web. A diferencia de una aplicación Flask mínima, Odoo ya incluye módulos empresariales listos para activar, por lo que es útil para prácticas de servidores, bases de datos, ERP, CRM, inventarios y despliegue de aplicaciones web.</p>
+
+      <table>
+        <tr>
+          <th>Componente</th>
+          <th>Rol</th>
+          <th>Ejemplo en la práctica</th>
+        </tr>
+        <tr>
+          <td>Odoo</td>
+          <td>Aplicación empresarial</td>
+          <td>Ejecuta módulos de ventas, inventario, CRM, sitio web y más.</td>
+        </tr>
+        <tr>
+          <td>Python</td>
+          <td>Lenguaje de backend</td>
+          <td>Ejecuta odoo-bin desde el entorno virtual.</td>
+        </tr>
+        <tr>
+          <td>PostgreSQL</td>
+          <td>Base de datos</td>
+          <td>Almacena las bases de datos creadas desde el administrador web.</td>
+        </tr>
+        <tr>
+          <td>systemd</td>
+          <td>Administrador de servicios</td>
+          <td>Permite iniciar, detener, reiniciar y habilitar Odoo.</td>
+        </tr>
+        <tr>
+          <td>Nginx</td>
+          <td>Proxy inverso opcional</td>
+          <td>Publica Odoo por el puerto 80 y reenvía a 127.0.0.1:8069.</td>
+        </tr>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    Material didáctico para práctica de laboratorio en Debian 12.
+  </footer>
+
+  <script>
+    function copyCommand(button) {
+      const code = button.parentElement.querySelector("code").innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        const original = button.innerText;
+        button.innerText = "Copiado";
+        setTimeout(() => {
+          button.innerText = original;
+        }, 1400);
+      });
+    }
+  </script>
+</body>
+</html>
