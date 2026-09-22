@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Apache como servidor de aplicaciones · Referencia de laboratorio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EFEDF0;
+    --paper-2:#E5E2E8;
+    --ink:#2A1B25;
+    --muted:#6E5C68;
+    --rubine:#D70A53;
+    --teal:#0F6E78;
+    --term-bg:#2A1B25;
+    --term-fg:#F3E9EE;
+    --term-dim:#A78E9C;
+    --rule:#CFC9D3;
+    --sans:'Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,'DejaVu Sans Mono',Consolas,monospace;
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:940px;margin:0 auto;padding:0 20px}
+
+  /* ---------- Encabezado ---------- */
+  header.top{
+    background:var(--term-bg);
+    color:var(--term-fg);
+    padding:56px 0 44px;
+  }
+  .prompt{
+    font-family:var(--mono);
+    font-size:clamp(14px,3.2vw,19px);
+    color:var(--term-dim);
+    margin-bottom:18px;
+  }
+  .prompt .user{color:#8FD3C9}
+  .prompt .path{color:#9BB8E8}
+  .prompt .sig{color:var(--rubine);font-weight:600}
+  .cursor{
+    display:inline-block;
+    width:.62em;height:1.05em;
+    background:var(--rubine);
+    vertical-align:-.18em;
+    margin-left:.15em;
+    animation:blink 1.05s steps(1) infinite;
+  }
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+
+  header.top h1{
+    font-size:clamp(30px,6vw,52px);
+    line-height:1.06;
+    font-weight:700;
+    letter-spacing:-.02em;
+    margin:0 0 10px;
+    max-width:18ch;
+  }
+  .sub{
+    font-family:var(--mono);
+    font-size:13px;
+    color:var(--term-dim);
+    margin:0;
+  }
+
+  /* ---------- Introducción ---------- */
+  .intro{padding:44px 0 30px;border-bottom:1px solid var(--rule)}
+  .intro p{max-width:68ch;margin:0 0 16px;font-size:17px}
+  .intro .lead{font-size:19px;line-height:1.5;text-align:justify}
+  .nota{
+    margin-top:26px;
+    border-left:3px solid var(--rubine);
+    padding:2px 0 2px 16px;
+    max-width:68ch;
+  }
+  .nota h2{font-size:15px;margin:0 0 6px;font-weight:600}
+  .nota p{font-size:15px;color:var(--muted);margin:0}
+  code.inl{font-family:var(--mono);font-size:.9em;background:var(--paper-2);padding:1px 5px;border-radius:3px}
+
+  /* ---------- Grupos ---------- */
+  .grupo{margin:44px 0 0}
+  .grupo > h2{
+    font-family:var(--mono);
+    font-size:14px;
+    font-weight:600;
+    color:var(--rubine);
+    margin:0 0 4px;
+    padding-bottom:10px;
+    border-bottom:2px solid var(--rubine);
+  }
+
+  /* ---------- Paso ---------- */
+  .cmd{
+    border-bottom:1px solid var(--rule);
+    padding:22px 0;
+  }
+  .cmd-head{
+    display:grid;
+    grid-template-columns:44px 1fr auto;
+    gap:14px;
+    align-items:baseline;
+  }
+  .num{
+    font-family:var(--mono);
+    font-size:14px;
+    color:var(--muted);
+    font-variant-numeric:tabular-nums;
+    padding-top:4px;
+  }
+  .nombre{
+    font-family:var(--mono);
+    font-size:22px;
+    font-weight:600;
+    letter-spacing:-.01em;
+    margin:0;
+  }
+  .desc{margin:4px 0 0;color:var(--muted);font-size:15px;max-width:62ch}
+
+  /* ---------- Botón copiar ---------- */
+  .copiar{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--ink);
+    background:transparent;
+    border:1px solid var(--rule);
+    border-radius:3px;
+    padding:5px 11px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .copiar:hover{border-color:var(--ink)}
+  .copiar:focus-visible{outline:2px solid var(--rubine);outline-offset:2px}
+  .copiar.ok{background:var(--rubine);border-color:var(--rubine);color:#fff}
+
+  /* ---------- Detalle: comandos del paso ---------- */
+  .detalle{margin:16px 0 0 58px}
+  @media (max-width:640px){.detalle{margin-left:0}}
+
+  .opciones{
+    display:grid;
+    grid-template-columns:auto 1fr;
+    gap:5px 14px;
+    margin:0 0 16px;
+    font-size:14px;
+  }
+  .opciones dt{font-family:var(--mono);font-weight:500;color:var(--teal);white-space:nowrap}
+  .opciones dd{margin:0;color:var(--muted)}
+
+  .ejemplo{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    background:var(--term-bg);
+    border-radius:4px;
+    padding:9px 10px 9px 12px;
+    margin-bottom:6px;
+  }
+  .ejemplo pre{
+    margin:0;
+    flex:1;
+    font-family:var(--mono);
+    font-size:13.5px;
+    line-height:1.5;
+    color:var(--term-fg);
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
+  .ejemplo pre .p{color:var(--rubine);user-select:none;margin-right:.5em}
+  .ejemplo .copiar{
+    color:var(--term-dim);
+    border-color:#4B3742;
+    flex:none;
+  }
+  .ejemplo .copiar:hover{color:var(--term-fg);border-color:var(--term-dim)}
+  .ejemplo .copiar.ok{background:var(--rubine);border-color:var(--rubine);color:#fff}
+  .pie-ej{
+    font-size:13px;
+    color:var(--muted);
+    margin:-2px 0 12px 12px;
+  }
+  .aviso{
+    font-size:13px;
+    color:var(--rubine);
+    font-weight:500;
+    margin:0 0 12px;
+  }
+
+  footer{
+    margin-top:56px;
+    padding:30px 0 60px;
+    border-top:1px solid var(--rule);
+    color:var(--muted);
+    font-size:14px;
+  }
+  footer p{max-width:68ch;margin:0 0 8px}
+
+  #aviso-copia{position:fixed;left:-9999px}
+
+  /* ---------- Extras de esta guía ---------- */
+  .archivo{background:#1E141B;border:1px solid #4B3742}
+  .archivo pre .ruta{display:block;color:var(--term-dim);user-select:none;margin-bottom:6px}
+  .grupo > .intro-grupo{max-width:68ch;color:var(--muted);font-size:15px;margin:14px 0 0}
+  .detalle a{color:var(--rubine)}
+  .detalle h4{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--teal);margin:18px 0 8px}
+  .detalle p.txt{font-size:15px;max-width:62ch;margin:0 0 12px}
+  .flujo{font-family:var(--mono);font-size:13.5px;background:var(--paper-2);border-radius:4px;padding:10px 12px;margin:0 0 14px;overflow-x:auto;white-space:pre}
+  .opciones dd code.inl{color:var(--ink)}
+
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <p class="prompt"><span class="user">alumno</span>@<span class="path">debian12</span>:~<span class="sig">$</span> apache2ctl -M | grep php<span class="cursor"></span></p>
+    <h1>Apache como servidor de aplicaciones</h1>
+    <p class="sub">Referencia de laboratorio · Administración y Configuración Cliente/Servidor · Del esquema LAMP a Tomcat</p>
+  </div>
+</header>
+
+<section class="intro">
+  <div class="wrap">
+    <p class="lead">Un <strong>servidor web</strong> recibe peticiones HTTP y entrega archivos: una página HTML, una imagen, una hoja de estilos. El archivo sale del disco tal como está. Un <strong>servidor de aplicaciones</strong> va un paso más allá: en lugar de entregar el archivo, <strong>ejecuta el código</strong> de la aplicación, consulta la base de datos, maneja sesiones de usuario y genera la respuesta en ese momento.</p>
+    <p class="lead">Apache nació como servidor web, pero en el esquema <strong>LAMP</strong> (Linux, Apache, MySQL/MariaDB, PHP) cumple también el papel de servidor de aplicaciones. El módulo <code class="inl">libapache2-mod-php</code> integra el intérprete de PHP dentro del propio Apache: cuando llega una petición a un archivo <code class="inl">.php</code>, Apache no lo entrega como texto, sino que lo ejecuta y devuelve el resultado. WordPress, PrestaShop y Moodle son aplicaciones PHP completas que funcionan de esta forma.</p>
+    <p class="lead">En Java la separación es más clara. Las aplicaciones Java no se ejecutan dentro de Apache, sino en un servidor de aplicaciones dedicado como <strong>Tomcat</strong>: un proceso de Java que permanece en memoria, carga la aplicación una vez y atiende las peticiones con servlets y páginas JSP. En producción es común poner Apache al frente como proxy, para que reciba las peticiones y se las pase a Tomcat.</p>
+    <p class="lead">Esta guía trabaja con Apache en su papel de servidor de aplicaciones PHP, instalando tres aplicaciones en el mismo servidor, en el orden del laboratorio: WordPress, PrestaShop y Moodle. Los conceptos que aparecen aquí (dónde se colocan las aplicaciones, qué ruta de URL les corresponde, quién es dueño de los archivos) se repiten después con Tomcat.</p>
+
+    <dl class="opciones" style="margin-top:26px;max-width:68ch">
+      <dt>Lenguaje</dt><dd>Apache (LAMP): PHP · Tomcat: Java (servlets y JSP)</dd>
+      <dt>Cómo ejecuta</dt><dd>Apache: el módulo PHP interpreta cada petición · Tomcat: la aplicación queda cargada en la JVM</dd>
+      <dt>Dónde van las apps</dt><dd>Apache: <code class="inl">/var/www/html</code> · Tomcat: carpeta <code class="inl">webapps</code></dd>
+      <dt>Cómo se instala una app</dt><dd>Apache: copiar la carpeta · Tomcat: desplegar un archivo <code class="inl">.war</code></dd>
+      <dt>Puerto HTTP</dt><dd>Apache: 80 · Tomcat: 8080</dd>
+      <dt>Puerto HTTPS</dt><dd>Apache: 443 · Tomcat: 8443</dd>
+    </dl>
+
+    <div class="nota">
+      <h2>Si una app no abre</h2>
+      <p>Antes de cambiar cualquier cosa, lee la bitácora de errores: <code class="inl">sudo tail -n 30 /var/log/apache2/error.log</code>. Casi siempre dice exactamente qué falta: una extensión de PHP, un permiso o un error de sintaxis.</p>
+    </div>
+  </div>
+</section>
+
+<main class="wrap">
+<section class="grupo">
+<h2>1. Conceptos</h2>
+
+<article class="cmd">
+  <div class="cmd-head">
+    <span class="num">1.1</span>
+    <div>
+      <h3 class="nombre">/var/www vs /var/www/html</h3>
+      <p class="desc">Qué carpeta publica Apache y cuál solo guarda archivos.</p>
+    </div>
+    
+  </div>
+  <div class="detalle">
+<dl class="opciones"><dt>/var/www/html</dt><dd>Es el <strong>DocumentRoot</strong> del sitio por defecto, definido en <code class="inl">/etc/apache2/sites-available/000-default.conf</code>. Todo lo que pongas aquí se publica en la URL automáticamente.</dd><dt>/var/www</dt><dd>Carpeta base. Apache tiene permiso de leerla, pero <strong>no la publica</strong>. Una app aquí solo es accesible si la conectas con un Alias o un VirtualHost.</dd></dl>
+<div class="flujo">/var/www/html/wordpress    →  http://localhost/wordpress
+/var/www/html/prestashop   →  http://localhost/prestashop
+/var/www/moodle/public     →  http://localhost/moodle   (solo con Alias, ver 1.4)</div>
+<p class="txt">Por eso WordPress funcionó con solo copiarlo a <code class="inl">html</code>: la ruta de la carpeta se convierte en la ruta de la URL.</p>
+  </div>
+</article>
+<article class="cmd">
+  <div class="cmd-head">
+    <span class="num">1.2</span>
+    <div>
+      <h3 class="nombre">sites · conf · mods</h3>
+      <p class="desc">Las tres familias de configuración de Apache en Debian.</p>
+    </div>
+    
+  </div>
+  <div class="detalle">
+<dl class="opciones"><dt>sites-available/</dt><dd>Sitios completos (VirtualHost). Aquí vive 000-default.conf. Se activan con a2ensite.</dd><dt>conf-available/</dt><dd>Fragmentos de configuración general que se suman a todos los sitios. Se activan con a2enconf.</dd><dt>mods-available/</dt><dd>Módulos que agregan funciones a Apache (rewrite, php, ssl). Se activan con a2enmod.</dd><dt>*-enabled/</dt><dd>Lo que está activo. Contiene solo enlaces simbólicos hacia *-available. Nunca se edita a mano.</dd></dl>
+<p class="txt">La idea es que <strong>*-available</strong> es el catálogo y <strong>*-enabled</strong> es lo que está encendido. Los comandos a2en* y a2dis* solo crean o borran el enlace; el archivo original no se toca.</p>
+  </div>
+</article>
+<article class="cmd" id="htaccess">
+  <div class="cmd-head">
+    <span class="num">1.3</span>
+    <div>
+      <h3 class="nombre">.htaccess</h3>
+      <p class="desc">Un archivo de configuración de Apache que vive dentro de la carpeta de la aplicación.</p>
+    </div>
+  </div>
+  <div class="detalle">
+<p class="txt">Normalmente la configuración de Apache está en <code class="inl">/etc/apache2</code> y solo la puede cambiar el administrador. El archivo <strong>.htaccess</strong> permite que cada aplicación traiga sus propias reglas dentro de su carpeta, sin tocar la configuración del servidor.</p>
+<dl class="opciones"><dt>Nombre</dt><dd>empieza con punto, así que en Linux es un <strong>archivo oculto</strong>: no aparece con ls, sí con ls -a.</dd><dt>Alcance</dt><dd>sus reglas aplican a la carpeta donde está y a todas sus subcarpetas.</dd><dt>Cuándo se lee</dt><dd>Apache lo lee <strong>en cada petición</strong>. Un cambio en .htaccess aplica al instante, sin reiniciar Apache.</dd><dt>Requisito</dt><dd>solo funciona si la carpeta tiene <code class="inl">AllowOverride All</code> (paso 3.1). Con <code class="inl">None</code>, Apache lo ignora como si no existiera.</dd><dt>Quién lo usa</dt><dd>WordPress y PrestaShop lo crean al instalarse para sus URLs amigables. Moodle 5.1+ no lo usa: todo va en su archivo .conf.</dd></dl>
+<div class="ejemplo"><pre><span class="p">$</span>ls -a /var/www/html/wordpress</pre><button class="copiar" type="button" data-copiar="ls -a /var/www/html/wordpress">Copiar</button></div>
+<p class="pie-ej">El -a muestra los archivos ocultos; ahí aparece .htaccess.</p>
+<div class="ejemplo"><pre><span class="p">$</span>cat /var/www/html/wordpress/.htaccess</pre><button class="copiar" type="button" data-copiar="cat /var/www/html/wordpress/.htaccess">Copiar</button></div>
+<p class="pie-ej">Ver su contenido.</p>
+<h4>Ejemplo: el .htaccess de WordPress</h4>
+<div class="ejemplo archivo"><pre><span class="ruta"># /var/www/html/wordpress/.htaccess</span># BEGIN WordPress
+&lt;IfModule mod_rewrite.c&gt;
+RewriteEngine On
+RewriteBase /wordpress/
+RewriteRule ^index\.php$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /wordpress/index.php [L]
+&lt;/IfModule&gt;
+# END WordPress</pre><button class="copiar" type="button" data-copiar="# BEGIN WordPress
+&lt;IfModule mod_rewrite.c&gt;
+RewriteEngine On
+RewriteBase /wordpress/
+RewriteRule ^index\.php$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /wordpress/index.php [L]
+&lt;/IfModule&gt;
+# END WordPress">Copiar</button></div>
+<p class="pie-ej">WordPress lo genera solo al guardar Ajustes › Enlaces permanentes.</p>
+<dl class="opciones"><dt>IfModule</dt><dd>aplica las reglas solo si mod_rewrite está activo; si no, las salta sin marcar error.</dd><dt>RewriteEngine On</dt><dd>enciende la reescritura de URLs para esta carpeta.</dd><dt>RewriteBase</dt><dd>la ruta de URL de la app: /wordpress/.</dd><dt>RewriteCond !-f · !-d</dt><dd>condiciones: «si lo que piden NO es un archivo real y NO es una carpeta real…»</dd><dt>RewriteRule</dt><dd>«…entonces mándalo a index.php». Así /wordpress/mi-primer-post lo resuelve WordPress, aunque no exista esa carpeta.</dd></dl>
+<p class="txt">Ventaja: cada app se configura sola. Desventaja: Apache tiene que buscar y leer .htaccess en cada carpeta, en cada petición, y eso lo hace un poco más lento. Por eso en servidores grandes las reglas se pasan a los archivos .conf y se deja <code class="inl">AllowOverride None</code>, como hace Moodle.</p>
+  </div>
+</article>
+<article class="cmd" id="alias">
+  <div class="cmd-head">
+    <span class="num">1.4</span>
+    <div>
+      <h3 class="nombre">Alias</h3>
+      <p class="desc">Una directiva de Apache que conecta una ruta de URL con una carpeta del disco.</p>
+    </div>
+  </div>
+  <div class="detalle">
+<p class="txt">Sin Alias, la URL depende de dónde esté la carpeta: solo lo que está dentro del DocumentRoot (/var/www/html) tiene URL. El Alias rompe esa regla: le dice a Apache «cuando pidan esta ruta, busca los archivos en esta otra carpeta», aunque esté fuera de html.</p>
+<div class="ejemplo archivo"><pre><span class="ruta"># Sintaxis</span>Alias /ruta-en-la-url /carpeta/en/el/disco</pre><button class="copiar" type="button" data-copiar="Alias /ruta-en-la-url /carpeta/en/el/disco">Copiar</button></div>
+<div class="flujo">Petición:  http://localhost/moodle/login/index.php
+Alias:     /moodle  →  /var/www/moodle/public
+Archivo:   /var/www/moodle/public/login/index.php</div>
+<dl class="opciones"><dt>Lo que cambia</dt><dd>solo la parte de la URL que coincide con el alias (/moodle) se sustituye por la carpeta. El resto de la ruta se conserva igual.</dd><dt>Va en pareja</dt><dd>el Alias abre el camino, pero la carpeta destino también necesita su bloque &lt;Directory&gt; con <code class="inl">Require all granted</code>. Sin él, Apache responde 403 Prohibido.</dd><dt>Módulo</dt><dd>lo da mod_alias, que Debian trae activado de fábrica.</dd><dt>Uso típico</dt><dd>publicar una app sin moverla a html. Debian mismo lo usa: phpMyAdmin se publica con Alias /phpmyadmin y los iconos de Apache con Alias /icons/.</dd></dl>
+<p class="txt">¿Por qué no copiar la app a html y listo? Porque así solo se publica la carpeta que tú eliges. En Moodle 5.1+ se publica únicamente <strong>public</strong>, y config.php y el resto del código quedan fuera del alcance del navegador (paso 6.3).</p>
+  </div>
+</article>
+</section>
+
+<section class="grupo">
+<h2>2. Preparar el servidor</h2>
+
+<article class="cmd">
+  <div class="cmd-head">
+    <span class="num">2.1</span>
+    <div>
+      <h3 class="nombre">Instalar PHP y extensiones</h3>
+      <p class="desc">Una sola vez, para las tres apps. WordPress pide pocas; PrestaShop y Moodle piden más.</p>
+    </div>
+    <button class="copiar" type="button" data-copiar="sudo apt update
+sudo apt install -y apache2 libapache2-mod-php php-mysql php-intl php-zip php-gd php-curl php-mbstring php-xml php-soap php-bcmath unzip" aria-label="Copiar todos los comandos del paso 2.1">Copiar todo</button>
+  </div>
+  <div class="detalle">
+<div class="ejemplo"><pre><span class="p">$</span>sudo apt update</pre><button class="copiar" type="button" data-copiar="sudo apt update">Copiar</button></div>
+<div class="ejemplo"><pre><span class="p">$</span>sudo apt install -y apache2 libapache2-mod-php php-mysql php-intl php-zip php-gd php-curl php-mbstring php-xml php-soap php-bcmath unzip</pre><button class="copiar" type="button" data-copiar="sudo apt install -y apache2 libapache2-mod-php php-mysql php-intl php-zip php-gd php-curl php-mbstring php-xml php-soap php-bcmath unzip">Copiar</button></div>
+<dl class="opciones"><dt>php-mysql</dt><dd>conexión a MariaDB/MySQL (las tres apps)</dd><dt>php-intl</dt><dd>idiomas, monedas y formatos regionales (PrestaShop y Moodle)</dd><dt>php-zip</dt><dd>instalar módulos, plugins y temas empaquetados</dd><dt>php-gd</dt><dd>procesar imágenes: miniaturas de productos, fotos de perfil</dd><dt>php-curl</dt><dd>conectarse a otros servidores: actualizaciones, pagos</dd><dt>php-mbstring</dt><dd>texto con acentos y ñ sin corromperse</dd><dt>php-xml · soap</dt><dd>importar/exportar datos y servicios web (Moodle)</dd><dt>php-bcmath</dt><dd>cálculos decimales precisos (precios en PrestaShop)</dd></dl>
+  </div>
+</article>
+<article class="cmd">
+  <div class="cmd-head">
+    <span class="num">2.2</span>
+    <div>
+      <h3 class="nombre">Verificar PHP</h3>
+      <p class="desc">Confirmar la versión y que las extensiones cargaron.</p>
+    </div>
+    <button class="copiar" type="button" data-copiar="php -v
+php -m | grep -Ei &#x27;intl|zip|gd|curl|mbstring|xml|soap|bcmath|mysql&#x27;" aria-label="Copiar todos los comandos del paso 2.2">Copiar todo</button>
+  </div>
+  <div class="detalle">
+<div class="ejemplo"><pre><span class="p">$</span>php -v</pre><button class="copiar" type="button" data-copiar="php -v">Copiar</button></div>
+<p class="pie-ej">Debian 12 trae PHP 8.2.</p>
+<div class="ejemplo"><pre><span class="p">$</span>php -m | grep -Ei &#x27;intl|zip|gd|curl|mbstring|xml|soap|bcmath|mysql&#x27;</pre><button class="copiar" type="button" data-copiar="php -m | grep -Ei &#x27;intl|zip|gd|curl|mbstring|xml|soap|bcmath|mysql&#x27;">Copiar</button></div>
+<p class="pie-ej">Debe aparecer cada extensión de la lista anterior.</p>
+  </div>
+</article>
+<article class="cmd">
+  <div class="cmd-head">
+    <span class="num">2.3</span>
+    <div>
+      <h3 class="nombre">Crear una base de datos por app</h3>
+      <p class="desc">Cada app necesita su propia base y su propio usuario. Repite este paso para cada una.</p>
+    </div>
+    
+  </div>
+  <div class="detalle">
+<div class="ejemplo"><pre><span class="p">$</span>sudo mysql -e &quot;CREATE DATABASE nombre_bd CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE USER &#x27;usuario_app&#x27;@&#x27;localhost&#x27; IDENTIFIED BY &#x27;Contraseña_Segura1&#x27;; GRANT ALL PRIVILEGES ON nombre_bd.* TO &#x27;usuario_app&#x27;@&#x27;localhost&#x27;; FLUSH PRIVILEGES;&quot;</pre><button class="copiar" type="button" data-copiar="sudo mysql -e &quot;CREATE DATABASE nombre_bd CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE USER &#x27;usuario_app&#x27;@&#x27;localhost&#x27; IDENTIFIED BY &#x27;Contraseña_Segura1&#x27;; GRANT ALL PRIVILEGES ON nombre_bd.* TO &#x27;usuario_app&#x27;@&#x27;localhost&#x27;; FLUSH PRIVILEGES;&quot;">Copiar</button></div>
+<dl class="opciones"><dt>wordpress</dt><dd>base wordpress · usuario wp_user</dd><dt>prestashop</dt><dd>base prestashop · usuario ps_user</dd><dt>moodle</dt><dd>base moodle · usuario moodle_user</dd></dl>
+<p class="txt">Cambia <code class="inl">nombre_bd</code>, <code class="inl">usuario_app</code> y la contraseña antes de ejecutarlo. Anota los datos: el instalador de cada app te los va a pedir.</p>
+  </div>
+</article>
+</section>
+
+<section class="grupo">
+<h2>3. Configuración general de Apache</h2>
+<p class="intro-grupo">Se hace una sola vez. Después, cualquier app que copies a /var/www/html queda en localhost/&lt;carpeta&gt; sin tocar Apache.</p>
+<article class="cmd">
+  <div class="cmd-head">
+    <span class="num">3.1</span>
+    <div>
+      <h3 class="nombre">Crear webapps.conf</h3>
+      <p class="desc">Un solo bloque que sirve para todas las apps que pongas en /var/www/html.</p>
+    </div>
+    
+  </div>
+  <div class="detalle">
+<div class="ejemplo"><pre><span class="p">$</span>sudo nano /etc/apache2/conf-available/webapps.conf</pre><button class="copiar" type="button" data-copiar="sudo nano /etc/apache2/conf-available/webapps.conf">Copiar</button></div>
+<div class="ejemplo archivo"><pre><span class="ruta"># /etc/apache2/conf-available/webapps.conf</span>&lt;Directory /var/www/html&gt;
+    Options -Indexes +FollowSymLinks
+    AllowOverride All
+    Require all granted
+&lt;/Directory&gt;</pre><button class="copiar" type="button" data-copiar="&lt;Directory /var/www/html&gt;
+    Options -Indexes +FollowSymLinks
+    AllowOverride All
+    Require all granted
+&lt;/Directory&gt;">Copiar</button></div>
+<p class="pie-ej">Contenido del archivo. Guarda con Ctrl+O y sal con Ctrl+X.</p>
+<h4>Qué hace cada línea</h4>
+<dl class="opciones"><dt>&lt;Directory ruta&gt;</dt><dd>Abre un bloque de reglas para esa carpeta. Las reglas <strong>se heredan a todas sus subcarpetas</strong>: por eso un solo bloque para html cubre wordpress, prestashop y cualquier app futura.</dd><dt>Options</dt><dd>Enciende (+) o apaga (−) características de Apache para esa carpeta.</dd><dt>  -Indexes</dt><dd>Si una carpeta no tiene index.php o index.html, Apache <strong>no muestra la lista de archivos</strong>. Evita que alguien vea respaldos, logs o archivos de configuración navegando carpetas.</dd><dt>  +FollowSymLinks</dt><dd>Permite seguir enlaces simbólicos. Además es <strong>requisito de mod_rewrite</strong> para que funcionen las reglas de los .htaccess.</dd><dt>AllowOverride All</dt><dd>Permite que el archivo <strong>.htaccess</strong> de cada app cambie la configuración de su carpeta. Debian trae <code class="inl">None</code>, que hace que Apache <strong>ignore</strong> los .htaccess. WordPress y PrestaShop traen su propio .htaccess con reglas de URLs amigables (qué es un .htaccess: <a href="#htaccess">1.3</a>).</dd><dt>Require all granted</dt><dd>Control de acceso: cualquier cliente puede entrar. Alternativas: <code class="inl">Require all denied</code> bloquea todo; <code class="inl">Require ip 192.168.1.0/24</code> solo deja entrar a esa red.</dd></dl>
+<p class="aviso">⚠ No mezcles opciones con y sin signo en la misma línea (por ejemplo <code class="inl">Options Indexes -FollowSymLinks</code>): Apache 2.4 lo marca como error.</p>
+  </div>
+</article>
+<article class="cmd">
+  <div class="cmd-head">
+    <span class="num">3.2</span>
+    <div>
+      <h3 class="nombre">¿Y el 000-default.conf?</h3>
+      <p class="desc">Por qué no conviene agregar un &lt;Directory&gt; por app dentro del sitio por defecto.</p>
+    </div>
+    
+  </div>
+  <div class="detalle">
+<p class="txt">Agregar un bloque por app en <code class="inl">sites-available/000-default.conf</code> funciona, pero tiene tres problemas:</p>
+<dl class="opciones"><dt>Se repite</dt><dd>cada app nueva obliga a editar el archivo del sitio, aunque las reglas sean las mismas.</dd><dt>Se contradice</dt><dd>un bloque de una subcarpeta gana sobre el de la carpeta padre. Si en uno pusiste AllowOverride None y en otro All, cada app se comporta distinto y es difícil saber por qué.</dd><dt>Se pierde</dt><dd>000-default.conf es la configuración del sitio. Las reglas de carpetas quedan más claras en un archivo aparte que se activa y desactiva con un comando.</dd></dl>
+<p class="txt">Recomendación: <strong>quita los bloques &lt;Directory&gt; por app</strong> que agregaron en 000-default.conf y deja solo webapps.conf. El DocumentRoot de 000-default.conf se queda como está (<code class="inl">/var/www/html</code>).</p>
+<div class="ejemplo"><pre><span class="p">$</span>sudo nano /etc/apache2/sites-available/000-default.conf</pre><button class="copiar" type="button" data-copiar="sudo nano /etc/apache2/sites-available/000-default.conf">Copiar</button></div>
+<p class="pie-ej">Revisar y borrar los bloques por app que se hayan agregado.</p>
+  </div>
+</article>
+<article class="cmd">
+  <div class="cmd-head">
+    <span class="num">3.3</span>
+    <div>
+      <h3 class="nombre">Activar y aplicar</h3>
+      <p class="desc">Cuatro comandos, siempre en este orden.</p>
+    </div>
+    <button class="copiar" type="button" data-copiar="sudo a2enconf webapps
+sudo a2enmod rewrite
+sudo apache2ctl configtest
+sudo systemctl restart apache2" aria-label="Copiar todos los comandos del paso 3.3">Copiar todo</button>
+  </div>
+  <div class="detalle">
+<div class="ejemplo"><pre><span class="p">$</span>sudo a2enconf webapps</pre><button class="copiar" type="button" data-copiar="sudo a2enconf webapps">Copiar</button></div>
+<p class="pie-ej"><strong>a2enconf</strong> = Apache 2 <em>enable conf</em>. Crea el enlace conf-available/webapps.conf → conf-enabled/. Se escribe sin .conf. Para desactivarlo: <code class="inl">sudo a2disconf webapps</code>.</p>
+<div class="ejemplo"><pre><span class="p">$</span>sudo a2enmod rewrite</pre><button class="copiar" type="button" data-copiar="sudo a2enmod rewrite">Copiar</button></div>
+<p class="pie-ej"><strong>a2enmod</strong> = <em>enable module</em>. Activa mod_rewrite, que reescribe URLs: convierte <code class="inl">/producto/camisa</code> en <code class="inl">index.php?id=15</code>. Sin él, las URLs amigables dan error 404. Para ver módulos activos: <code class="inl">apache2ctl -M</code>.</p>
+<div class="ejemplo"><pre><span class="p">$</span>sudo apache2ctl configtest</pre><button class="copiar" type="button" data-copiar="sudo apache2ctl configtest">Copiar</button></div>
+<p class="pie-ej">Revisa la sintaxis de <strong>toda</strong> la configuración sin aplicarla. Debe decir <code class="inl">Syntax OK</code>. Si hay error, indica archivo y número de línea. Córrelo siempre antes de recargar: así un error de dedo no tumba el servidor.</p>
+<div class="ejemplo"><pre><span class="p">$</span>sudo systemctl restart apache2</pre><button class="copiar" type="button" data-copiar="sudo systemctl restart apache2">Copiar</button></div>
+<p class="pie-ej">Aplica los cambios.</p>
+<dl class="opciones"><dt>reload</dt><dd>relee la configuración sin cortar las conexiones activas. Úsalo cuando solo cambiaste archivos .conf.</dd><dt>restart</dt><dd>detiene y vuelve a arrancar Apache. Úsalo cuando activaste un módulo con a2enmod o instalaste extensiones de PHP.</dd></dl>
+  </div>
+</article>
+<article class="cmd" id="https">
+  <div class="cmd-head">
+    <span class="num">3.4</span>
+    <div>
+      <h3 class="nombre">Activar HTTPS</h3>
+      <p class="desc">Cifrar la conexión para todas las apps de una vez. Hazlo antes de instalar las apps.</p>
+    </div>
+    <button class="copiar" type="button" data-copiar="sudo a2enmod ssl
+sudo a2ensite default-ssl
+sudo apache2ctl configtest
+sudo systemctl restart apache2" aria-label="Copiar todos los comandos del paso 3.4">Copiar todo</button>
+  </div>
+  <div class="detalle">
+<p class="txt"><strong>HTTP</strong> usa el puerto 80 y el tráfico viaja en texto plano: cualquiera en la red puede leer usuarios y contraseñas. <strong>HTTPS</strong> usa el puerto 443 y Apache cifra la conexión con un <strong>certificado</strong>: una llave privada que se queda en el servidor y un certificado público que recibe el navegador.</p>
+<div class="ejemplo"><pre><span class="p">$</span>sudo a2enmod ssl</pre><button class="copiar" type="button" data-copiar="sudo a2enmod ssl">Copiar</button></div>
+<p class="pie-ej">Activa mod_ssl, el módulo que le enseña a Apache a cifrar.</p>
+<div class="ejemplo"><pre><span class="p">$</span>sudo a2ensite default-ssl</pre><button class="copiar" type="button" data-copiar="sudo a2ensite default-ssl">Copiar</button></div>
+<p class="pie-ej">Activa el sitio del puerto 443 que Debian ya trae en sites-available. Tiene el mismo DocumentRoot /var/www/html que 000-default.conf y usa un certificado de prueba («snakeoil») que el sistema generó al instalarse.</p>
+<div class="ejemplo"><pre><span class="p">$</span>sudo apache2ctl configtest</pre><button class="copiar" type="button" data-copiar="sudo apache2ctl configtest">Copiar</button></div>
+<p class="pie-ej">Debe decir Syntax OK.</p>
+<div class="ejemplo"><pre><span class="p">$</span>sudo systemctl restart apache2</pre><button class="copiar" type="button" data-copiar="sudo systemctl restart apache2">Copiar</button></div>
+<p class="pie-ej">Se activó un módulo: va restart.</p>
+<h4>Por qué aplica a todas las apps</h4>
+<p class="txt">webapps.conf y moodle.conf están en <strong>conf-enabled</strong>: esa configuración se suma a todos los sitios, al del puerto 80 y al del 443. Cada app queda disponible por las dos vías sin tocar nada más.</p>
+<div class="flujo">https://localhost/wordpress/index.php
+  → puerto 443  →  sites-enabled/default-ssl.conf
+  → DocumentRoot /var/www/html
+  → archivo /var/www/html/wordpress/index.php</div>
+<h4>Verificar</h4>
+<div class="ejemplo"><pre><span class="p">$</span>sudo ss -tlnp | grep 443</pre><button class="copiar" type="button" data-copiar="sudo ss -tlnp | grep 443">Copiar</button></div>
+<p class="pie-ej">Apache debe aparecer escuchando en el puerto 443.</p>
+<div class="ejemplo"><pre><span class="p">$</span>curl -kI https://localhost/</pre><button class="copiar" type="button" data-copiar="curl -kI https://localhost/">Copiar</button></div>
+<p class="pie-ej">El -k acepta el certificado de prueba. Debe responder HTTP/1.1 200 OK (la página de bienvenida de Apache), no un error de conexión.</p>
+<div class="ejemplo"><pre><span class="p">$</span>sudo ufw allow 443/tcp</pre><button class="copiar" type="button" data-copiar="sudo ufw allow 443/tcp">Copiar</button></div>
+<p class="pie-ej">Solo si tienen ufw activo.</p>
+<dl class="opciones"><dt>Aviso del navegador</dt><dd>saldrá «La conexión no es privada». Es normal: el certificado snakeoil está <strong>autofirmado</strong>. La conexión sí va cifrada, pero ninguna autoridad reconocida avala la identidad del servidor. Se acepta el aviso (Configuración avanzada › Continuar).</dd><dt>En producción</dt><dd>un servidor con dominio público usa un certificado de <strong>Let's Encrypt</strong> (gratis, con certbot). No funciona con localhost ni con una IP privada de VM.</dd></dl>
+<div class="nota" style="margin-top:14px"><h2>Instala las apps con https</h2><p>Cada app guarda su dirección al instalarse. Si abres el instalador con <code class="inl">https://localhost/...</code>, la app queda configurada con HTTPS desde el principio. Si ya las instalaste con http, la sección 7 explica cómo cambiarlas.</p></div>
+  </div>
+</article>
+</section>
+
+<section class="grupo">
+<h2>4. WordPress</h2>
+
+<article class="cmd">
+  <div class="cmd-head">
+    <span class="num">4.1</span>
+    <div>
+      <h3 class="nombre">Descargar y colocar</h3>
+      <p class="desc">La app de referencia: se copia a html y funciona.</p>
+    </div>
+    <button class="copiar" type="button" data-copiar="cd /tmp
+wget https://wordpress.org/latest.zip
+unzip -q latest.zip
+sudo mv wordpress /var/www/html/
+sudo chown -R www-data:www-data /var/www/html/wordpress" aria-label="Copiar todos los comandos del paso 4.1">Copiar todo</button>
+  </div>
+  <div class="detalle">
+<div class="ejemplo"><pre><span class="p">$</span>cd /tmp</pre><button class="copiar" type="button" data-copiar="cd /tmp">Copiar</button></div>
+<div class="ejemplo"><pre><span class="p">$</span>wget https://wordpress.org/latest.zip</pre><button class="copiar" type="button" data-copiar="wget https://wordpress.org/latest.zip">Copiar</button></div>
+<div class="ejemplo"><pre><span class="p">$</span>unzip -q latest.zip</pre><button class="copiar" type="button" data-copiar="unzip -q latest.zip">Copiar</button></div>
+<div class="ejemplo"><pre><span class="p">$</span>sudo mv wordpress /var/www/html/</pre><button class="copiar" type="button" data-copiar="sudo mv wordpress /var/www/html/">Copiar</button></div>
+<div class="ejemplo"><pre><span class="p">$</span>sudo chown -R www-data:www-data /var/www/html/wordpress</pre><button class="copiar" type="button" data-copiar="sudo chown -R www-data:www-data /var/www/html/wordpress">Copiar</button></div>
+<p class="pie-ej">www-data es el usuario con el que corre Apache: necesita ser dueño para instalar plugins y subir imágenes.</p>
+  </div>
+</article>
+<article class="cmd">
+  <div class="cmd-head">
+    <span class="num">4.2</span>
+    <div>
+      <h3 class="nombre">Instalar desde el navegador</h3>
+      <p class="desc">Abrir https://localhost/wordpress y capturar los datos de la base del paso 2.3.</p>
+    </div>
+    
+  </div>
+  <div class="detalle">
+<dl class="opciones"><dt>Servidor de BD</dt><dd>localhost</dd><dt>Prefijo</dt><dd>wp_ (el predeterminado)</dd></dl>
+  </div>
+</article>
+</section>
+
+<section class="grupo">
+<h2>5. PrestaShop</h2>
+
+<article class="cmd">
+  <div class="cmd-head">
+    <span class="num">5.1</span>
+    <div>
+      <h3 class="nombre">Usar PrestaShop 9</h3>
+      <p class="desc">PrestaShop 8 no es compatible con PHP 8.2 de Debian 12.</p>
+    </div>
+    <button class="copiar" type="button" data-copiar="cd /tmp
+sudo mkdir /var/www/html/prestashop
+sudo unzip -q prestashop_9*.zip -d /var/www/html/prestashop
+sudo chown -R www-data:www-data /var/www/html/prestashop" aria-label="Copiar todos los comandos del paso 5.1">Copiar todo</button>
+  </div>
+  <div class="detalle">
+<p class="txt">Descarga la versión 9 desde prestashop.com o desde la sección Releases del repositorio de PrestaShop en GitHub y guárdala en /tmp.</p>
+<div class="ejemplo"><pre><span class="p">$</span>cd /tmp</pre><button class="copiar" type="button" data-copiar="cd /tmp">Copiar</button></div>
+<div class="ejemplo"><pre><span class="p">$</span>sudo mkdir /var/www/html/prestashop</pre><button class="copiar" type="button" data-copiar="sudo mkdir /var/www/html/prestashop">Copiar</button></div>
+<div class="ejemplo"><pre><span class="p">$</span>sudo unzip -q prestashop_9*.zip -d /var/www/html/prestashop</pre><button class="copiar" type="button" data-copiar="sudo unzip -q prestashop_9*.zip -d /var/www/html/prestashop">Copiar</button></div>
+<p class="pie-ej">El zip trae adentro otro zip y un index.php: el instalador los descomprime solo al abrirlo en el navegador.</p>
+<div class="ejemplo"><pre><span class="p">$</span>sudo chown -R www-data:www-data /var/www/html/prestashop</pre><button class="copiar" type="button" data-copiar="sudo chown -R www-data:www-data /var/www/html/prestashop">Copiar</button></div>
+  </div>
+</article>
+<article class="cmd">
+  <div class="cmd-head">
+    <span class="num">5.2</span>
+    <div>
+      <h3 class="nombre">Instalar desde el navegador</h3>
+      <p class="desc">Abrir https://localhost/prestashop y seguir el asistente.</p>
+    </div>
+    <button class="copiar" type="button" data-copiar="sudo rm -rf /var/www/html/prestashop/install
+ls -d /var/www/html/prestashop/admin*" aria-label="Copiar todos los comandos del paso 5.2">Copiar todo</button>
+  </div>
+  <div class="detalle">
+<p class="aviso">⚠ Abre el instalador con la <strong>misma dirección</strong> que vas a usar siempre, con https (https://localhost o https://IP-de-la-VM). PrestaShop guarda ese dominio y después redirige todo hacia él.</p>
+<p class="txt">Al terminar hay dos pasos obligatorios:</p>
+<div class="ejemplo"><pre><span class="p">$</span>sudo rm -rf /var/www/html/prestashop/install</pre><button class="copiar" type="button" data-copiar="sudo rm -rf /var/www/html/prestashop/install">Copiar</button></div>
+<p class="pie-ej">Mientras exista la carpeta install, el back office no abre.</p>
+<div class="ejemplo"><pre><span class="p">$</span>ls -d /var/www/html/prestashop/admin*</pre><button class="copiar" type="button" data-copiar="ls -d /var/www/html/prestashop/admin*">Copiar</button></div>
+<p class="pie-ej">El instalador renombra la carpeta admin con letras al azar (por ejemplo admin482xkq). Esa es la URL del back office: https://localhost/prestashop/admin482xkq</p>
+  </div>
+</article>
+<article class="cmd">
+  <div class="cmd-head">
+    <span class="num">5.3</span>
+    <div>
+      <h3 class="nombre">Solo abre el back office</h3>
+      <p class="desc">La tienda (front) da 404 o página en blanco, pero el panel admin sí entra.</p>
+    </div>
+    
+  </div>
+  <div class="detalle">
+<p class="txt">Causa: la tienda usa <strong>URLs amigables</strong> desde la instalación, y dependen del .htaccess. Si Apache tenía <code class="inl">AllowOverride None</code> o mod_rewrite apagado, el front falla.</p>
+<dl class="opciones"><dt>1.</dt><dd>Aplica toda la sección 3 (webapps.conf, rewrite y HTTPS).</dd><dt>2.</dt><dd>En el back office: <strong>Parámetros de la tienda › Tráfico y SEO</strong> › Guardar. Esto regenera el .htaccess.</dd></dl>
+<div class="ejemplo"><pre><span class="p">$</span>sudo rm -rf /var/www/html/prestashop/var/cache/*</pre><button class="copiar" type="button" data-copiar="sudo rm -rf /var/www/html/prestashop/var/cache/*">Copiar</button></div>
+<p class="pie-ej">Limpiar la caché si sigue igual.</p>
+  </div>
+</article>
+<article class="cmd">
+  <div class="cmd-head">
+    <span class="num">5.4</span>
+    <div>
+      <h3 class="nombre">Solo abre el front</h3>
+      <p class="desc">La tienda carga, pero el back office no abre o redirige a otra dirección.</p>
+    </div>
+    
+  </div>
+  <div class="detalle">
+<dl class="opciones"><dt>URL equivocada</dt><dd>se está entrando a /prestashop/admin, pero la carpeta se renombró. Revisa el nombre real con el comando de 5.2.</dd><dt>Carpeta install</dt><dd>si todavía existe, bórrala (paso 5.2).</dd><dt>Dominio distinto</dt><dd>se instaló con localhost y se abre con la IP, o al revés. PrestaShop redirige al dominio guardado.</dd></dl>
+<p class="txt">Para cambiar el dominio guardado sin entrar al back office (cambia la IP y el nombre de la base si son otros):</p>
+<div class="ejemplo"><pre><span class="p">$</span>sudo mysql prestashop -e &quot;UPDATE ps_shop_url SET domain=&#x27;192.168.1.50&#x27;, domain_ssl=&#x27;192.168.1.50&#x27;; UPDATE ps_configuration SET value=&#x27;192.168.1.50&#x27; WHERE name IN (&#x27;PS_SHOP_DOMAIN&#x27;,&#x27;PS_SHOP_DOMAIN_SSL&#x27;);&quot;</pre><button class="copiar" type="button" data-copiar="sudo mysql prestashop -e &quot;UPDATE ps_shop_url SET domain=&#x27;192.168.1.50&#x27;, domain_ssl=&#x27;192.168.1.50&#x27;; UPDATE ps_configuration SET value=&#x27;192.168.1.50&#x27; WHERE name IN (&#x27;PS_SHOP_DOMAIN&#x27;,&#x27;PS_SHOP_DOMAIN_SSL&#x27;);&quot;">Copiar</button></div>
+<div class="ejemplo"><pre><span class="p">$</span>sudo rm -rf /var/www/html/prestashop/var/cache/*</pre><button class="copiar" type="button" data-copiar="sudo rm -rf /var/www/html/prestashop/var/cache/*">Copiar</button></div>
+<p class="pie-ej">Limpiar la caché para que tome el cambio.</p>
+  </div>
+</article>
+</section>
+
+<section class="grupo">
+<h2>6. Moodle</h2>
+
+<article class="cmd">
+  <div class="cmd-head">
+    <span class="num">6.1</span>
+    <div>
+      <h3 class="nombre">¿Qué versión descargaste?</h3>
+      <p class="desc">Desde Moodle 5.1 cambió la estructura de carpetas.</p>
+    </div>
+    
+  </div>
+  <div class="detalle">
+<div class="ejemplo"><pre><span class="p">$</span>ls /tmp/moodle</pre><button class="copiar" type="button" data-copiar="ls /tmp/moodle">Copiar</button></div>
+<p class="pie-ej">Si ves una carpeta <strong>public</strong>, es Moodle 5.1 o posterior: sigue los pasos 6.2 y 6.3. Si no, cópialo a /var/www/html como WordPress y salta a 6.4.</p>
+<p class="txt">En Moodle 5.1+, solo la carpeta <strong>public</strong> debe ser accesible por web. El resto (config.php con la contraseña de la base, librerías, scripts de administración) queda <strong>fuera</strong> del alcance del navegador. Si lo copias completo a html, esos archivos quedan expuestos y el sitio no carga bien.</p>
+  </div>
+</article>
+<article class="cmd">
+  <div class="cmd-head">
+    <span class="num">6.2</span>
+    <div>
+      <h3 class="nombre">Colocar fuera de html</h3>
+      <p class="desc">Moodle va en /var/www, no en /var/www/html.</p>
+    </div>
+    <button class="copiar" type="button" data-copiar="sudo mv /tmp/moodle /var/www/moodle
+sudo chown -R www-data:www-data /var/www/moodle" aria-label="Copiar todos los comandos del paso 6.2">Copiar todo</button>
+  </div>
+  <div class="detalle">
+<div class="ejemplo"><pre><span class="p">$</span>sudo mv /tmp/moodle /var/www/moodle</pre><button class="copiar" type="button" data-copiar="sudo mv /tmp/moodle /var/www/moodle">Copiar</button></div>
+<div class="ejemplo"><pre><span class="p">$</span>sudo chown -R www-data:www-data /var/www/moodle</pre><button class="copiar" type="button" data-copiar="sudo chown -R www-data:www-data /var/www/moodle">Copiar</button></div>
+  </div>
+</article>
+<article class="cmd">
+  <div class="cmd-head">
+    <span class="num">6.3</span>
+    <div>
+      <h3 class="nombre">Publicar con un Alias</h3>
+      <p class="desc">Conectar la URL /moodle con la carpeta public.</p>
+    </div>
+    <button class="copiar" type="button" data-copiar="sudo a2enconf moodle
+sudo apache2ctl configtest
+sudo systemctl reload apache2" aria-label="Copiar todos los comandos del paso 6.3">Copiar todo</button>
+  </div>
+  <div class="detalle">
+<div class="ejemplo"><pre><span class="p">$</span>sudo nano /etc/apache2/conf-available/moodle.conf</pre><button class="copiar" type="button" data-copiar="sudo nano /etc/apache2/conf-available/moodle.conf">Copiar</button></div>
+<div class="ejemplo archivo"><pre><span class="ruta"># /etc/apache2/conf-available/moodle.conf</span>Alias /moodle /var/www/moodle/public
+&lt;Directory /var/www/moodle/public&gt;
+    Options -Indexes +FollowSymLinks
+    AllowOverride None
+    Require all granted
+    DirectoryIndex index.php
+    FallbackResource /moodle/r.php
+&lt;/Directory&gt;</pre><button class="copiar" type="button" data-copiar="Alias /moodle /var/www/moodle/public
+&lt;Directory /var/www/moodle/public&gt;
+    Options -Indexes +FollowSymLinks
+    AllowOverride None
+    Require all granted
+    DirectoryIndex index.php
+    FallbackResource /moodle/r.php
+&lt;/Directory&gt;">Copiar</button></div>
+<p class="pie-ej">Contenido del archivo.</p>
+<h4>Líneas nuevas respecto a webapps.conf</h4>
+<dl class="opciones"><dt>Alias /moodle ruta</dt><dd>Cuando alguien pida localhost/moodle, Apache entrega archivos de /var/www/moodle/public aunque esté fuera de html. Es un «atajo» de URL a carpeta (explicado en <a href="#alias">1.4</a>).</dd><dt>AllowOverride None</dt><dd>Moodle no usa .htaccess; toda su configuración de Apache va en este archivo.</dd><dt>DirectoryIndex index.php</dt><dd>Si la URL apunta a una carpeta, abre su index.php.</dd><dt>FallbackResource</dt><dd>Si la URL no corresponde a ningún archivo real (por ejemplo /moodle/course/42/manage), la manda a r.php, el «router» de Moodle, en lugar de dar 404. La ruta es de URL, no de disco: por eso lleva /moodle/ al inicio.</dd></dl>
+<div class="ejemplo"><pre><span class="p">$</span>sudo a2enconf moodle</pre><button class="copiar" type="button" data-copiar="sudo a2enconf moodle">Copiar</button></div>
+<div class="ejemplo"><pre><span class="p">$</span>sudo apache2ctl configtest</pre><button class="copiar" type="button" data-copiar="sudo apache2ctl configtest">Copiar</button></div>
+<div class="ejemplo"><pre><span class="p">$</span>sudo systemctl reload apache2</pre><button class="copiar" type="button" data-copiar="sudo systemctl reload apache2">Copiar</button></div>
+<p class="pie-ej">Solo cambiaron archivos .conf: basta con reload.</p>
+  </div>
+</article>
+<article class="cmd">
+  <div class="cmd-head">
+    <span class="num">6.4</span>
+    <div>
+      <h3 class="nombre">Carpeta de datos y ajuste de PHP</h3>
+      <p class="desc">Requisitos que el instalador de Moodle revisa antes de continuar.</p>
+    </div>
+    <button class="copiar" type="button" data-copiar="sudo mkdir /var/moodledata
+sudo chown -R www-data:www-data /var/moodledata
+sudo sed -i &#x27;s/^;\?\s*max_input_vars.*/max_input_vars = 5000/&#x27; /etc/php/8.2/apache2/php.ini
+sudo systemctl restart apache2" aria-label="Copiar todos los comandos del paso 6.4">Copiar todo</button>
+  </div>
+  <div class="detalle">
+<div class="ejemplo"><pre><span class="p">$</span>sudo mkdir /var/moodledata</pre><button class="copiar" type="button" data-copiar="sudo mkdir /var/moodledata">Copiar</button></div>
+<div class="ejemplo"><pre><span class="p">$</span>sudo chown -R www-data:www-data /var/moodledata</pre><button class="copiar" type="button" data-copiar="sudo chown -R www-data:www-data /var/moodledata">Copiar</button></div>
+<p class="pie-ej">Aquí Moodle guarda archivos subidos, caché y sesiones. Va fuera de /var/www para que nunca se pueda descargar por URL.</p>
+<div class="ejemplo"><pre><span class="p">$</span>sudo sed -i &#x27;s/^;\?\s*max_input_vars.*/max_input_vars = 5000/&#x27; /etc/php/8.2/apache2/php.ini</pre><button class="copiar" type="button" data-copiar="sudo sed -i &#x27;s/^;\?\s*max_input_vars.*/max_input_vars = 5000/&#x27; /etc/php/8.2/apache2/php.ini">Copiar</button></div>
+<p class="pie-ej">Sube el límite de campos por formulario de 1000 a 5000. Moodle lo exige porque sus formularios de configuración son muy grandes.</p>
+<div class="ejemplo"><pre><span class="p">$</span>sudo systemctl restart apache2</pre><button class="copiar" type="button" data-copiar="sudo systemctl restart apache2">Copiar</button></div>
+<p class="pie-ej">Se cambió PHP: aquí sí va restart.</p>
+  </div>
+</article>
+<article class="cmd">
+  <div class="cmd-head">
+    <span class="num">6.5</span>
+    <div>
+      <h3 class="nombre">Instalar desde el navegador</h3>
+      <p class="desc">Abrir https://localhost/moodle.</p>
+    </div>
+    
+  </div>
+  <div class="detalle">
+<dl class="opciones"><dt>Dirección web</dt><dd>https://localhost/moodle (o la IP que vayas a usar siempre)</dd><dt>Directorio de datos</dt><dd>/var/moodledata</dd><dt>Base de datos</dt><dd>MariaDB (native/mariadb) o MySQL (native/mysqli), según el servidor que tengas · localhost · datos del paso 2.3</dd></dl>
+<p class="txt">Si en la revisión de requisitos aparece un aviso del <strong>router</strong>, revisa la línea FallbackResource del paso 6.3.</p>
+  </div>
+</article>
+</section>
+
+<section class="grupo" id="https-apps">
+<h2>7. HTTPS en cada app</h2>
+<p class="intro-grupo">Apache ya sirve todo por https (paso 3.4), pero cada app guardó su dirección al instalarse. Si la instalaste con http, la app te regresa a http o carga la página sin estilos. Si la instalaste con https, solo revisa que esté así.</p>
+<article class="cmd" id="https-wordpress">
+  <div class="cmd-head">
+    <span class="num">7.1</span>
+    <div>
+      <h3 class="nombre">WordPress</h3>
+      <p class="desc">Cambiar la dirección guardada a https.</p>
+    </div>
+    
+  </div>
+  <div class="detalle">
+<dl class="opciones"><dt>Panel</dt><dd><strong>Ajustes › Generales</strong>: cambiar <em>Dirección de WordPress (URL)</em> y <em>Dirección del sitio (URL)</em> a https://localhost/wordpress y guardar. WordPress cierra la sesión: vuelve a entrar ya con https.</dd></dl>
+<p class="txt">Si después de guardar ya no puedes entrar al panel, corrige desde la terminal (base wordpress, prefijo wp_):</p>
+<div class="ejemplo"><pre><span class="p">$</span>sudo mysql wordpress -e &quot;UPDATE wp_options SET option_value=&#x27;https://localhost/wordpress&#x27; WHERE option_name IN (&#x27;siteurl&#x27;,&#x27;home&#x27;);&quot;</pre><button class="copiar" type="button" data-copiar="sudo mysql wordpress -e &quot;UPDATE wp_options SET option_value=&#x27;https://localhost/wordpress&#x27; WHERE option_name IN (&#x27;siteurl&#x27;,&#x27;home&#x27;);&quot;">Copiar</button></div>
+  </div>
+</article>
+<article class="cmd" id="https-prestashop">
+  <div class="cmd-head">
+    <span class="num">7.2</span>
+    <div>
+      <h3 class="nombre">PrestaShop</h3>
+      <p class="desc">Activar SSL desde el back office, en este orden.</p>
+    </div>
+    <button class="copiar" type="button" data-copiar="sudo mysql prestashop -e &quot;UPDATE ps_configuration SET value=&#x27;0&#x27; WHERE name IN (&#x27;PS_SSL_ENABLED&#x27;,&#x27;PS_SSL_ENABLED_EVERYWHERE&#x27;);&quot;
+sudo rm -rf /var/www/html/prestashop/var/cache/*" aria-label="Copiar todos los comandos del paso 7.2">Copiar todo</button>
+  </div>
+  <div class="detalle">
+<dl class="opciones"><dt>1.</dt><dd><strong>Parámetros de la tienda › Configuración › General</strong>.</dd><dt>2.</dt><dd>Da clic en el enlace de esa página para comprobar que la tienda abre por HTTPS. Debe cargar sin errores (aparte del aviso del certificado).</dd><dt>3.</dt><dd>Activa <strong>Activar SSL</strong> = Sí y guarda.</dd><dt>4.</dt><dd>Activa <strong>Activar SSL en todas las páginas</strong> = Sí y guarda.</dd></dl>
+<p class="aviso">⚠ Si activas SSL antes de que funcione el paso 3.4, el back office queda inaccesible. Para regresarlo a http:</p>
+<div class="ejemplo"><pre><span class="p">$</span>sudo mysql prestashop -e &quot;UPDATE ps_configuration SET value=&#x27;0&#x27; WHERE name IN (&#x27;PS_SSL_ENABLED&#x27;,&#x27;PS_SSL_ENABLED_EVERYWHERE&#x27;);&quot;</pre><button class="copiar" type="button" data-copiar="sudo mysql prestashop -e &quot;UPDATE ps_configuration SET value=&#x27;0&#x27; WHERE name IN (&#x27;PS_SSL_ENABLED&#x27;,&#x27;PS_SSL_ENABLED_EVERYWHERE&#x27;);&quot;">Copiar</button></div>
+<div class="ejemplo"><pre><span class="p">$</span>sudo rm -rf /var/www/html/prestashop/var/cache/*</pre><button class="copiar" type="button" data-copiar="sudo rm -rf /var/www/html/prestashop/var/cache/*">Copiar</button></div>
+<p class="pie-ej">Limpiar la caché para que tome el cambio.</p>
+  </div>
+</article>
+<article class="cmd" id="https-moodle">
+  <div class="cmd-head">
+    <span class="num">7.3</span>
+    <div>
+      <h3 class="nombre">Moodle</h3>
+      <p class="desc">Moodle guarda su dirección en config.php, no en el panel.</p>
+    </div>
+    
+  </div>
+  <div class="detalle">
+<div class="ejemplo"><pre><span class="p">$</span>sudo nano /var/www/moodle/config.php</pre><button class="copiar" type="button" data-copiar="sudo nano /var/www/moodle/config.php">Copiar</button></div>
+<div class="ejemplo archivo"><pre><span class="ruta"># /var/www/moodle/config.php (línea wwwroot)</span>$CFG-&gt;wwwroot   = &#x27;https://localhost/moodle&#x27;;</pre><button class="copiar" type="button" data-copiar="$CFG-&gt;wwwroot   = &#x27;https://localhost/moodle&#x27;;">Copiar</button></div>
+<p class="pie-ej">Solo cambia http por https en esa línea.</p>
+<p class="txt">Moodle acepta <strong>una sola</strong> dirección. Si alguien entra con otra (http, o la IP en lugar de localhost), Moodle lo redirige a la que diga wwwroot. No hace falta reiniciar Apache: config.php se lee en cada petición.</p>
+  </div>
+</article>
+<article class="cmd" id="https-forzar">
+  <div class="cmd-head">
+    <span class="num">7.4</span>
+    <div>
+      <h3 class="nombre">Forzar HTTPS siempre</h3>
+      <p class="desc">Opcional y al final: mandar todo lo que llegue por http al puerto 443.</p>
+    </div>
+    <button class="copiar" type="button" data-copiar="sudo apache2ctl configtest
+sudo systemctl reload apache2" aria-label="Copiar todos los comandos del paso 7.4">Copiar todo</button>
+  </div>
+  <div class="detalle">
+<p class="aviso">⚠ Hazlo solo cuando las tres apps ya funcionen por https. Si no, se forman ciclos de redirección (http → https → http…).</p>
+<div class="ejemplo"><pre><span class="p">$</span>sudo nano /etc/apache2/sites-available/000-default.conf</pre><button class="copiar" type="button" data-copiar="sudo nano /etc/apache2/sites-available/000-default.conf">Copiar</button></div>
+<div class="ejemplo archivo"><pre><span class="ruta"># dentro de &lt;VirtualHost *:80&gt;, antes de &lt;/VirtualHost&gt;</span>RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]</pre><button class="copiar" type="button" data-copiar="RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]">Copiar</button></div>
+<dl class="opciones"><dt>RewriteCond %{HTTPS} off</dt><dd>«si la petición NO llegó cifrada…»</dd><dt>RewriteRule ^ https://…</dt><dd>«…mándala a la misma dirección, pero con https». %{HTTP_HOST} conserva lo que escribió el usuario (localhost o la IP) y %{REQUEST_URI} conserva la ruta (/wordpress/index.php).</dd><dt>[R=301,L]</dt><dd>301 = redirección permanente; L = no evaluar más reglas.</dd></dl>
+<div class="ejemplo"><pre><span class="p">$</span>sudo apache2ctl configtest</pre><button class="copiar" type="button" data-copiar="sudo apache2ctl configtest">Copiar</button></div>
+<div class="ejemplo"><pre><span class="p">$</span>sudo systemctl reload apache2</pre><button class="copiar" type="button" data-copiar="sudo systemctl reload apache2">Copiar</button></div>
+<p class="pie-ej">Solo cambió un .conf: basta con reload.</p>
+<div class="ejemplo"><pre><span class="p">$</span>curl -I http://localhost/wordpress/</pre><button class="copiar" type="button" data-copiar="curl -I http://localhost/wordpress/">Copiar</button></div>
+<p class="pie-ej">Debe responder 301 con Location: https://localhost/wordpress/</p>
+  </div>
+</article>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Diagnóstico rápido: <code class="inl">apache2ctl -S</code> muestra los sitios activos, <code class="inl">apache2ctl -M | grep rewrite</code> confirma mod_rewrite y <code class="inl">ls /etc/apache2/conf-enabled</code> lista las configuraciones encendidas.</p>
+    <p>Escuela Politécnica «Ing. Jorge Matute Remus» · Academia de Redes de Cómputo</p>
+  </div>
+</footer>
+
+<div id="aviso-copia" role="status" aria-live="polite"></div>
+
+<script>
+async function copiar(texto){
+  try{
+    await navigator.clipboard.writeText(texto);
+    return true;
+  }catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = texto;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try{ ok = document.execCommand('copy'); }catch(_){ ok = false; }
+    document.body.removeChild(ta);
+    return ok;
+  }
+}
+
+document.addEventListener('click', async ev => {
+  const btn = ev.target.closest('.copiar');
+  if(!btn) return;
+  const original = btn.textContent;
+  const texto = btn.dataset.copiar;
+  const ok = await copiar(texto);
+  btn.textContent = ok ? 'Copiado' : 'Selecciona y copia';
+  btn.classList.toggle('ok', ok);
+  document.getElementById('aviso-copia').textContent = ok ? 'Copiado: ' + texto : 'No se pudo copiar';
+  setTimeout(() => { btn.textContent = original; btn.classList.remove('ok'); }, 1600);
+});
+</script>
+</body>
+</html>

@@ -1,277 +1,459 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-MX">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Limpieza total de MariaDB/MySQL e instalación limpia de MySQL en Debian</title>
-  <style>
-    :root{
-      --bg:#0f172a;
-      --panel:#111827;
-      --panel2:#1f2937;
-      --text:#e5e7eb;
-      --muted:#9ca3af;
-      --accent:#22c55e;
-      --accent2:#16a34a;
-      --border:#374151;
-      --code:#0b1220;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:Arial, Helvetica, sans-serif;
-      background:#0b1020;
-      color:var(--text);
-      line-height:1.55;
-    }
-    .container{
-      max-width:980px;
-      margin:32px auto;
-      padding:0 18px 48px;
-    }
-    h1,h2,h3{
-      line-height:1.25;
-    }
-    h1{
-      font-size:2rem;
-      margin-bottom:8px;
-    }
-    .intro, .card{
-      background:rgba(17,24,39,.92);
-      border:1px solid var(--border);
-      border-radius:14px;
-      padding:22px;
-      margin:18px 0;
-      box-shadow:0 8px 24px rgba(0,0,0,.25);
-    }
-    .muted{color:var(--muted)}
-    ul{
-      margin-top:8px;
-    }
-    li{margin:6px 0}
-    .step-title{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      margin-top:0;
-    }
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-width:38px;
-      height:38px;
-      padding:0 10px;
-      border-radius:999px;
-      background:var(--accent2);
-      color:white;
-      font-weight:bold;
-    }
-    .code-wrap{
-      margin-top:14px;
-      border:1px solid var(--border);
-      border-radius:12px;
-      overflow:hidden;
-      background:var(--code);
-    }
-    .code-head{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      padding:10px 12px;
-      background:#111827;
-      border-bottom:1px solid var(--border);
-      flex-wrap:wrap;
-    }
-    .code-head span{
-      color:var(--muted);
-      font-size:.95rem;
-    }
-    pre{
-      margin:0;
-      padding:16px;
-      overflow:auto;
-      white-space:pre-wrap;
-      word-break:break-word;
-      font-family:Consolas, Monaco, 'Courier New', monospace;
-      font-size:.95rem;
-      color:#d1fae5;
-    }
-    button.copy-btn{
-      border:none;
-      border-radius:10px;
-      padding:10px 14px;
-      cursor:pointer;
-      background:var(--accent);
-      color:#052e16;
-      font-weight:bold;
-      transition:.18s ease;
-    }
-    button.copy-btn:hover{
-      filter:brightness(1.05);
-    }
-    .note{
-      background:#1e293b;
-      border-left:4px solid #f59e0b;
-      padding:12px 14px;
-      border-radius:8px;
-      margin-top:12px;
-    }
-    code.inline{
-      background:#111827;
-      border:1px solid var(--border);
-      border-radius:6px;
-      padding:2px 6px;
-      color:#d1fae5;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Limpieza de MariaDB/MySQL e instalación limpia de MySQL · Referencia de laboratorio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EFEDF0;
+    --paper-2:#E5E2E8;
+    --ink:#2A1B25;
+    --muted:#6E5C68;
+    --rubine:#D70A53;
+    --teal:#0F6E78;
+    --term-bg:#2A1B25;
+    --term-fg:#F3E9EE;
+    --term-dim:#A78E9C;
+    --rule:#CFC9D3;
+    --sans:'Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,'DejaVu Sans Mono',Consolas,monospace;
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:940px;margin:0 auto;padding:0 20px}
+
+  /* ---------- Encabezado ---------- */
+  header.top{
+    background:var(--term-bg);
+    color:var(--term-fg);
+    padding:56px 0 44px;
+  }
+  .prompt{
+    font-family:var(--mono);
+    font-size:clamp(14px,3.2vw,19px);
+    color:var(--term-dim);
+    margin-bottom:18px;
+  }
+  .prompt .user{color:#8FD3C9}
+  .prompt .path{color:#9BB8E8}
+  .prompt .sig{color:var(--rubine);font-weight:600}
+  .cursor{
+    display:inline-block;
+    width:.62em;height:1.05em;
+    background:var(--rubine);
+    vertical-align:-.18em;
+    margin-left:.15em;
+    animation:blink 1.05s steps(1) infinite;
+  }
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+
+  header.top h1{
+    font-size:clamp(30px,6vw,52px);
+    line-height:1.06;
+    font-weight:700;
+    letter-spacing:-.02em;
+    margin:0 0 10px;
+    max-width:18ch;
+  }
+  .sub{
+    font-family:var(--mono);
+    font-size:13px;
+    color:var(--term-dim);
+    margin:0;
+  }
+
+  /* ---------- Introducción ---------- */
+  .intro{padding:44px 0 30px;border-bottom:1px solid var(--rule)}
+  .intro p{max-width:68ch;margin:0 0 16px;font-size:17px}
+  .intro .lead{font-size:19px;line-height:1.5;text-align:justify}
+  .nota{
+    margin-top:26px;
+    border-left:3px solid var(--rubine);
+    padding:2px 0 2px 16px;
+    max-width:68ch;
+  }
+  .nota h2{font-size:15px;margin:0 0 6px;font-weight:600}
+  .nota p{font-size:15px;color:var(--muted);margin:0}
+  code.inl{font-family:var(--mono);font-size:.9em;background:var(--paper-2);padding:1px 5px;border-radius:3px}
+
+  /* ---------- Grupos ---------- */
+  .grupo{margin:44px 0 0}
+  .grupo > h2{
+    font-family:var(--mono);
+    font-size:14px;
+    font-weight:600;
+    color:var(--rubine);
+    margin:0 0 4px;
+    padding-bottom:10px;
+    border-bottom:2px solid var(--rubine);
+  }
+
+  /* ---------- Paso ---------- */
+  .cmd{
+    border-bottom:1px solid var(--rule);
+    padding:22px 0;
+  }
+  .cmd-head{
+    display:grid;
+    grid-template-columns:44px 1fr auto;
+    gap:14px;
+    align-items:baseline;
+  }
+  .num{
+    font-family:var(--mono);
+    font-size:14px;
+    color:var(--muted);
+    font-variant-numeric:tabular-nums;
+    padding-top:4px;
+  }
+  .nombre{
+    font-family:var(--mono);
+    font-size:22px;
+    font-weight:600;
+    letter-spacing:-.01em;
+    margin:0;
+  }
+  .desc{margin:4px 0 0;color:var(--muted);font-size:15px;max-width:62ch}
+
+  /* ---------- Botón copiar ---------- */
+  .copiar{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--ink);
+    background:transparent;
+    border:1px solid var(--rule);
+    border-radius:3px;
+    padding:5px 11px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .copiar:hover{border-color:var(--ink)}
+  .copiar:focus-visible{outline:2px solid var(--rubine);outline-offset:2px}
+  .copiar.ok{background:var(--rubine);border-color:var(--rubine);color:#fff}
+
+  /* ---------- Detalle: comandos del paso ---------- */
+  .detalle{margin:16px 0 0 58px}
+  @media (max-width:640px){.detalle{margin-left:0}}
+
+  .opciones{
+    display:grid;
+    grid-template-columns:auto 1fr;
+    gap:5px 14px;
+    margin:0 0 16px;
+    font-size:14px;
+  }
+  .opciones dt{font-family:var(--mono);font-weight:500;color:var(--teal);white-space:nowrap}
+  .opciones dd{margin:0;color:var(--muted)}
+
+  .ejemplo{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    background:var(--term-bg);
+    border-radius:4px;
+    padding:9px 10px 9px 12px;
+    margin-bottom:6px;
+  }
+  .ejemplo pre{
+    margin:0;
+    flex:1;
+    font-family:var(--mono);
+    font-size:13.5px;
+    line-height:1.5;
+    color:var(--term-fg);
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
+  .ejemplo pre .p{color:var(--rubine);user-select:none;margin-right:.5em}
+  .ejemplo .copiar{
+    color:var(--term-dim);
+    border-color:#4B3742;
+    flex:none;
+  }
+  .ejemplo .copiar:hover{color:var(--term-fg);border-color:var(--term-dim)}
+  .ejemplo .copiar.ok{background:var(--rubine);border-color:var(--rubine);color:#fff}
+  .pie-ej{
+    font-size:13px;
+    color:var(--muted);
+    margin:-2px 0 12px 12px;
+  }
+  .aviso{
+    font-size:13px;
+    color:var(--rubine);
+    font-weight:500;
+    margin:0 0 12px;
+  }
+
+  footer{
+    margin-top:56px;
+    padding:30px 0 60px;
+    border-top:1px solid var(--rule);
+    color:var(--muted);
+    font-size:14px;
+  }
+  footer p{max-width:68ch;margin:0 0 8px}
+
+  #aviso-copia{position:fixed;left:-9999px}
+</style>
 </head>
 <body>
-  <div class="container">
-    <div class="intro">
-      <h1>Limpieza total de MariaDB/MySQL e instalación limpia de MySQL en Debian</h1>
-    </div>
 
-    <div class="card">
-      <h2>1. Diferencia clave</h2>
-      <ul>
-        <li>MariaDB usa paquetes como <span class="inline-code"><code class="inline">mariadb-server</code></span> y <span class="inline-code"><code class="inline">mariadb-client</code></span>.</li>
-        <li>MySQL oficial usa paquetes como <span class="inline-code"><code class="inline">mysql-community-server</code></span>.</li>
-        <li>Ambos suelen usar <code class="inline">/etc/mysql</code>, <code class="inline">/var/lib/mysql</code> y el puerto <code class="inline">3306</code>.</li>
-      </ul>
-    </div>
-
-    <div class="card">
-      <h2>2. Limpieza total recomendada</h2>
-
-      <h3 class="step-title"><span class="badge">2.1</span> Detener servicios</h3>
-      <div class="code-wrap">
-        <div class="code-head">
-          <span>Detener MySQL y MariaDB</span>
-          <button class="copy-btn" onclick="copyCode('cmd-21', this)">Copiar</button>
-        </div>
-        <pre id="cmd-21">sudo systemctl stop mysql
-sudo systemctl stop mariadb</pre>
-      </div>
-
-      <h3 class="step-title"><span class="badge">2.2</span> Eliminar paquetes relacionados</h3>
-      <div class="code-wrap">
-        <div class="code-head">
-          <span>Purgar paquetes de MariaDB y MySQL</span>
-          <button class="copy-btn" onclick="copyCode('cmd-22', this)">Copiar</button>
-        </div>
-        <pre id="cmd-22">sudo apt purge -y mariadb-server mariadb-client mariadb-common mariadb-server-core* mariadb-client-core*
-sudo apt purge -y mysql-server mysql-client mysql-common mysql-server-core* mysql-client-core*</pre>
-      </div>
-
-      <h3 class="step-title"><span class="badge">2.3</span> Eliminar dependencias huérfanas</h3>
-      <div class="code-wrap">
-        <div class="code-head">
-          <span>Limpiar paquetes innecesarios y caché</span>
-          <button class="copy-btn" onclick="copyCode('cmd-23', this)">Copiar</button>
-        </div>
-        <pre id="cmd-23">sudo apt autoremove -y
-sudo apt autoclean</pre>
-      </div>
-
-      <h3 class="step-title"><span class="badge">2.4</span> Borrar archivos residuales</h3>
-      <div class="code-wrap">
-        <div class="code-head">
-          <span>Eliminar configuración, datos y logs</span>
-          <button class="copy-btn" onclick="copyCode('cmd-24', this)">Copiar</button>
-        </div>
-        <pre id="cmd-24">sudo rm -rf /etc/mysql
-sudo rm -rf /var/lib/mysql
-sudo rm -rf /var/log/mysql</pre>
-      </div>
-
-      <div class="code-wrap" style="margin-top:12px;">
-        <div class="code-head">
-          <span>Opcional: eliminar directorio de ejecución</span>
-          <button class="copy-btn" onclick="copyCode('cmd-24b', this)">Copiar</button>
-        </div>
-        <pre id="cmd-24b">sudo rm -rf /var/run/mysqld</pre>
-      </div>
-
-      <h3 class="step-title"><span class="badge">2.5</span> Verificar que no quede nada</h3>
-      <div class="code-wrap">
-        <div class="code-head">
-          <span>Comprobar paquetes instalados</span>
-          <button class="copy-btn" onclick="copyCode('cmd-25', this)">Copiar</button>
-        </div>
-        <pre id="cmd-25">dpkg -l | grep -i mysql
-dpkg -l | grep -i mariadb</pre>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>3. Problema común</h2>
-      <p>
-        Si antes intentaste instalar MySQL 8 en Debian 12 o Debian 13, es común encontrar errores de firma GPG
-        o conflictos con repositorios anteriores. Por eso conviene hacer la limpieza completa antes de instalar
-        el repositorio oficial de MySQL.
-      </p>
-    </div>
-
-    <div class="card">
-      <h2>4. Instalación limpia de MySQL oficial</h2>
-
-      <h3 class="step-title"><span class="badge">4.1</span> Instalar el repositorio</h3>
-      <div class="code-wrap">
-        <div class="code-head">
-          <span>Descargar e instalar mysql-apt-config</span>
-          <button class="copy-btn" onclick="copyCode('cmd-41', this)">Copiar</button>
-        </div>
-        <pre id="cmd-41">wget https://dev.mysql.com/get/mysql-apt-config_0.8.36-1_all.deb
-sudo dpkg -i mysql-apt-config_0.8.36-1_all.deb</pre>
-      </div>
-      <div class="note">
-        Durante la instalación del paquete, selecciona la versión de MySQL que deseas habilitar, por ejemplo MySQL 8.0 o la rama estable que necesites.
-      </div>
-
-      <h3 class="step-title"><span class="badge">4.2</span> Actualizar repositorios</h3>
-      <div class="code-wrap">
-        <div class="code-head">
-          <span>Actualizar índices de paquetes</span>
-          <button class="copy-btn" onclick="copyCode('cmd-42', this)">Copiar</button>
-        </div>
-        <pre id="cmd-42">sudo apt update</pre>
-      </div>
-
-      <h3 class="step-title"><span class="badge">4.3</span> Instalar MySQL</h3>
-      <div class="code-wrap">
-        <div class="code-head">
-          <span>Instalar servidor MySQL</span>
-          <button class="copy-btn" onclick="copyCode('cmd-43', this)">Copiar</button>
-        </div>
-        <pre id="cmd-43">sudo apt install mysql-server</pre>
-      </div>
-
-      <h3 class="step-title"><span class="badge">4.4</span> Verificar instalación</h3>
-      <div class="code-wrap">
-        <div class="code-head">
-          <span>Comprobar versión instalada</span>
-          <button class="copy-btn" onclick="copyCode('cmd-44', this)">Copiar</button>
-        </div>
-        <pre id="cmd-44">mysql --version</pre>
-      </div>
-    </div>
+<header class="top">
+  <div class="wrap">
+    <p class="prompt"><span class="user">alumno</span>@<span class="path">debian12</span>:~<span class="sig">$</span> sudo apt purge mysql-server<span class="cursor"></span></p>
+    <h1>Limpieza de MariaDB/MySQL e instalación limpia</h1>
+    <p class="sub">Referencia de laboratorio · Administración y Configuración Cliente/Servidor</p>
   </div>
+</header>
 
-  <script>
-    async function copyCode(id, btn){
-      const text = document.getElementById(id).innerText;
-      const original = btn.textContent;
-      try{
-        await navigator.clipboard.writeText(text);
-        btn.textContent = 'Copiado';
-        setTimeout(() => btn.textContent = original, 1800);
-      }catch(e){
-        btn.textContent = 'Error al copiar';
-        setTimeout(() => btn.textContent = original, 1800);
-      }
-    }
-  </script>
+<section class="intro">
+  <div class="wrap">
+    <p class="lead">Esta guía deja el sistema sin rastros de MariaDB o MySQL y después instala MySQL oficial desde el repositorio de Oracle. Síguela en orden: primero la limpieza completa, luego la instalación.</p>
+
+  </div>
+</section>
+
+<main class="wrap">
+
+  <!-- ===================== 1 ===================== -->
+  <section class="grupo">
+    <h2>1. Diferencia clave</h2>
+    <article class="cmd">
+      <div class="detalle" style="margin-left:0">
+        <dl class="opciones">
+          <dt>MariaDB</dt><dd>usa paquetes como <code class="inl">mariadb-server</code> y <code class="inl">mariadb-client</code>.</dd>
+          <dt>MySQL oficial</dt><dd>usa paquetes como <code class="inl">mysql-community-server</code>.</dd>
+          <dt>En común</dt><dd>ambos suelen usar <code class="inl">/etc/mysql</code>, <code class="inl">/var/lib/mysql</code> y el puerto <code class="inl">3306</code>.</dd>
+        </dl>
+      </div>
+    </article>
+  </section>
+
+  <!-- ===================== 2 ===================== -->
+  <section class="grupo">
+    <h2>2. Limpieza total recomendada</h2>
+
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">2.1</span>
+        <div>
+          <h3 class="nombre">Detener servicios</h3>
+          <p class="desc">Detener MySQL y MariaDB antes de quitar los paquetes.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo systemctl stop mysql
+sudo systemctl stop mariadb" aria-label="Copiar todos los comandos del paso 2.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo systemctl stop mysql</pre><button class="copiar" type="button" data-copiar="sudo systemctl stop mysql">Copiar</button></div>
+        <div class="ejemplo"><pre><span class="p">$</span>sudo systemctl stop mariadb</pre><button class="copiar" type="button" data-copiar="sudo systemctl stop mariadb">Copiar</button></div>
+      </div>
+    </article>
+
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">2.2</span>
+        <div>
+          <h3 class="nombre">Eliminar paquetes relacionados</h3>
+          <p class="desc">Purgar paquetes de MariaDB y MySQL junto con su configuración.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo apt purge -y mariadb-server mariadb-client mariadb-common mariadb-server-core* mariadb-client-core*
+sudo apt purge -y mysql-server mysql-client mysql-common mysql-server-core* mysql-client-core*" aria-label="Copiar todos los comandos del paso 2.2">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo apt purge -y mariadb-server mariadb-client mariadb-common mariadb-server-core* mariadb-client-core*</pre><button class="copiar" type="button" data-copiar="sudo apt purge -y mariadb-server mariadb-client mariadb-common mariadb-server-core* mariadb-client-core*">Copiar</button></div>
+        <p class="pie-ej">Paquetes de MariaDB.</p>
+        <div class="ejemplo"><pre><span class="p">$</span>sudo apt purge -y mysql-server mysql-client mysql-common mysql-server-core* mysql-client-core*</pre><button class="copiar" type="button" data-copiar="sudo apt purge -y mysql-server mysql-client mysql-common mysql-server-core* mysql-client-core*">Copiar</button></div>
+        <p class="pie-ej">Paquetes de MySQL.</p>
+      </div>
+    </article>
+
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">2.3</span>
+        <div>
+          <h3 class="nombre">Eliminar dependencias huérfanas</h3>
+          <p class="desc">Limpiar paquetes innecesarios y la caché de apt.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo apt autoremove -y
+sudo apt autoclean" aria-label="Copiar todos los comandos del paso 2.3">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo apt autoremove -y</pre><button class="copiar" type="button" data-copiar="sudo apt autoremove -y">Copiar</button></div>
+        <div class="ejemplo"><pre><span class="p">$</span>sudo apt autoclean</pre><button class="copiar" type="button" data-copiar="sudo apt autoclean">Copiar</button></div>
+      </div>
+    </article>
+
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">2.4</span>
+        <div>
+          <h3 class="nombre">Borrar archivos residuales</h3>
+          <p class="desc">Eliminar configuración, datos y bitácoras que apt no borra.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo rm -rf /etc/mysql
+sudo rm -rf /var/lib/mysql
+sudo rm -rf /var/log/mysql" aria-label="Copiar todos los comandos del paso 2.4">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <p class="aviso">⚠ /var/lib/mysql contiene las bases de datos. Si hay algo que conservar, respáldalo antes.</p>
+        <div class="ejemplo"><pre><span class="p">$</span>sudo rm -rf /etc/mysql</pre><button class="copiar" type="button" data-copiar="sudo rm -rf /etc/mysql">Copiar</button></div>
+        <div class="ejemplo"><pre><span class="p">$</span>sudo rm -rf /var/lib/mysql</pre><button class="copiar" type="button" data-copiar="sudo rm -rf /var/lib/mysql">Copiar</button></div>
+        <div class="ejemplo"><pre><span class="p">$</span>sudo rm -rf /var/log/mysql</pre><button class="copiar" type="button" data-copiar="sudo rm -rf /var/log/mysql">Copiar</button></div>
+        <div class="ejemplo"><pre><span class="p">$</span>sudo rm -rf /var/run/mysqld</pre><button class="copiar" type="button" data-copiar="sudo rm -rf /var/run/mysqld">Copiar</button></div>
+        <p class="pie-ej">Opcional: eliminar el directorio de ejecución.</p>
+      </div>
+    </article>
+
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">2.5</span>
+        <div>
+          <h3 class="nombre">Verificar que no quede nada</h3>
+          <p class="desc">Comprobar paquetes instalados. Si no devuelve nada, la limpieza terminó.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="dpkg -l | grep -i mysql
+dpkg -l | grep -i mariadb" aria-label="Copiar todos los comandos del paso 2.5">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>dpkg -l | grep -i mysql</pre><button class="copiar" type="button" data-copiar="dpkg -l | grep -i mysql">Copiar</button></div>
+        <div class="ejemplo"><pre><span class="p">$</span>dpkg -l | grep -i mariadb</pre><button class="copiar" type="button" data-copiar="dpkg -l | grep -i mariadb">Copiar</button></div>
+      </div>
+    </article>
+  </section>
+
+  <!-- ===================== 3 ===================== -->
+  <section class="grupo">
+    <h2>3. Problema común</h2>
+    <article class="cmd">
+      <div class="nota" style="margin-top:0">
+        <p>Si antes intentaste instalar MySQL 8 en Debian 12 o Debian 13, es común encontrar errores de firma GPG o conflictos con repositorios anteriores. Por eso conviene hacer la limpieza completa antes de instalar el repositorio oficial de MySQL.</p>
+      </div>
+    </article>
+  </section>
+
+  <!-- ===================== 4 ===================== -->
+  <section class="grupo">
+    <h2>4. Instalación limpia de MySQL oficial</h2>
+
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">4.1</span>
+        <div>
+          <h3 class="nombre">Instalar el repositorio</h3>
+          <p class="desc">Descargar e instalar mysql-apt-config desde /tmp.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="cd /tmp
+wget https://dev.mysql.com/get/mysql-apt-config_0.8.36-1_all.deb
+sudo dpkg -i mysql-apt-config_0.8.36-1_all.deb" aria-label="Copiar todos los comandos del paso 4.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>cd /tmp</pre><button class="copiar" type="button" data-copiar="cd /tmp">Copiar</button></div>
+        <p class="pie-ej">Descarga en una carpeta temporal para no dejar el .deb en tu home.</p>
+        <div class="ejemplo"><pre><span class="p">$</span>wget https://dev.mysql.com/get/mysql-apt-config_0.8.36-1_all.deb</pre><button class="copiar" type="button" data-copiar="wget https://dev.mysql.com/get/mysql-apt-config_0.8.36-1_all.deb">Copiar</button></div>
+        <div class="ejemplo"><pre><span class="p">$</span>sudo dpkg -i mysql-apt-config_0.8.36-1_all.deb</pre><button class="copiar" type="button" data-copiar="sudo dpkg -i mysql-apt-config_0.8.36-1_all.deb">Copiar</button></div>
+        <p class="pie-ej">Durante la instalación del paquete, selecciona la versión de MySQL que deseas habilitar, por ejemplo MySQL 8.0 o la rama estable que necesites.</p>
+      </div>
+    </article>
+
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">4.2</span>
+        <div>
+          <h3 class="nombre">Actualizar repositorios</h3>
+          <p class="desc">Actualizar los índices de paquetes para que apt vea el repo nuevo.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo apt update" aria-label="Copiar el comando del paso 4.2">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo apt update</pre><button class="copiar" type="button" data-copiar="sudo apt update">Copiar</button></div>
+      </div>
+    </article>
+
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">4.3</span>
+        <div>
+          <h3 class="nombre">Instalar MySQL</h3>
+          <p class="desc">Instalar el servidor MySQL.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo apt install mysql-server" aria-label="Copiar el comando del paso 4.3">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo apt install mysql-server</pre><button class="copiar" type="button" data-copiar="sudo apt install mysql-server">Copiar</button></div>
+      </div>
+    </article>
+
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">4.4</span>
+        <div>
+          <h3 class="nombre">Verificar instalación</h3>
+          <p class="desc">Comprobar la versión instalada.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="mysql --version" aria-label="Copiar el comando del paso 4.4">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>mysql --version</pre><button class="copiar" type="button" data-copiar="mysql --version">Copiar</button></div>
+      </div>
+    </article>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Para ver el estado del servidor después de instalar: <code class="inl">sudo systemctl status mysql</code>.</p>
+    <p>Escuela Politécnica «Ing. Jorge Matute Remus» · Academia de Redes de Cómputo</p>
+  </div>
+</footer>
+
+<div id="aviso-copia" role="status" aria-live="polite"></div>
+
+<script>
+async function copiar(texto){
+  try{
+    await navigator.clipboard.writeText(texto);
+    return true;
+  }catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = texto;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try{ ok = document.execCommand('copy'); }catch(_){ ok = false; }
+    document.body.removeChild(ta);
+    return ok;
+  }
+}
+
+document.addEventListener('click', async ev => {
+  const btn = ev.target.closest('.copiar');
+  if(!btn) return;
+  const original = btn.textContent;
+  const texto = btn.dataset.copiar;
+  const ok = await copiar(texto);
+  btn.textContent = ok ? 'Copiado' : 'Selecciona y copia';
+  btn.classList.toggle('ok', ok);
+  document.getElementById('aviso-copia').textContent = ok ? 'Copiado: ' + texto : 'No se pudo copiar';
+  setTimeout(() => { btn.textContent = original; btn.classList.remove('ok'); }, 1600);
+});
+</script>
 </body>
 </html>
