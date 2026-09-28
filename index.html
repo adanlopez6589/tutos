@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guías de laboratorio (Runbooks) · Cliente/Servidor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EFEDF0;
+    --paper-2:#E5E2E8;
+    --ink:#2A1B25;
+    --muted:#6E5C68;
+    --rubine:#D70A53;
+    --teal:#0F6E78;
+    --term-bg:#2A1B25;
+    --term-fg:#F3E9EE;
+    --term-dim:#A78E9C;
+    --rule:#CFC9D3;
+    --sans:'Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,'DejaVu Sans Mono',Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:var(--sans);font-size:16px;line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:940px;margin:0 auto;padding:0 20px}
+
+  /* ---------- Encabezado ---------- */
+  header.top{background:var(--term-bg);color:var(--term-fg);padding:56px 0 44px}
+  .prompt{font-family:var(--mono);font-size:clamp(14px,3.2vw,19px);color:var(--term-dim);margin:0 0 18px}
+  .prompt .user{color:#8FD3C9}
+  .prompt .path{color:#9BB8E8}
+  .prompt .sig{color:var(--rubine);font-weight:600}
+  .cursor{display:inline-block;width:.62em;height:1.05em;background:var(--rubine);vertical-align:-.18em;margin-left:.15em;animation:blink 1.05s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+  header.top h1{font-size:clamp(30px,6vw,52px);line-height:1.06;font-weight:700;letter-spacing:-.02em;margin:0 0 10px;max-width:16ch}
+  .sub{font-family:var(--mono);font-size:13px;color:var(--term-dim);margin:0}
+  header.top h1 .alias{display:block;margin-top:8px;font-family:var(--mono);font-size:clamp(16px,2.6vw,22px);font-weight:500;letter-spacing:0;color:var(--term-dim)}
+  header.top h1 .alias b{color:var(--rubine);font-weight:600}
+
+  /* ---------- Intro ---------- */
+  .intro{padding:40px 0 28px;border-bottom:1px solid var(--rule)}
+  .intro p{max-width:68ch;margin:0;font-size:17px}
+  code.inl{font-family:var(--mono);font-size:.9em;background:var(--paper-2);padding:1px 5px;border-radius:3px}
+
+  /* ---------- Búsqueda ---------- */
+  .toolbar{position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:1px solid var(--rule);padding:12px 0}
+  .toolbar .wrap{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  #buscar{flex:1 1 240px;font-family:var(--mono);font-size:15px;color:var(--ink);background:#fff;border:1px solid var(--rule);border-radius:4px;padding:9px 12px}
+  #buscar::placeholder{color:#9C90A2}
+  #buscar:focus{outline:2px solid var(--rubine);outline-offset:1px;border-color:transparent}
+  #conteo{font-family:var(--mono);font-size:13px;color:var(--muted);white-space:nowrap}
+
+  /* ---------- Grupos ---------- */
+  .grupo{margin:44px 0 0}
+  .grupo > h2{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--rubine);margin:0 0 4px;padding-bottom:10px;border-bottom:2px solid var(--rubine)}
+
+  /* ---------- Fila de guía ---------- */
+  a.tuto{
+    display:grid;grid-template-columns:44px 1fr auto;gap:14px;align-items:baseline;
+    padding:20px 0;border-bottom:1px solid var(--rule);
+    color:inherit;text-decoration:none;
+  }
+  .num{font-family:var(--mono);font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .nombre{font-size:21px;font-weight:600;letter-spacing:-.01em;margin:0}
+  .desc{margin:4px 0 0;color:var(--muted);font-size:15px;max-width:62ch}
+  .archivo{display:block;margin-top:6px;font-family:var(--mono);font-size:12.5px;color:var(--teal)}
+  .ir{font-family:var(--mono);font-size:12px;color:var(--ink);border:1px solid var(--rule);border-radius:3px;padding:5px 11px;white-space:nowrap}
+  a.tuto:hover .nombre{color:var(--rubine)}
+  a.tuto:hover .ir{background:var(--rubine);border-color:var(--rubine);color:#fff}
+  a.tuto:focus-visible{outline:2px solid var(--rubine);outline-offset:4px}
+  @media (max-width:560px){
+    a.tuto{grid-template-columns:32px 1fr}
+    .ir{display:none}
+  }
+
+  .oculto{display:none !important}
+  #vacio{padding:60px 20px;color:var(--muted);font-family:var(--mono);font-size:15px}
+
+  footer{margin-top:56px;padding:30px 0 60px;border-top:1px solid var(--rule);color:var(--muted);font-size:14px}
+  footer p{max-width:68ch;margin:0 0 8px}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <p class="prompt"><span class="user">alumno</span>@<span class="path">debian12</span>:~/tutos<span class="sig">$</span> ls *.html<span class="cursor"></span></p>
+    <h1>Guías de laboratorio <span class="alias">(<b>runbooks</b>)</span></h1>
+    <p class="sub">Guías de práctica · Administración y Configuración Cliente/Servidor</p>
+  </div>
+</header>
+
+<section class="intro">
+  <div class="wrap">
+    <p>Índice de las guías de práctica del módulo. Cada guía se abre en una página independiente; úsalas junto con tu máquina virtual con Debian 12.</p>
+    <p style="margin-top:14px;font-size:15px;color:var(--muted)">En la industria, a estos procedimientos paso a paso para instalar, configurar o recuperar un servidor se les llama <strong>runbooks</strong>.</p>
+  </div>
+</section>
+
+<div class="toolbar">
+  <div class="wrap">
+    <label for="buscar" class="oculto">Buscar guía</label>
+    <input id="buscar" type="search" placeholder="Buscar guía (apache, postfix, odoo…)" autocomplete="off">
+    <span id="conteo"></span>
+  </div>
+</div>
+
+<main class="wrap" id="lista"></main>
+<p id="vacio" class="wrap oculto">Sin resultados. Prueba con otra palabra.</p>
+
+<footer>
+  <div class="wrap">
+    <p>Escuela Politécnica «Ing. Jorge Matute Remus» · Academia de Redes de Cómputo</p>
+  </div>
+</footer>
+
+<script>
+/* Para agregar una guía: añade un objeto al grupo que corresponda.
+   "archivo" debe coincidir EXACTO con el nombre en el repo (mayúsculas incluidas). */
+const GRUPOS = [
+  {
+    titulo: "Fundamentos y evaluación",
+    items: [
+      { archivo: "comandos_debian12.html", nombre: "50 comandos de Debian 12", desc: "Referencia de los comandos más usados para administrar un servidor Debian 12." },
+      { archivo: "guia_examen_parcial.html", nombre: "Guía para el examen parcial", desc: "Temas y repaso para el examen parcial del módulo." }
+    ]
+  },
+  {
+    titulo: "Servidores web y despliegue de aplicaciones",
+    items: [
+      { archivo: "webapps_apache_debian12.html", nombre: "Aplicaciones web con Apache", desc: "Publicación de aplicaciones web con Apache en Debian 12." },
+      { archivo: "tomcat.html", nombre: "Apache Tomcat", desc: "Instalación y configuración de Tomcat para aplicaciones Java." },
+      { archivo: "gunicorn.html", nombre: "Gunicorn", desc: "Servir aplicaciones Python con Gunicorn." },
+      { archivo: "gunicorn2.html", nombre: "Gunicorn (parte 2)", desc: "Continuación de la práctica con Gunicorn." },
+      { archivo: "despliegue_railway_appflask.html", nombre: "Despliegue de app Flask en Railway", desc: "Publicar una aplicación Flask en la plataforma Railway." }
+    ]
+  },
+  {
+    titulo: "Correo electrónico",
+    items: [
+      { archivo: "postfix.html", nombre: "Postfix", desc: "Instalación y configuración del servidor de correo Postfix." },
+      { archivo: "postfix_smtp.html", nombre: "Postfix con SMTP", desc: "Configuración de envío de correo por SMTP con Postfix." }
+    ]
+  },
+  {
+    titulo: "Bases de datos",
+    items: [
+      { archivo: "limpieza_mysql_debian.html", nombre: "Limpieza de MySQL en Debian", desc: "Desinstalación completa de MySQL para reinstalar desde cero." }
+    ]
+  },
+  {
+    titulo: "Aplicaciones empresariales y colaboración",
+    items: [
+      { archivo: "Instalacion_Odoo_Debian12.html", nombre: "Instalación de Odoo", desc: "Instalación del ERP Odoo en Debian 12." },
+      { archivo: "nextcloud.html", nombre: "Nextcloud", desc: "Nube privada de archivos con Nextcloud." },
+      { archivo: "ms3_stockmanagement.html", nombre: "MS3 Stock Management", desc: "Sistema de gestión de inventario." }
+    ]
+  }
+];
+
+/* URL base donde viven las guías en GitHub Pages */
+const BASE = "https://adanlopez6589.github.io/tutos/";
+
+const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const lista = document.getElementById("lista");
+const total = GRUPOS.reduce((n, g) => n + g.items.length, 0);
+let n = 0;
+
+lista.innerHTML = GRUPOS.map(g => `
+  <section class="grupo">
+    <h2>${esc(g.titulo)}</h2>
+    ${g.items.map(t => {
+      n++;
+      const texto = (t.nombre + " " + t.desc + " " + t.archivo + " " + g.titulo).toLowerCase();
+      return `
+      <a class="tuto" href="${BASE + encodeURI(t.archivo)}" data-texto="${esc(texto)}">
+        <span class="num">${String(n).padStart(2,"0")}</span>
+        <span>
+          <p class="nombre">${esc(t.nombre)}</p>
+          <p class="desc">${esc(t.desc)}</p>
+          <span class="archivo">${esc(t.archivo)}</span>
+        </span>
+        <span class="ir">abrir →</span>
+      </a>`;
+    }).join("")}
+  </section>`).join("");
+
+const conteo = document.getElementById("conteo");
+const vacio = document.getElementById("vacio");
+const plural = k => k === 1 ? "1 guía" : k + " guías";
+conteo.textContent = plural(total);
+
+document.getElementById("buscar").addEventListener("input", e => {
+  const q = e.target.value.trim().toLowerCase();
+  let visibles = 0;
+  document.querySelectorAll(".grupo").forEach(sec => {
+    let enGrupo = 0;
+    sec.querySelectorAll("a.tuto").forEach(a => {
+      const ok = !q || a.dataset.texto.includes(q);
+      a.classList.toggle("oculto", !ok);
+      if (ok) enGrupo++;
+    });
+    sec.classList.toggle("oculto", enGrupo === 0);
+    visibles += enGrupo;
+  });
+  conteo.textContent = plural(visibles);
+  vacio.classList.toggle("oculto", visibles > 0);
+});
+</script>
+</body>
+</html>

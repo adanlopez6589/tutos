@@ -138,6 +138,39 @@
   </style>
 </head>
 <body>
+<!-- ===== Barra para regresar al índice (pegar justo después de <body>) ===== -->
+<style>
+  .nav-indice{position:sticky;top:0;z-index:100;height:44px;box-sizing:border-box;background:#1E131A;border-bottom:1px solid #3A2833;font-family:'IBM Plex Mono',ui-monospace,Consolas,monospace;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+  .nav-indice .nav-wrap{max-width:940px;height:100%;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  /* Si la guía tiene su propia barra fija (.toolbar), se acomoda debajo de esta */
+  .toolbar{top:44px !important}
+  html{scroll-padding-top:132px}
+  .nav-indice a{color:#F3E9EE;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+  .nav-indice a .flecha{color:#D70A53;font-weight:700;font-size:20px;line-height:1;transition:transform .15s}
+  .nav-indice a:hover .flecha{transform:translateX(-3px)}
+  .nav-indice a:hover{color:#D70A53}
+  .nav-indice a:focus-visible,.btn-indice:focus-visible{outline:2px solid #D70A53;outline-offset:3px}
+  .nav-indice .ruta{color:#A78E9C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nav-indice .ruta .u{color:#8FD3C9}
+  .nav-indice .ruta .h{color:#9BB8E8}
+  .nav-indice .ruta .s{color:#D70A53;font-weight:600}
+  .nav-indice .ruta .c{color:#F3E9EE}
+  .nav-indice .cursor-nav{display:inline-block;width:.6em;height:1.05em;background:#D70A53;vertical-align:-.2em;margin-left:.2em;animation:nav-blink 1.05s steps(1) infinite}
+  @keyframes nav-blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.nav-indice .cursor-nav{animation:none}}
+  .btn-indice{position:fixed;right:18px;bottom:18px;z-index:50;background:#D70A53;color:#fff;font-family:'IBM Plex Mono',ui-monospace,Consolas,monospace;font-size:13px;font-weight:600;text-decoration:none;padding:10px 14px;border-radius:4px;box-shadow:0 4px 14px rgba(42,27,37,.25)}
+  .btn-indice:hover{background:#B00845}
+  @media (max-width:560px){.nav-indice .ruta{display:none}}
+  @media print{.nav-indice,.btn-indice{display:none}}
+</style>
+<nav class="nav-indice" aria-label="Navegación">
+  <div class="nav-wrap">
+    <a href="https://adanlopez6589.github.io/tutos/"><span class="flecha">←</span> Guías de laboratorio</a>
+    <span class="ruta" aria-hidden="true"><span class="u">alumno</span>@<span class="h">debian12</span>:~/guias<span class="s">$</span> <span class="c">cd ..</span><span class="cursor-nav"></span></span>
+  </div>
+</nav>
+<a class="btn-indice" href="https://adanlopez6589.github.io/tutos/" title="Regresar al índice de guías">☰ Índice</a>
+<!-- ===== Fin barra índice ===== -->
   <header>
     <h1>Instalación y configuración básica de Postfix y Dovecot en Debian 12</h1>
     <p>Servidor SMTP con Postfix y acceso a buzones con Dovecot.</p>
