@@ -1,141 +1,276 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-MX">
 <head>
-  <meta charset="UTF-8">
-  <title>Instalación y configuración básica de Postfix y Dovecot en Debian 12</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      font-family: Arial, Helvetica, sans-serif;
-      margin: 0;
-      background: #f4f6f8;
-      color: #222;
-      line-height: 1.55;
-    }
-    header {
-      background: #263238;
-      color: white;
-      padding: 28px 36px;
-    }
-    header h1 {
-      margin: 0 0 8px 0;
-      font-size: 28px;
-    }
-    header p {
-      margin: 0;
-      font-size: 15px;
-    }
-    main {
-      max-width: 1050px;
-      margin: 24px auto;
-      padding: 0 18px 40px;
-    }
-    .intro, .card {
-      background: white;
-      border-radius: 10px;
-      padding: 22px;
-      margin-bottom: 18px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-    h2 {
-      margin-top: 0;
-      color: #263238;
-      font-size: 21px;
-    }
-    h3 {
-      color: #263238;
-    }
-    .cmd-row {
-      display: flex;
-      gap: 12px;
-      margin: 14px 0;
-      align-items: flex-start;
-    }
-    .cmd-num {
-      min-width: 48px;
-      font-weight: bold;
-      color: #263238;
-      padding-top: 10px;
-    }
-    .cmd-content {
-      flex: 1;
-    }
-    .cmd-desc {
-      margin-bottom: 6px;
-      font-size: 14px;
-      color: #444;
-    }
-    .code-wrap {
-      display: flex;
-      align-items: stretch;
-      gap: 8px;
-    }
-    code {
-      flex: 1;
-      display: block;
-      background: #111827;
-      color: #f9fafb;
-      padding: 12px;
-      border-radius: 7px;
-      overflow-x: auto;
-      font-family: Consolas, "Courier New", monospace;
-      font-size: 14px;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-    button {
-      background: #1976d2;
-      color: white;
-      border: none;
-      border-radius: 7px;
-      padding: 0 14px;
-      cursor: pointer;
-      font-weight: bold;
-      min-width: 78px;
-    }
-    button:hover {
-      background: #0d47a1;
-    }
-    .note {
-      background: #fff8e1;
-      border-left: 5px solid #f9a825;
-      padding: 12px 14px;
-      margin: 14px 0;
-      border-radius: 6px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 12px;
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 10px;
-      text-align: left;
-      vertical-align: top;
-    }
-    th {
-      background: #eceff1;
-    }
-    footer {
-      text-align: center;
-      color: #666;
-      font-size: 13px;
-      padding: 22px;
-    }
-    @media print {
-      button {
-        display: none;
-      }
-      body {
-        background: white;
-      }
-      .intro, .card {
-        box-shadow: none;
-        border: 1px solid #ddd;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Servidor de correo con Postfix y Dovecot · Referencia de laboratorio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EFEDF0;
+    --paper-2:#E5E2E8;
+    --ink:#2A1B25;
+    --muted:#6E5C68;
+    --rubine:#D70A53;
+    --teal:#0F6E78;
+    --term-bg:#2A1B25;
+    --term-fg:#F3E9EE;
+    --term-dim:#A78E9C;
+    --rule:#CFC9D3;
+    --sans:'Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,'DejaVu Sans Mono',Consolas,monospace;
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:940px;margin:0 auto;padding:0 20px}
+
+  /* ---------- Encabezado ---------- */
+  header.top{
+    background:var(--term-bg);
+    color:var(--term-fg);
+    padding:56px 0 44px;
+  }
+  .prompt{
+    font-family:var(--mono);
+    font-size:clamp(14px,3.2vw,19px);
+    color:var(--term-dim);
+    margin-bottom:18px;
+  }
+  .prompt .user{color:#8FD3C9}
+  .prompt .path{color:#9BB8E8}
+  .prompt .sig{color:var(--rubine);font-weight:600}
+  .cursor{
+    display:inline-block;
+    width:.62em;height:1.05em;
+    background:var(--rubine);
+    vertical-align:-.18em;
+    margin-left:.15em;
+    animation:blink 1.05s steps(1) infinite;
+  }
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+
+  header.top h1{
+    font-size:clamp(30px,6vw,52px);
+    line-height:1.06;
+    font-weight:700;
+    letter-spacing:-.02em;
+    margin:0 0 10px;
+    max-width:18ch;
+  }
+  .sub{
+    font-family:var(--mono);
+    font-size:13px;
+    color:var(--term-dim);
+    margin:0;
+  }
+
+  /* ---------- Introducción ---------- */
+  .intro{padding:44px 0 30px;border-bottom:1px solid var(--rule)}
+  .intro p{max-width:68ch;margin:0 0 16px;font-size:17px}
+  .intro .lead{font-size:19px;line-height:1.5;text-align:justify}
+  .nota{
+    margin-top:26px;
+    border-left:3px solid var(--rubine);
+    padding:2px 0 2px 16px;
+    max-width:68ch;
+  }
+  .nota h2{font-size:15px;margin:0 0 6px;font-weight:600}
+  .nota p{font-size:15px;color:var(--muted);margin:0}
+  code.inl{font-family:var(--mono);font-size:.9em;background:var(--paper-2);padding:1px 5px;border-radius:3px}
+
+  /* ---------- Grupos ---------- */
+  .grupo{margin:44px 0 0}
+  .grupo > h2{
+    font-family:var(--mono);
+    font-size:14px;
+    font-weight:600;
+    color:var(--rubine);
+    margin:0 0 4px;
+    padding-bottom:10px;
+    border-bottom:2px solid var(--rubine);
+  }
+
+  /* ---------- Paso ---------- */
+  .cmd{
+    border-bottom:1px solid var(--rule);
+    padding:22px 0;
+  }
+  .cmd-head{
+    display:grid;
+    grid-template-columns:44px 1fr auto;
+    gap:14px;
+    align-items:baseline;
+  }
+  .num{
+    font-family:var(--mono);
+    font-size:14px;
+    color:var(--muted);
+    font-variant-numeric:tabular-nums;
+    padding-top:4px;
+  }
+  .nombre{
+    font-family:var(--mono);
+    font-size:22px;
+    font-weight:600;
+    letter-spacing:-.01em;
+    margin:0;
+  }
+  .desc{margin:4px 0 0;color:var(--muted);font-size:15px;max-width:62ch}
+
+  /* ---------- Botón copiar ---------- */
+  .copiar{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--ink);
+    background:transparent;
+    border:1px solid var(--rule);
+    border-radius:3px;
+    padding:5px 11px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .copiar:hover{border-color:var(--ink)}
+  .copiar:focus-visible{outline:2px solid var(--rubine);outline-offset:2px}
+  .copiar.ok{background:var(--rubine);border-color:var(--rubine);color:#fff}
+
+  /* ---------- Detalle: comandos del paso ---------- */
+  .detalle{margin:16px 0 0 58px}
+  @media (max-width:640px){.detalle{margin-left:0}}
+
+  .opciones{
+    display:grid;
+    grid-template-columns:auto 1fr;
+    gap:5px 14px;
+    margin:0 0 16px;
+    font-size:14px;
+  }
+  .opciones dt{font-family:var(--mono);font-weight:500;color:var(--teal);white-space:nowrap}
+  .opciones dd{margin:0;color:var(--muted)}
+
+  .ejemplo{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    background:var(--term-bg);
+    border-radius:4px;
+    padding:9px 10px 9px 12px;
+    margin-bottom:6px;
+  }
+  .ejemplo pre{
+    margin:0;
+    flex:1;
+    font-family:var(--mono);
+    font-size:13.5px;
+    line-height:1.5;
+    color:var(--term-fg);
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
+  .ejemplo pre .p{color:var(--rubine);user-select:none;margin-right:.5em}
+  .ejemplo .copiar{
+    color:var(--term-dim);
+    border-color:#4B3742;
+    flex:none;
+  }
+  .ejemplo .copiar:hover{color:var(--term-fg);border-color:var(--term-dim)}
+  .ejemplo .copiar.ok{background:var(--rubine);border-color:var(--rubine);color:#fff}
+  .pie-ej{
+    font-size:13px;
+    color:var(--muted);
+    margin:-2px 0 12px 12px;
+  }
+  .aviso{
+    font-size:13px;
+    color:var(--rubine);
+    font-weight:500;
+    margin:0 0 12px;
+  }
+
+  footer{
+    margin-top:56px;
+    padding:30px 0 60px;
+    border-top:1px solid var(--rule);
+    color:var(--muted);
+    font-size:14px;
+  }
+  footer p{max-width:68ch;margin:0 0 8px}
+
+  #aviso-copia{position:fixed;left:-9999px}
+
+  /* ---------- Variables del alumno ---------- */
+  .var{color:var(--teal);font-weight:600;border-bottom:1px dotted currentColor}
+  .ejemplo .var{color:#8FD3C9}
+  .otro{font-style:italic;color:var(--muted)}
+  .ejemplo .otro{color:#E8B4C8}
+  .datos{
+    margin-top:26px;padding:18px 20px;max-width:68ch;
+    background:var(--paper-2);border-radius:4px;
+  }
+  .datos h2{font-size:15px;margin:0 0 4px;font-weight:600}
+  .datos p{font-size:14px;color:var(--muted);margin:0 0 14px}
+  .campos{display:flex;flex-wrap:wrap;gap:12px 22px;align-items:flex-end}
+  .campos label{display:flex;flex-direction:column;gap:4px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .campos input{
+    font-family:var(--mono);font-size:16px;color:var(--ink);
+    background:var(--paper);border:1px solid var(--rule);border-radius:3px;padding:7px 10px;
+  }
+  .campos input:focus-visible{outline:2px solid var(--rubine);outline-offset:1px}
+  #f-n{width:90px} #f-u{width:180px}
+  .correo{font-family:var(--mono);font-size:16px;padding-bottom:7px}
+  .correo b{color:var(--rubine);font-weight:600}
+
+  /* ---------- Bloque de archivo / sesión ---------- */
+  .ejemplo.archivo{flex-wrap:wrap;border-left:3px solid var(--teal)}
+  .ejemplo.archivo .arch{
+    width:100%;font-family:var(--mono);font-size:11.5px;color:var(--term-dim);
+    margin:0 0 2px;
+  }
+
+  /* ---------- Partes ---------- */
+  .parte{margin:72px 0 0}
+  .parte h2{font-size:clamp(24px,4vw,32px);font-weight:700;letter-spacing:-.015em;margin:0 0 6px;line-height:1.15}
+  .parte p{margin:0;color:var(--muted);max-width:68ch}
+
+  /* ---------- Texto y tablas dentro de grupos ---------- */
+  .texto{max-width:68ch;margin:0 0 14px}
+  .detalle .texto{font-size:15px;margin-top:4px}
+  .tabla-wrap{overflow-x:auto;margin:0 0 16px}
+  table.tabla{border-collapse:collapse;width:100%;font-size:14px;min-width:520px}
+  .tabla th{font-family:var(--mono);font-weight:500;font-size:12.5px;color:var(--teal);text-align:left;padding:6px 12px 6px 0;border-bottom:1px solid var(--ink)}
+  .tabla td{padding:8px 12px 8px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+  .tabla td:first-child{font-family:var(--mono);white-space:nowrap}
+
+  /* ---------- Diagrama ---------- */
+  .diagrama{overflow-x:auto;margin:6px 0 10px}
+  .diagrama svg{display:block;width:100%;min-width:640px;height:auto}
+  .d-vm{fill:none;stroke:var(--muted);stroke-width:1.2;stroke-dasharray:5 4}
+  .d-box{fill:#FAF9FB;stroke:var(--ink);stroke-width:1.3}
+  .d-box.tr{stroke-dasharray:4 3;stroke:var(--muted)}
+  .d-t{font-family:var(--mono);font-size:14px;font-weight:600;fill:var(--ink)}
+  .d-s{font-family:var(--mono);font-size:11.5px;fill:var(--muted)}
+  .d-vmt{font-family:var(--mono);font-size:14px;font-weight:600;fill:var(--rubine)}
+  .d-l{font-family:var(--mono);font-size:11.5px;fill:var(--ink)}
+  .d-smtp{stroke:var(--rubine);stroke-width:2;fill:none}
+  .d-imap{stroke:var(--teal);stroke-width:2;fill:none}
+  .d-dash{stroke:var(--muted);stroke-width:1.3;stroke-dasharray:3 3;fill:none}
+  .d-c{fill:var(--rubine)} .d-c.t{fill:var(--teal)}
+  .d-cn{font-family:var(--mono);font-size:11px;font-weight:600;fill:#fff}
+  ol.pasos-flujo{margin:0 0 6px;padding-left:22px;max-width:68ch;font-size:15px}
+  ol.pasos-flujo li{margin:0 0 4px}
+</style>
 </head>
 <body>
 <!-- ===== Barra para regresar al índice (pegar justo después de <body>) ===== -->
@@ -171,729 +306,930 @@
 </nav>
 <a class="btn-indice" href="https://adanlopez6589.github.io/tutos/" title="Regresar al índice de guías">☰ Índice</a>
 <!-- ===== Fin barra índice ===== -->
-  <header>
-    <h1>Instalación y configuración básica de Postfix y Dovecot en Debian 12</h1>
-    <p>Servidor SMTP con Postfix y acceso a buzones con Dovecot.</p>
-  </header>
 
-  <main>
-    <section class="intro">
-      <h2>Propósito de la práctica</h2>
-      <p>Instalar y configurar de manera básica un servidor de correo local en Debian 12 utilizando Postfix como servidor SMTP y Dovecot como servidor IMAP/POP3, con el fin de comprender la función de cada componente dentro del modelo cliente-servidor.</p>
+<header class="top">
+  <div class="wrap">
+    <p class="prompt"><span class="user">alumno</span>@<span class="path">debian12</span>:~<span class="sig">$</span> sudo apt install postfix dovecot-imapd<span class="cursor"></span></p>
+    <h1>Servidor de correo con Postfix y Dovecot</h1>
+    <p class="sub">Referencia de laboratorio · Administración y Configuración Cliente/Servidor</p>
+  </div>
+</header>
 
+<section class="intro">
+  <div class="wrap">
+    <p class="lead">En esta práctica instalas un servidor de correo en Debian 12: Postfix para enviar y recibir por SMTP, Dovecot para consultar el buzón por IMAP y Thunderbird como cliente. Primero lo haces funcionar dentro de tu VM y después intercambias correos con las VMs de tus compañeros del laboratorio, cada una con su propio dominio.</p>
+    <p>Cada dirección tiene la forma <code class="inl">usuario@debianserverN.lab</code>, donde N es el número de lista. Ejemplo: Adán con el número 1 usa <code class="inl">adan@debianserver1.lab</code>.</p>
 
-<h3>Arquitectura real del sistema de correo (flujo completo)</h3>
-<p>En un sistema de correo electrónico moderno intervienen varios agentes especializados que trabajan en conjunto para garantizar el envío, transporte, validación y entrega de los mensajes.</p>
-
-<div style="text-align:center; margin:20px 0;">
-  <img src="https://cms.elasticemail.com/wp-content/uploads/2021/11/Elastic-Email-MTA-Mail-Transfer-Agent-diagram.jpg"
-       alt="Arquitectura MTA MSA MDA"
-       style="max-width:100%; border-radius:8px;">
-</div>
-
-<p><strong>Flujo del correo:</strong><br>
-MUA → MSA → MTA → MTA (Internet) → MDA → Dovecot → MUA</p>
-
-<h3>Agentes del sistema de correo</h3>
-
-<p><strong>MUA (Mail User Agent)</strong>: Es el cliente de correo utilizado por el usuario final para redactar, enviar y leer mensajes. Ejemplo: Thunderbird.</p>
-
-<p><strong>MSA (Mail Submission Agent)</strong>: Recibe el correo desde el cliente (MUA), valida credenciales y prepara el mensaje antes de enviarlo al servidor de transporte. Generalmente opera en el puerto 587.</p>
-
-<p><strong>MTA (Mail Transfer Agent)</strong>: Es el encargado de enrutar y transferir los correos entre servidores utilizando SMTP. Puede pasar por varios MTAs hasta llegar al destino. Ejemplo: Postfix.</p>
-
-<p><strong>MDA (Mail Delivery Agent)</strong>: Recibe el correo del MTA y lo almacena en el buzón del usuario (Maildir). Aquí es donde realmente “llega” el correo al servidor destino.</p>
-
-<p><strong>Servidor de acceso (Dovecot)</strong>: Permite al usuario consultar su buzón mediante IMAP o POP3.</p>
-
-<h3>Elementos adicionales de la imagen (nivel producción)</h3>
-
-<p><strong>IP Warmup(Acondicionamiento de la IP)</strong>: Es el proceso de aumentar gradualmente el volumen de envío de correos desde una dirección IP nueva para generar reputación y evitar que los mensajes sean marcados como spam.</p>
-
-<p><strong>Email Throttling(Control de envío de correos)</strong>: Técnica que controla la cantidad de correos enviados por unidad de tiempo para evitar bloqueos por parte de servidores receptores o sistemas anti-spam.</p>
-
-<p><strong>DKIM (DomainKeys Identified Mail, Autenticación de correo por firma digital del dominio)</strong>: Método de autenticación que firma digitalmente los correos electrónicos para verificar que el mensaje no ha sido alterado y que proviene del dominio legítimo.</p>
-
-
-      <h2>Fundamentos de protocolos y agentes de correo</h2>
-      <p><strong>SMTP (Simple Mail Transfer Protocol)</strong> es el protocolo utilizado para el envío de correos electrónicos entre servidores y desde clientes hacia el servidor. Es el protocolo que utiliza Postfix para transferir mensajes.</p>
-
-      <p><strong>IMAP (Internet Message Access Protocol)</strong> es el protocolo que permite a los usuarios acceder y gestionar sus correos directamente en el servidor sin descargarlos completamente. Es el método más utilizado actualmente para consultar el correo desde múltiples dispositivos.</p>
-
-      <p><strong>POP3 (Post Office Protocol versión 3)</strong> es un protocolo que permite descargar los correos del servidor al equipo local, generalmente eliminándolos del servidor después de la descarga.</p>
-
-      <p>En la arquitectura de correo electrónico intervienen distintos agentes:</p>
-
-      <p><strong>MTA (Mail Transfer Agent)</strong>: Es el encargado de enviar y enrutar los correos entre servidores. En esta práctica, <strong>Postfix</strong> cumple esta función utilizando SMTP.</p>
-
-      <p><strong>MDA (Mail Delivery Agent)</strong>: Es el encargado de entregar el correo al buzón del usuario dentro del sistema. En esta práctica, la entrega se realiza en formato <strong>Maildir</strong>, donde cada mensaje se almacena como un archivo individual.</p>
-
-      <p><strong>MUA (Mail User Agent)</strong>: Es el cliente de correo que utiliza el usuario final para leer y enviar mensajes. En esta práctica, <strong>Thunderbird</strong> cumple este rol.</p>
-
-      <p><strong>Servidor de acceso a correo</strong>: Permite que el usuario consulte sus mensajes almacenados en el servidor mediante protocolos como IMAP o POP3. En esta práctica, <strong>Dovecot</strong> cumple esta función.</p>
-
-      <h2>Conceptos clave</h2>
-      <table>
-        <tr>
-          <th>Componente</th>
-          <th>Función</th>
-          <th>Protocolos relacionados</th>
-        </tr>
-        <tr>
-          <td>Postfix</td>
-          <td>Servidor de correo saliente y de transferencia de mensajes. Permite enviar y recibir correos mediante SMTP.</td>
-          <td>SMTP, puerto 25; envío autenticado comúnmente en 587.</td>
-        </tr>
-        <tr>
-          <td>Dovecot</td>
-          <td>Servidor de correo entrante. Permite que los usuarios lean sus buzones desde clientes como Thunderbird.</td>
-          <td>IMAP, puerto 143; IMAPS, puerto 993; POP3, puerto 110.</td>
-        </tr>
-        <tr>
-          <td>Maildir</td>
-          <td>Formato de almacenamiento donde cada correo se guarda como archivo dentro del directorio del usuario.</td>
-          <td>Usado por Postfix para guardar mensajes y por Dovecot para leerlos.</td>
-        </tr>
-        <tr>
-          <td>Thunderbird</td>
-          <td>Cliente de correo que permite comprobar gráficamente el envío y recepción de mensajes.</td>
-          <td>IMAP/POP3 para recibir y SMTP para enviar.</td>
-        </tr>
-      </table>
-
-      <h2>Escenario de laboratorio</h2>
-      <p>Esta guía está pensada para una máquina virtual con Debian 12. La práctica usa el usuario local <strong>juan</strong> como cuenta de correo de prueba. En un escenario de producción se requiere configuración adicional de dominio, DNS, certificados SSL/TLS, antispam, antivirus, SPF, DKIM y DMARC.</p>
+    <div class="datos">
+      <h2>Tus datos</h2>
+      <p>Escribe tu número de lista y tu usuario. Los comandos de la guía se actualizan con ellos.</p>
+      <div class="campos">
+        <label for="f-n">Número de lista<input id="f-n" type="number" min="1" max="99" inputmode="numeric" placeholder="N"></label>
+        <label for="f-u">Usuario<input id="f-u" type="text" autocomplete="off" spellcheck="false" placeholder="usuario"></label>
+        <span class="correo" aria-live="polite"><span class="var" data-v="U">usuario</span>@<b>debianserver<span data-v="N" class="var">N</span>.lab</b></span>
+      </div>
+    </div>
+  </div>
 </section>
 
-    
-    <section class="card">
-      <h2>1. Actualizar el sistema</h2>
-      <p>Antes de instalar los servicios de correo, se actualizan los repositorios y paquetes del sistema.</p>
-    
+<main class="wrap">
 
-        <div class="cmd-row">
-          <div class="cmd-num">1.1</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Actualiza la lista de paquetes disponibles desde los repositorios configurados.</div>
-            <div class="code-wrap">
-              <code>sudo apt update</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+  <section class="grupo">
+    <h2>Cómo viaja un correo en el laboratorio</h2>
+    <article class="cmd">
+      <div class="detalle" style="margin-left:0">
+        <p class="texto">Cada máquina virtual es un servidor de correo completo con su propio dominio. Cuando ana le escribe a luis, el mensaje sale de la VM de ana y llega a la VM de luis por la red del laboratorio:</p><div class="diagrama"><svg viewBox="0 0 900 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="dg-t">
+  <title id="dg-t">Flujo de un correo de ana@debianserver1.lab a luis@debianserver2.lab en la red del laboratorio</title>
+  <defs>
+    <marker id="ah-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#D70A53"/></marker>
+    <marker id="ah-t" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#0F6E78"/></marker>
+  </defs>
+  <rect class="d-vm" x="10" y="20" width="330" height="315" rx="6"/>
+  <text class="d-vmt" x="26" y="46">debianserver1.lab</text>
+  <text class="d-s" x="26" y="64">VM de ana</text>
+  <rect class="d-vm" x="560" y="20" width="330" height="315" rx="6"/>
+  <text class="d-vmt" x="576" y="46">debianserver2.lab</text>
+  <text class="d-s" x="576" y="64">VM de luis</text>
+
+  <rect class="d-box" x="24" y="100" width="120" height="64" rx="4"/><text class="d-t" x="84.0" y="128" text-anchor="middle">Thunderbird</text><text class="d-s" x="84.0" y="147" text-anchor="middle">MUA</text>
+  <rect class="d-box" x="200" y="100" width="120" height="64" rx="4"/><text class="d-t" x="260.0" y="128" text-anchor="middle">Postfix</text><text class="d-s" x="260.0" y="147" text-anchor="middle">MTA</text>
+  <rect class="d-box tr" x="200" y="235" width="120" height="64" rx="4"/><text class="d-t" x="260.0" y="263" text-anchor="middle">transport</text><text class="d-s" x="260.0" y="282" text-anchor="middle">¿a qué IP?</text>
+  <line class="d-smtp" x1="144" y1="132" x2="196" y2="132" marker-end="url(#ah-r)"/>
+  <circle class="d-c" cx="170" cy="112" r="10"/><text class="d-cn" x="170" y="116" text-anchor="middle">1</text>
+  <text class="d-l" x="172" y="157" text-anchor="middle">:25</text>
+  <line class="d-dash" x1="260" y1="164" x2="260" y2="235"/>
+  <circle class="d-c" cx="260" cy="200" r="10"/><text class="d-cn" x="260" y="204" text-anchor="middle">2</text>
+
+  <line class="d-smtp" x1="320" y1="132" x2="576" y2="132" marker-end="url(#ah-r)"/>
+  <circle class="d-c" cx="449" cy="132" r="10"/><text class="d-cn" x="449" y="136" text-anchor="middle">3</text>
+  <text class="d-l" x="449" y="112" text-anchor="middle">SMTP :25</text>
+  <text class="d-s" x="449" y="157" text-anchor="middle">red del laboratorio</text>
+
+  <rect class="d-box" x="580" y="100" width="120" height="64" rx="4"/><text class="d-t" x="640.0" y="128" text-anchor="middle">Postfix</text><text class="d-s" x="640.0" y="147" text-anchor="middle">MTA</text>
+  <rect class="d-box" x="750" y="100" width="120" height="64" rx="4"/><text class="d-t" x="810.0" y="128" text-anchor="middle">Maildir</text><text class="d-s" x="810.0" y="147" text-anchor="middle">MDA · buzón</text>
+  <rect class="d-box" x="750" y="235" width="120" height="64" rx="4"/><text class="d-t" x="810.0" y="263" text-anchor="middle">Dovecot</text><text class="d-s" x="810.0" y="282" text-anchor="middle">IMAP</text>
+  <rect class="d-box" x="580" y="235" width="120" height="64" rx="4"/><text class="d-t" x="640.0" y="263" text-anchor="middle">Thunderbird</text><text class="d-s" x="640.0" y="282" text-anchor="middle">MUA</text>
+  <line class="d-smtp" x1="700" y1="132" x2="746" y2="132" marker-end="url(#ah-r)"/>
+  <circle class="d-c" cx="723" cy="112" r="10"/><text class="d-cn" x="723" y="116" text-anchor="middle">4</text>
+  <line class="d-imap" x1="810" y1="164" x2="810" y2="231" marker-end="url(#ah-t)"/>
+  <circle class="d-c t" cx="810" cy="198" r="10"/><text class="d-cn" x="810" y="202" text-anchor="middle">5</text>
+  <line class="d-imap" x1="750" y1="267" x2="704" y2="267" marker-end="url(#ah-t)"/>
+  <circle class="d-c t" cx="727" cy="247" r="10"/><text class="d-cn" x="727" y="251" text-anchor="middle">6</text>
+  <text class="d-l" x="727" y="319" text-anchor="middle">IMAP :143</text>
+</svg></div>
+<ol class="pasos-flujo">
+  <li>Ana escribe en Thunderbird, que entrega el mensaje a su propio Postfix en <code class="inl">localhost:25</code>.</li>
+  <li>Postfix consulta la tabla <code class="inl">transport</code> para saber a qué IP enviar el correo de <code class="inl">debianserver2.lab</code>.</li>
+  <li>El Postfix de ana se conecta al Postfix de luis por SMTP, puerto 25, a través de la red del laboratorio.</li>
+  <li>El Postfix de luis reconoce su propio dominio y guarda el mensaje en el Maildir de luis.</li>
+  <li>Dovecot lee el Maildir de luis.</li>
+  <li>El Thunderbird de luis muestra el mensaje, conectado a Dovecot por IMAP, puerto 143.</li>
+</ol>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>Agentes y protocolos</h2>
+    <article class="cmd">
+      <div class="detalle" style="margin-left:0">
+        <dl class="opciones"><dt>MUA</dt><dd>Mail User Agent. Cliente con el que el usuario redacta y lee correo. Aquí: Thunderbird.</dd><dt>MTA</dt><dd>Mail Transfer Agent. Transfiere correo entre servidores usando SMTP. Aquí: Postfix.</dd><dt>MDA</dt><dd>Mail Delivery Agent. Guarda el mensaje en el buzón del usuario. Aquí: el agente local de Postfix, en formato Maildir (un archivo por mensaje).</dd><dt>Acceso</dt><dd>Servidor que permite consultar el buzón por IMAP o POP3. Aquí: Dovecot.</dd><dt>MSA</dt><dd>Mail Submission Agent. Recibe correo de clientes autenticados, normalmente en el puerto 587. En esta práctica no se usa: Thunderbird entrega directo al puerto 25 de su propio servidor.</dd></dl><div class="tabla-wrap"><table class="tabla"><thead><tr><th>Protocolo</th><th>Puerto</th><th>Uso en la práctica</th></tr></thead><tbody><tr><td>SMTP</td><td>25</td><td>Envío de Thunderbird a Postfix y de un Postfix a otro.</td></tr><tr><td>IMAP</td><td>143</td><td>Thunderbird consulta el buzón en Dovecot; los mensajes se quedan en el servidor.</td></tr><tr><td>POP3</td><td>110</td><td>Disponible. Descarga los mensajes al cliente y normalmente los borra del servidor.</td></tr><tr><td>Submission</td><td>587</td><td>No se usa. En producción es el puerto de envío autenticado.</td></tr><tr><td>IMAPS</td><td>993</td><td>No se usa. IMAP cifrado con TLS.</td></tr></tbody></table></div><div class="nota" style="margin-top:4px"><h2>En producción</h2><p>Un servidor de correo real en internet necesita además un dominio registrado con registro MX en DNS, certificados TLS, autenticación en el envío, SPF, DKIM y DMARC, filtros antispam y antivirus. Los servicios de envío masivo también aplican calentamiento de IP (warmup) y control de la velocidad de envío (throttling) para no ser marcados como spam.</p></div>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>Escenario del laboratorio</h2>
+    <article class="cmd">
+      <div class="detalle" style="margin-left:0">
+        <p class="texto">Todas las VMs están en el mismo segmento de red. Cada alumno usa su nombre de usuario y un dominio con su número de lista. La IP la asigna el DHCP del laboratorio y se registra en una tabla compartida.</p><div class="tabla-wrap"><table class="tabla"><thead><tr><th>Número</th><th>Usuario</th><th>Correo</th><th>IP (ejemplo)</th></tr></thead><tbody><tr><td>1</td><td>ana</td><td>ana@debianserver1.lab</td><td>192.168.1.57</td></tr><tr><td>2</td><td>luis</td><td>luis@debianserver2.lab</td><td>192.168.1.63</td></tr><tr><td>3</td><td>sofia</td><td>sofia@debianserver3.lab</td><td>192.168.1.71</td></tr></tbody></table></div><p class="texto">En los comandos de esta guía, lo que aparece en verde punteado se reemplaza con tus datos. Escríbelos arriba en «Tus datos» y los botones Copiar ya los incluyen. Lo que aparece en cursiva corresponde a un compañero y lo cambias tú.</p>
+      </div>
+    </article>
+  </section>
+  <section class="parte">
+    <h2>Parte A. Servidor de correo local</h2>
+    <p>Instalar Postfix, Dovecot y Thunderbird en tu VM y comprobar que puedes enviarte correo a ti mismo.</p>
+  </section>
+  <section class="grupo">
+    <h2>1. Preparar la máquina virtual</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">1.1</span>
+        <div>
+          <h3 class="nombre">Red en modo puente</h3>
+          <p class="desc">Con la VM apagada, conecta su adaptador de red en modo puente para que tenga una IP del laboratorio.</p>
         </div>
-        
-
-        <div class="cmd-row">
-          <div class="cmd-num">1.2</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Instala las actualizaciones disponibles de los paquetes ya instalados.</div>
-            <div class="code-wrap">
-              <code>sudo apt upgrade -y</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <span></span>
+      </div>
+      <div class="detalle">
+        <dl class="opciones"><dt>VirtualBox</dt><dd>Configuración → Red → Adaptador 1 → Conectado a: Adaptador puente.</dd><dt>Por qué</dt><dd>En modo NAT cada VM queda aislada detrás de su PC y no puede recibir correo de otras VMs.</dd></dl>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">1.2</span>
+        <div>
+          <h3 class="nombre">Actualizar el sistema</h3>
+          <p class="desc">Actualizar la lista de paquetes y los paquetes instalados.</p>
         </div>
-        
-</section>
-
-    <section class="card">
-      <h2>2. Instalar Postfix y Dovecot</h2>
-      <p>Postfix funcionará como servidor SMTP para enviar y recibir mensajes. Dovecot permitirá acceder a los buzones mediante IMAP y POP3.</p>
-    
-<div class="note"><strong>Nota:</strong> Durante la instalación de Postfix, selecciona Sitio de Internet. En nombre de correo del sistema puedes usar localhost o un dominio de laboratorio como correo.local.</div>
-
-        <div class="cmd-row">
-          <div class="cmd-num">2.1</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Instala Postfix y los componentes principales de Dovecot para IMAP y POP3.</div>
-            <div class="code-wrap">
-              <code>sudo apt install postfix dovecot-core dovecot-imapd dovecot-pop3d -y</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="sudo apt update
+sudo apt upgrade -y" aria-label="Copiar todos los comandos del paso 1.2">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo apt update</pre><button class="copiar" type="button" data-copiar="sudo apt update">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo apt upgrade -y</pre><button class="copiar" type="button" data-copiar="sudo apt upgrade -y">Copiar</button></div>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">1.3</span>
+        <div>
+          <h3 class="nombre">Consultar tu IP</h3>
+          <p class="desc">Ver la IP que el DHCP asignó a tu VM.</p>
         </div>
-        
-</section>
-
-    <section class="card">
-      <h2>3. Verificar el estado de los servicios</h2>
-      <p>Después de la instalación, se revisa si los servicios quedaron activos correctamente.</p>
-    
-
-        <div class="cmd-row">
-          <div class="cmd-num">3.1</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Muestra el estado actual del servicio Postfix.</div>
-            <div class="code-wrap">
-              <code>sudo systemctl status postfix</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="hostname -I" aria-label="Copiar el comando del paso 1.3">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>hostname -I</pre><button class="copiar" type="button" data-copiar="hostname -I">Copiar</button></div><p class="pie-ej">Anótala en la tabla compartida junto a tu número de lista y tu usuario. Debe estar en el mismo segmento que las de tus compañeros, por ejemplo 192.168.1.x.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>2. Identidad del servidor</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">2.1</span>
+        <div>
+          <h3 class="nombre">Cambiar el nombre del equipo</h3>
+          <p class="desc">El hostname usa tu número de lista.</p>
         </div>
-        
-
-        <div class="cmd-row">
-          <div class="cmd-num">3.2</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Muestra el estado actual del servicio Dovecot.</div>
-            <div class="code-wrap">
-              <code>sudo systemctl status dovecot</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="sudo hostnamectl set-hostname debianserver%N%" aria-label="Copiar el comando del paso 2.1">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo hostnamectl set-hostname debianserver<span class="var" data-v="N">N</span></pre><button class="copiar" type="button" data-copiar="sudo hostnamectl set-hostname debianserver%N%">Copiar</button></div>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">2.2</span>
+        <div>
+          <h3 class="nombre">Registrar el dominio en /etc/hosts</h3>
+          <p class="desc">Asociar el nombre completo del servidor a la propia máquina.</p>
         </div>
-        
-</section>
-
-    <section class="card">
-      <h2>4. Habilitar servicios al inicio del sistema</h2>
-      <p>Esto permite que Postfix y Dovecot inicien automáticamente cada vez que Debian arranque.</p>
-    
-
-        <div class="cmd-row">
-          <div class="cmd-num">4.1</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Habilita Postfix para iniciar automáticamente.</div>
-            <div class="code-wrap">
-              <code>sudo systemctl enable postfix</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="sudo nano /etc/hosts" aria-label="Copiar el comando del paso 2.2">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo nano /etc/hosts</pre><button class="copiar" type="button" data-copiar="sudo nano /etc/hosts">Copiar</button></div><div class="ejemplo archivo"><p class="arch">Reemplaza la línea que empieza con 127.0.1.1 por:</p><pre>127.0.1.1   debianserver<span class="var" data-v="N">N</span>.lab debianserver<span class="var" data-v="N">N</span></pre><button class="copiar" type="button" data-copiar="127.0.1.1   debianserver%N%.lab debianserver%N%">Copiar</button></div>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">2.3</span>
+        <div>
+          <h3 class="nombre">Verificar</h3>
+          <p class="desc">Debe mostrar el nombre completo con el dominio.</p>
         </div>
-        
-
-        <div class="cmd-row">
-          <div class="cmd-num">4.2</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Habilita Dovecot para iniciar automáticamente.</div>
-            <div class="code-wrap">
-              <code>sudo systemctl enable dovecot</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="hostname -f" aria-label="Copiar el comando del paso 2.3">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>hostname -f</pre><button class="copiar" type="button" data-copiar="hostname -f">Copiar</button></div><p class="pie-ej">Resultado esperado: debianserver<span class="var" data-v="N">N</span>.lab</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>3. Crear tu usuario de correo</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">3.1</span>
+        <div>
+          <h3 class="nombre">Agregar el usuario</h3>
+          <p class="desc">Cada usuario de Linux es una cuenta de correo. Usa tu nombre en minúsculas, sin acentos ni ñ.</p>
         </div>
-        
-</section>
-
-    <section class="card">
-      <h2>5. Configurar el formato Maildir en Postfix</h2>
-      <p>Maildir guarda los mensajes en carpetas individuales dentro del directorio personal del usuario. Es un formato recomendado para prácticas con Dovecot.</p>
-    
-
-        <div class="cmd-row">
-          <div class="cmd-num">5.1</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Indica a Postfix que almacene los correos en la carpeta Maildir del usuario.</div>
-            <div class="code-wrap">
-              <code>sudo postconf -e &#x27;home_mailbox = Maildir/&#x27;</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="sudo adduser %U%" aria-label="Copiar el comando del paso 3.1">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo adduser <span class="var" data-v="U">usuario</span></pre><button class="copiar" type="button" data-copiar="sudo adduser %U%">Copiar</button></div><p class="pie-ej">La contraseña que asignes aquí es la que usarás en Thunderbird.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>4. Instalar Postfix y Dovecot</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">4.1</span>
+        <div>
+          <h3 class="nombre">Instalar los paquetes</h3>
+          <p class="desc">Postfix para enviar y recibir por SMTP; Dovecot para consultar el buzón por IMAP y POP3.</p>
         </div>
-        
-
-        <div class="cmd-row">
-          <div class="cmd-num">5.2</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Reinicia Postfix para aplicar el cambio.</div>
-            <div class="code-wrap">
-              <code>sudo systemctl restart postfix</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="sudo apt install postfix dovecot-core dovecot-imapd dovecot-pop3d -y
+sudo dpkg-reconfigure postfix
+postconf inet_interfaces default_transport relay_transport" aria-label="Copiar todos los comandos del paso 4.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo apt install postfix dovecot-core dovecot-imapd dovecot-pop3d -y</pre><button class="copiar" type="button" data-copiar="sudo apt install postfix dovecot-core dovecot-imapd dovecot-pop3d -y">Copiar</button></div><p class="texto">El asistente de Postfix pregunta dos cosas:</p><dl class="opciones"><dt>Tipo</dt><dd>Sitio de Internet.</dd><dt>Nombre</dt><dd>debianserver<span class="var" data-v="N">N</span>.lab</dd></dl><p class="aviso">⚠ Si Postfix ya estaba instalado y elegiste otra opción (por ejemplo Sólo correo local) u otro nombre, vuelve a lanzar el asistente. Hazlo antes del paso 5: el asistente reescribe esa configuración.</p><div class="ejemplo"><pre><span class="p">$</span>sudo dpkg-reconfigure postfix</pre><button class="copiar" type="button" data-copiar="sudo dpkg-reconfigure postfix">Copiar</button></div><p class="pie-ej">Tipo: Sitio de Internet. Nombre: debianserver<span class="var" data-v="N">N</span>.lab. En las demás pantallas deja los valores que trae; en protocolos elige ipv4.</p><div class="ejemplo"><pre><span class="p">$</span>postconf inet_interfaces default_transport relay_transport</pre><button class="copiar" type="button" data-copiar="postconf inet_interfaces default_transport relay_transport">Copiar</button></div><p class="pie-ej">default_transport y relay_transport deben decir smtp. Si dicen error, Postfix sigue en Sólo correo local y no enviará a otros dominios.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">4.2</span>
+        <div>
+          <h3 class="nombre">Verificar y habilitar los servicios</h3>
+          <p class="desc">Comprobar que ambos estén activos y que inicien con el sistema.</p>
         </div>
-        
-</section>
-
-    <section class="card">
-      <h2>6. Crear la estructura Maildir para el usuario juan</h2>
-      <p>Se crea la carpeta de buzón donde se almacenarán los mensajes recibidos por el usuario.</p>
-    
-
-        <div class="cmd-row">
-          <div class="cmd-num">6.1</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Crea la estructura básica de Maildir para el usuario juan.</div>
-            <div class="code-wrap">
-              <code>sudo mkdir -p /home/juan/Maildir/{cur,new,tmp}</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="sudo systemctl status postfix --no-pager
+sudo systemctl status dovecot --no-pager
+sudo systemctl enable postfix dovecot" aria-label="Copiar todos los comandos del paso 4.2">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo systemctl status postfix --no-pager</pre><button class="copiar" type="button" data-copiar="sudo systemctl status postfix --no-pager">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo systemctl status dovecot --no-pager</pre><button class="copiar" type="button" data-copiar="sudo systemctl status dovecot --no-pager">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo systemctl enable postfix dovecot</pre><button class="copiar" type="button" data-copiar="sudo systemctl enable postfix dovecot">Copiar</button></div>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>5. Configurar Postfix</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">5.1</span>
+        <div>
+          <h3 class="nombre">Identidad del servidor de correo</h3>
+          <p class="desc">Definir el nombre, el dominio y los destinos que Postfix considera locales.</p>
         </div>
-        
-
-        <div class="cmd-row">
-          <div class="cmd-num">6.2</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Asigna la propiedad de la carpeta Maildir al usuario juan.</div>
-            <div class="code-wrap">
-              <code>sudo chown -R juan:juan /home/juan/Maildir</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="sudo postconf -e &#x27;myhostname = debianserver%N%.lab&#x27;
+sudo postconf -e &#x27;mydomain = debianserver%N%.lab&#x27;
+sudo postconf -e &#x27;myorigin = $mydomain&#x27;
+sudo postconf -e &#x27;mydestination = $myhostname, localhost.localdomain, localhost&#x27;" aria-label="Copiar todos los comandos del paso 5.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo postconf -e 'myhostname = debianserver<span class="var" data-v="N">N</span>.lab'</pre><button class="copiar" type="button" data-copiar="sudo postconf -e &#x27;myhostname = debianserver%N%.lab&#x27;">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo postconf -e 'mydomain = debianserver<span class="var" data-v="N">N</span>.lab'</pre><button class="copiar" type="button" data-copiar="sudo postconf -e &#x27;mydomain = debianserver%N%.lab&#x27;">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo postconf -e 'myorigin = $mydomain'</pre><button class="copiar" type="button" data-copiar="sudo postconf -e &#x27;myorigin = $mydomain&#x27;">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo postconf -e 'mydestination = $myhostname, localhost.localdomain, localhost'</pre><button class="copiar" type="button" data-copiar="sudo postconf -e &#x27;mydestination = $myhostname, localhost.localdomain, localhost&#x27;">Copiar</button></div><p class="pie-ej"><code class="inl">mydestination</code> lleva solo tu propio dominio. El correo para cualquier otro dominio se envía fuera.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">5.2</span>
+        <div>
+          <h3 class="nombre">Usar formato Maildir</h3>
+          <p class="desc">Guardar cada mensaje como un archivo dentro de ~/Maildir del usuario.</p>
         </div>
-        
-
-        <div class="cmd-row">
-          <div class="cmd-num">6.3</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Restringe el acceso al buzón para proteger los mensajes del usuario.</div>
-            <div class="code-wrap">
-              <code>sudo chmod -R 700 /home/juan/Maildir</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="sudo postconf -e &#x27;home_mailbox = Maildir/&#x27;" aria-label="Copiar el comando del paso 5.2">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo postconf -e 'home_mailbox = Maildir/'</pre><button class="copiar" type="button" data-copiar="sudo postconf -e &#x27;home_mailbox = Maildir/&#x27;">Copiar</button></div>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">5.3</span>
+        <div>
+          <h3 class="nombre">Revisar y aplicar</h3>
+          <p class="desc">Validar la configuración y reiniciar Postfix.</p>
         </div>
-        
-</section>
-
-    <section class="card">
-      <h2>7. Configurar Dovecot para usar Maildir</h2>
-      <p>Se edita la configuración principal de Dovecot para que lea los buzones en formato Maildir.</p>
-    
-<div class="note"><strong>Nota:</strong> Busca la línea mail_location. Si está comentada con #, elimínalo y deja el valor exactamente como se muestra en el punto 7.2.</div>
-
-        <div class="cmd-row">
-          <div class="cmd-num">7.1</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Abre el archivo de configuración de ubicación de buzones.</div>
-            <div class="code-wrap">
-              <code>sudo nano /etc/dovecot/conf.d/10-mail.conf</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="sudo postfix check
+sudo systemctl restart postfix" aria-label="Copiar todos los comandos del paso 5.3">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo postfix check</pre><button class="copiar" type="button" data-copiar="sudo postfix check">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo systemctl restart postfix</pre><button class="copiar" type="button" data-copiar="sudo systemctl restart postfix">Copiar</button></div><p class="pie-ej">Si <code class="inl">postfix check</code> no muestra nada, la configuración es válida.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>6. Crear el buzón Maildir</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">6.1</span>
+        <div>
+          <h3 class="nombre">Estructura del buzón</h3>
+          <p class="desc">Crear las carpetas del buzón y dejarlas solo para tu usuario.</p>
         </div>
-        
-
-        <div class="cmd-row">
-          <div class="cmd-num">7.2</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Línea que debe quedar configurada dentro del archivo 10-mail.conf.</div>
-            <div class="code-wrap">
-              <code>mail_location = maildir:~/Maildir</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="sudo mkdir -p /home/%U%/Maildir/{cur,new,tmp}
+sudo chown -R %U%:%U% /home/%U%/Maildir
+sudo chmod -R 700 /home/%U%/Maildir" aria-label="Copiar todos los comandos del paso 6.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo mkdir -p /home/<span class="var" data-v="U">usuario</span>/Maildir/{cur,new,tmp}</pre><button class="copiar" type="button" data-copiar="sudo mkdir -p /home/%U%/Maildir/{cur,new,tmp}">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo chown -R <span class="var" data-v="U">usuario</span>:<span class="var" data-v="U">usuario</span> /home/<span class="var" data-v="U">usuario</span>/Maildir</pre><button class="copiar" type="button" data-copiar="sudo chown -R %U%:%U% /home/%U%/Maildir">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo chmod -R 700 /home/<span class="var" data-v="U">usuario</span>/Maildir</pre><button class="copiar" type="button" data-copiar="sudo chmod -R 700 /home/%U%/Maildir">Copiar</button></div><p class="pie-ej"><code class="inl">new</code> recibe los mensajes sin leer, <code class="inl">cur</code> los ya vistos y <code class="inl">tmp</code> los que se están escribiendo.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>7. Configurar Dovecot</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">7.1</span>
+        <div>
+          <h3 class="nombre">Ubicación de los buzones</h3>
+          <p class="desc">Indicar a Dovecot que lea el buzón en formato Maildir.</p>
         </div>
-        
-</section>
-
-    <section class="card">
-      <h2>8. Configurar autenticación básica en Dovecot</h2>
-      <p>Para esta práctica se utilizarán usuarios locales de Linux como cuentas de correo.</p>
-    
-<div class="note"><strong>Nota:</strong> Esta configuración es aceptable para laboratorio local. En producción debe usarse SSL/TLS y mayor endurecimiento de seguridad.</div>
-
-        <div class="cmd-row">
-          <div class="cmd-num">8.1</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Abre el archivo de configuración de autenticación.</div>
-            <div class="code-wrap">
-              <code>sudo nano /etc/dovecot/conf.d/10-auth.conf</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="sudo nano /etc/dovecot/conf.d/10-mail.conf" aria-label="Copiar el comando del paso 7.1">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo nano /etc/dovecot/conf.d/10-mail.conf</pre><button class="copiar" type="button" data-copiar="sudo nano /etc/dovecot/conf.d/10-mail.conf">Copiar</button></div><div class="ejemplo archivo"><p class="arch">Cambia el valor de la línea mail_location (en Debian viene como mbox:...) por:</p><pre>mail_location = maildir:~/Maildir</pre><button class="copiar" type="button" data-copiar="mail_location = maildir:~/Maildir">Copiar</button></div>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">7.2</span>
+        <div>
+          <h3 class="nombre">Autenticación</h3>
+          <p class="desc">Permitir el inicio de sesión con usuario y contraseña de Linux sin cifrado, solo para el laboratorio.</p>
         </div>
-        
-
-        <div class="cmd-row">
-          <div class="cmd-num">8.2</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Permite autenticación en texto plano para pruebas locales de laboratorio.</div>
-            <div class="code-wrap">
-              <code>disable_plaintext_auth = no</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="sudo nano /etc/dovecot/conf.d/10-auth.conf" aria-label="Copiar el comando del paso 7.2">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo nano /etc/dovecot/conf.d/10-auth.conf</pre><button class="copiar" type="button" data-copiar="sudo nano /etc/dovecot/conf.d/10-auth.conf">Copiar</button></div><div class="ejemplo archivo"><p class="arch">Quita el # de estas líneas y deja los valores así:</p><pre>disable_plaintext_auth = no
+auth_mechanisms = plain login</pre><button class="copiar" type="button" data-copiar="disable_plaintext_auth = no
+auth_mechanisms = plain login">Copiar</button></div><p class="aviso">⚠ En producción la autenticación siempre debe ir cifrada con TLS.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">7.3</span>
+        <div>
+          <h3 class="nombre">Revisar protocolos</h3>
+          <p class="desc">Debian activa automáticamente los protocolos de los paquetes instalados. No hace falta editar dovecot.conf.</p>
         </div>
-        
-
-        <div class="cmd-row">
-          <div class="cmd-num">8.3</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Habilita los mecanismos de autenticación plain y login.</div>
-            <div class="code-wrap">
-              <code>auth_mechanisms = plain login</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="doveconf protocols" aria-label="Copiar el comando del paso 7.3">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>doveconf protocols</pre><button class="copiar" type="button" data-copiar="doveconf protocols">Copiar</button></div><p class="pie-ej">Resultado esperado: protocols = imap pop3. No agregues lmtp: requiere el paquete dovecot-lmtpd y sin él Dovecot no arranca.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">7.4</span>
+        <div>
+          <h3 class="nombre">Aplicar</h3>
+          <p class="desc">Reiniciar Dovecot y comprobar que esté activo.</p>
         </div>
-        
-</section>
-
-    <section class="card">
-      <h2>9. Revisar protocolos habilitados en Dovecot</h2>
-      <p>Se confirma que Dovecot tenga habilitados los protocolos IMAP y POP3.</p>
-    
-
-        <div class="cmd-row">
-          <div class="cmd-num">9.1</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Abre la configuración general de Dovecot.</div>
-            <div class="code-wrap">
-              <code>sudo nano /etc/dovecot/dovecot.conf</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="sudo systemctl restart dovecot
+sudo systemctl status dovecot --no-pager" aria-label="Copiar todos los comandos del paso 7.4">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo systemctl restart dovecot</pre><button class="copiar" type="button" data-copiar="sudo systemctl restart dovecot">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo systemctl status dovecot --no-pager</pre><button class="copiar" type="button" data-copiar="sudo systemctl status dovecot --no-pager">Copiar</button></div>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>8. Prueba local desde terminal</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">8.1</span>
+        <div>
+          <h3 class="nombre">Instalar el comando mail</h3>
+          <p class="desc">Herramienta para enviar correos desde la terminal.</p>
         </div>
-        
-
-        <div class="cmd-row">
-          <div class="cmd-num">9.2</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Línea sugerida para habilitar IMAP, POP3 y LMTP.</div>
-            <div class="code-wrap">
-              <code>protocols = imap pop3 lmtp</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="sudo apt install mailutils -y" aria-label="Copiar el comando del paso 8.1">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo apt install mailutils -y</pre><button class="copiar" type="button" data-copiar="sudo apt install mailutils -y">Copiar</button></div>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">8.2</span>
+        <div>
+          <h3 class="nombre">Enviarte un correo</h3>
+          <p class="desc">Mensaje de tu servidor para tu propio usuario.</p>
         </div>
-        
-</section>
-
-    <section class="card">
-      <h2>10. Reiniciar Dovecot</h2>
-      <p>Después de modificar la configuración, se reinicia Dovecot.</p>
-    
-
-        <div class="cmd-row">
-          <div class="cmd-num">10.1</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Reinicia el servicio Dovecot.</div>
-            <div class="code-wrap">
-              <code>sudo systemctl restart dovecot</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="echo &#x27;Correo de prueba desde Postfix&#x27; | mail -s &#x27;Prueba local&#x27; %U%" aria-label="Copiar el comando del paso 8.2">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>echo 'Correo de prueba desde Postfix' | mail -s 'Prueba local' <span class="var" data-v="U">usuario</span></pre><button class="copiar" type="button" data-copiar="echo &#x27;Correo de prueba desde Postfix&#x27; | mail -s &#x27;Prueba local&#x27; %U%">Copiar</button></div>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">8.3</span>
+        <div>
+          <h3 class="nombre">Revisar el buzón</h3>
+          <p class="desc">El mensaje debe aparecer como archivo en la carpeta new.</p>
         </div>
-        
-
-        <div class="cmd-row">
-          <div class="cmd-num">10.2</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Verifica que Dovecot esté activo y sin errores.</div>
-            <div class="code-wrap">
-              <code>sudo systemctl status dovecot</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="sudo ls -l /home/%U%/Maildir/new
+sudo cat /home/%U%/Maildir/new/*" aria-label="Copiar todos los comandos del paso 8.3">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo ls -l /home/<span class="var" data-v="U">usuario</span>/Maildir/new</pre><button class="copiar" type="button" data-copiar="sudo ls -l /home/%U%/Maildir/new">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo cat /home/<span class="var" data-v="U">usuario</span>/Maildir/new/*</pre><button class="copiar" type="button" data-copiar="sudo cat /home/%U%/Maildir/new/*">Copiar</button></div><p class="pie-ej">En los encabezados debe aparecer From y To con @debianserver<span class="var" data-v="N">N</span>.lab.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>9. Verificar puertos</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">9.1</span>
+        <div>
+          <h3 class="nombre">Servicios escuchando</h3>
+          <p class="desc">Comprobar SMTP (25), IMAP (143) y POP3 (110).</p>
         </div>
-        
-</section>
-
-    <section class="card">
-      <h2>11. Enviar un correo local de prueba</h2>
-      <p>Para probar Postfix, se puede enviar un mensaje local al usuario juan.</p>
-    
-
-        <div class="cmd-row">
-          <div class="cmd-num">11.1</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Instala herramientas básicas para enviar correos desde terminal.</div>
-            <div class="code-wrap">
-              <code>sudo apt install mailutils -y</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="sudo ss -tlnp | grep -E &#x27;:(25|143|110) &#x27;" aria-label="Copiar el comando del paso 9.1">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo ss -tlnp | grep -E ':(25|143|110) '</pre><button class="copiar" type="button" data-copiar="sudo ss -tlnp | grep -E &#x27;:(25|143|110) &#x27;">Copiar</button></div><p class="pie-ej">Postfix aparece como master y Dovecot como dovecot. Para recibir correo de compañeros, el 25 debe mostrar 0.0.0.0:25 y no 127.0.0.1:25.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>10. Thunderbird</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">10.1</span>
+        <div>
+          <h3 class="nombre">Instalar Thunderbird</h3>
+          <p class="desc">Thunderbird está en los repositorios de Debian 12, con traducción al español.</p>
         </div>
-        
-
-        <div class="cmd-row">
-          <div class="cmd-num">11.2</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Envía un mensaje de prueba al usuario juan.</div>
-            <div class="code-wrap">
-              <code>echo &#x27;Correo de prueba desde Postfix en Debian 12&#x27; | mail -s &#x27;Prueba Postfix&#x27; juan</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="sudo apt install thunderbird thunderbird-l10n-es-es -y
+thunderbird &amp;" aria-label="Copiar todos los comandos del paso 10.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo apt install thunderbird thunderbird-l10n-es-es -y</pre><button class="copiar" type="button" data-copiar="sudo apt install thunderbird thunderbird-l10n-es-es -y">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>thunderbird &amp;</pre><button class="copiar" type="button" data-copiar="thunderbird &amp;">Copiar</button></div>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">10.2</span>
+        <div>
+          <h3 class="nombre">Crear la cuenta</h3>
+          <p class="desc">En el asistente escribe tus datos y elige Configurar manualmente.</p>
         </div>
-        
-</section>
-
-    <section class="card">
-      <h2>12. Verificar si el mensaje llegó al buzón</h2>
-      <p>Se revisa la carpeta Maildir del usuario para comprobar si el mensaje fue recibido.</p>
-    
-
-        <div class="cmd-row">
-          <div class="cmd-num">12.1</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Lista los mensajes nuevos recibidos por el usuario juan.</div>
-            <div class="code-wrap">
-              <code>sudo ls -l /home/juan/Maildir/new</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <span></span>
+      </div>
+      <div class="detalle">
+        <dl class="opciones"><dt>Nombre</dt><dd>tu nombre completo</dd><dt>Correo</dt><dd><span class="var" data-v="U">usuario</span>@debianserver<span class="var" data-v="N">N</span>.lab</dd><dt>Contraseña</dt><dd>la de tu usuario de Linux</dd></dl><div class="tabla-wrap"><table class="tabla"><thead><tr><th>Servidor</th><th>Nombre</th><th>Puerto</th><th>Seguridad</th><th>Autenticación</th><th>Usuario</th></tr></thead><tbody><tr><td>Entrante IMAP</td><td>localhost</td><td>143</td><td>Ninguna</td><td>Contraseña normal</td><td><span class="var" data-v="U">usuario</span></td></tr><tr><td>Saliente SMTP</td><td>localhost</td><td>25</td><td>Ninguna</td><td>Sin autenticación</td><td>(vacío)</td></tr></tbody></table></div><p class="aviso">⚠ El SMTP va sin autenticación: Postfix acepta el correo porque viene de la propia máquina (127.0.0.1). Si eliges Contraseña normal, el envío falla.</p><p class="pie-ej">Thunderbird advierte que la conexión no está cifrada. Marca que entiendes los riesgos y continúa.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">10.3</span>
+        <div>
+          <h3 class="nombre">Enviarte un correo</h3>
+          <p class="desc">Desde Thunderbird, escribe un mensaje a <span class="var" data-v="U">usuario</span>@debianserver<span class="var" data-v="N">N</span>.lab y comprueba que llegue a tu bandeja de entrada.</p>
         </div>
-        
-
-        <div class="cmd-row">
-          <div class="cmd-num">12.2</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Muestra el contenido del mensaje recibido.</div>
-            <div class="code-wrap">
-              <code>sudo cat /home/juan/Maildir/new/*</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <span></span>
+      </div>
+      <div class="detalle">
+        <p class="pie-ej">Si llega, la Parte A está completa: tu servidor envía, entrega y permite leer correo.</p>
+      </div>
+    </article>
+  </section>
+  <section class="parte">
+    <h2>Parte B. Correo entre compañeros</h2>
+    <p>Abrir Postfix a la red del laboratorio y enviar correo de tu dominio al de tus compañeros desde Thunderbird.</p>
+  </section>
+  <section class="grupo">
+    <h2>11. Abrir Postfix a la red</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">11.1</span>
+        <div>
+          <h3 class="nombre">Escuchar en todas las interfaces</h3>
+          <p class="desc">Recibir conexiones de otras VMs, solo por IPv4.</p>
         </div>
-        
-</section>
-
-    <section class="card">
-      <h2>13. Verificar puertos de correo</h2>
-      <p>Se revisan los puertos usados por Postfix y Dovecot.</p>
-    
-
-        <div class="cmd-row">
-          <div class="cmd-num">13.1</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Verifica si Postfix está escuchando en el puerto SMTP 25.</div>
-            <div class="code-wrap">
-              <code>sudo ss -tulpn | grep master</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="sudo postconf -e &#x27;inet_interfaces = all&#x27;
+sudo postconf -e &#x27;inet_protocols = ipv4&#x27;
+sudo postconf -e &#x27;mynetworks = 127.0.0.0/8&#x27;
+sudo systemctl restart postfix" aria-label="Copiar todos los comandos del paso 11.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo postconf -e 'inet_interfaces = all'</pre><button class="copiar" type="button" data-copiar="sudo postconf -e &#x27;inet_interfaces = all&#x27;">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo postconf -e 'inet_protocols = ipv4'</pre><button class="copiar" type="button" data-copiar="sudo postconf -e &#x27;inet_protocols = ipv4&#x27;">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo postconf -e 'mynetworks = 127.0.0.0/8'</pre><button class="copiar" type="button" data-copiar="sudo postconf -e &#x27;mynetworks = 127.0.0.0/8&#x27;">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo systemctl restart postfix</pre><button class="copiar" type="button" data-copiar="sudo systemctl restart postfix">Copiar</button></div><p class="pie-ej"><code class="inl">mynetworks</code> se queda solo con localhost: tus compañeros pueden entregarte correo para tu dominio, pero no usar tu servidor para reenviar a otros dominios (relay abierto).</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">11.2</span>
+        <div>
+          <h3 class="nombre">Verificar</h3>
+          <p class="desc">El puerto 25 debe estar abierto hacia la red.</p>
         </div>
-        
-
-        <div class="cmd-row">
-          <div class="cmd-num">13.2</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Verifica si Dovecot está escuchando en puertos IMAP o POP3.</div>
-            <div class="code-wrap">
-              <code>sudo ss -tulpn | grep dovecot</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="sudo ss -tlnp | grep &#x27;:25 &#x27;" aria-label="Copiar el comando del paso 11.2">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo ss -tlnp | grep ':25 '</pre><button class="copiar" type="button" data-copiar="sudo ss -tlnp | grep &#x27;:25 &#x27;">Copiar</button></div><p class="pie-ej">Resultado esperado: 0.0.0.0:25</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>12. Tabla compartida de IPs</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">12.1</span>
+        <div>
+          <h3 class="nombre">Registrar tus datos</h3>
+          <p class="desc">En el pizarrón o en el documento del grupo, cada alumno agrega una fila con su número, usuario, dominio e IP.</p>
         </div>
-        
-</section>
-
-  <section class="card">
-      <h2>14. Configurar Thunderbird como cliente de correo</h2>
-      <p>Thunderbird puede usarse como cliente para probar la lectura de correos mediante Dovecot y el envío mediante Postfix.</p>
-    
-        <div class="cmd-row">
-          <div class="cmd-num">14.1</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Cambia al directorio temporal para descargar el instalador oficial de Thunderbird.</div>
-            <div class="code-wrap">
-              <code>cd /tmp</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <span></span>
+      </div>
+      <div class="detalle">
+        <div class="tabla-wrap"><table class="tabla"><thead><tr><th>Número</th><th>Usuario</th><th>Dominio</th><th>IP</th></tr></thead><tbody><tr><td>1</td><td>ana</td><td>debianserver1.lab</td><td>192.168.1.57</td></tr><tr><td>2</td><td>luis</td><td>debianserver2.lab</td><td>192.168.1.63</td></tr><tr><td><span class="var" data-v="N">N</span></td><td><span class="var" data-v="U">usuario</span></td><td>debianserver<span class="var" data-v="N">N</span>.lab</td><td>(tu IP de hostname -I)</td></tr></tbody></table></div><p class="aviso">⚠ Con DHCP la IP puede cambiar entre sesiones. Al inicio de cada clase revisa <code class="inl">hostname -I</code> y corrige tu fila si cambió.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>13. Tabla transport</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">13.1</span>
+        <div>
+          <h3 class="nombre">Indicar la IP de cada compañero</h3>
+          <p class="desc">Postfix no tiene DNS para los dominios .lab, así que la tabla transport le dice a qué IP entregar cada dominio.</p>
         </div>
-        
-
-        <div class="cmd-row">
-          <div class="cmd-num">14.2</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Descarga el instalador oficial de Thunderbird.</div>
-            <div class="code-wrap">
-              <code>wget https://download.mozilla.org/?product=thunderbird-latest&amp;os=linux64&amp;lang=es-ES -O thunderbird.tar.bz2</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="sudo nano /etc/postfix/transport" aria-label="Copiar el comando del paso 13.1">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo nano /etc/postfix/transport</pre><button class="copiar" type="button" data-copiar="sudo nano /etc/postfix/transport">Copiar</button></div><div class="ejemplo archivo"><p class="arch">/etc/postfix/transport (una línea por compañero, con los datos de la tabla compartida)</p><pre>debianserver1.lab   smtp:[192.168.1.57]
+debianserver2.lab   smtp:[192.168.1.63]
+debianserver3.lab   smtp:[192.168.1.71]</pre><button class="copiar" type="button" data-copiar="debianserver1.lab   smtp:[192.168.1.57]
+debianserver2.lab   smtp:[192.168.1.63]
+debianserver3.lab   smtp:[192.168.1.71]">Copiar</button></div><p class="pie-ej">No incluyas tu propio dominio. Los corchetes indican que use la IP directamente, sin buscar registro MX.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">13.2</span>
+        <div>
+          <h3 class="nombre">Activar la tabla</h3>
+          <p class="desc">Generar el archivo indexado que lee Postfix y registrarlo en la configuración.</p>
         </div>
-        
-
-        <div class="cmd-row">
-          <div class="cmd-num">14.3</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Extrae el paquete descargado.</div>
-            <div class="code-wrap">
-              <code>tar -xjf thunderbird.tar.bz2</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="sudo postconf -e &#x27;transport_maps = hash:/etc/postfix/transport&#x27;
+sudo postmap /etc/postfix/transport
+sudo systemctl reload postfix" aria-label="Copiar todos los comandos del paso 13.2">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo postconf -e 'transport_maps = hash:/etc/postfix/transport'</pre><button class="copiar" type="button" data-copiar="sudo postconf -e &#x27;transport_maps = hash:/etc/postfix/transport&#x27;">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo postmap /etc/postfix/transport</pre><button class="copiar" type="button" data-copiar="sudo postmap /etc/postfix/transport">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo systemctl reload postfix</pre><button class="copiar" type="button" data-copiar="sudo systemctl reload postfix">Copiar</button></div><p class="aviso">⚠ Cada vez que edites transport vuelve a ejecutar postmap y reload. Si no, Postfix sigue usando la versión anterior.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>14. Verificar conectividad</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">14.1</span>
+        <div>
+          <h3 class="nombre">Probar el puerto 25 de un compañero</h3>
+          <p class="desc">Antes de enviar, confirmar que su VM responde y que su Postfix acepta conexiones.</p>
         </div>
-        
-
-        <div class="cmd-row">
-          <div class="cmd-num">14.4</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Mueve la carpeta a /opt para instalación global.</div>
-            <div class="code-wrap">
-              <code>sudo mv thunderbird /opt/</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="sudo apt install netcat-openbsd -y
+ping -c 3 IP_DEL_COMPAÑERO
+nc -zv IP_DEL_COMPAÑERO 25" aria-label="Copiar todos los comandos del paso 14.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo apt install netcat-openbsd -y</pre><button class="copiar" type="button" data-copiar="sudo apt install netcat-openbsd -y">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>ping -c 3 <span class="otro">IP_DEL_COMPAÑERO</span></pre><button class="copiar" type="button" data-copiar="ping -c 3 IP_DEL_COMPAÑERO">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>nc -zv <span class="otro">IP_DEL_COMPAÑERO</span> 25</pre><button class="copiar" type="button" data-copiar="nc -zv IP_DEL_COMPAÑERO 25">Copiar</button></div><p class="pie-ej">Resultado esperado de nc: succeeded. Si dice refused o timed out, revisa la sección 18.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>15. Enviar desde terminal</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">15.1</span>
+        <div>
+          <h3 class="nombre">Correo a un compañero</h3>
+          <p class="desc">Usa el usuario y el número de lista de tu compañero.</p>
         </div>
-        
-
-        <div class="cmd-row">
-          <div class="cmd-num">14.5</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Crea un enlace simbólico para ejecutar Thunderbird desde terminal.</div>
-            <div class="code-wrap">
-              <code>sudo ln -s /opt/thunderbird/thunderbird /usr/bin/thunderbird</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="echo &#x27;Hola desde debianserver%N%&#x27; | mail -s &#x27;Prueba entre VMs&#x27; luis@debianserver2.lab" aria-label="Copiar el comando del paso 15.1">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>echo 'Hola desde debianserver<span class="var" data-v="N">N</span>' | mail -s 'Prueba entre VMs' <span class="otro">luis@debianserver2.lab</span></pre><button class="copiar" type="button" data-copiar="echo &#x27;Hola desde debianserver%N%&#x27; | mail -s &#x27;Prueba entre VMs&#x27; luis@debianserver2.lab">Copiar</button></div>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">15.2</span>
+        <div>
+          <h3 class="nombre">Seguir la entrega</h3>
+          <p class="desc">Ver en vivo el registro de Postfix. Sal con Ctrl+C.</p>
         </div>
-        
-
-        <div class="cmd-row">
-          <div class="cmd-num">14.6</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Ejecuta Thunderbird.</div>
-            <div class="code-wrap">
-              <code>thunderbird</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="sudo journalctl -u postfix@- -f" aria-label="Copiar el comando del paso 15.2">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo journalctl -u postfix@- -f</pre><button class="copiar" type="button" data-copiar="sudo journalctl -u postfix@- -f">Copiar</button></div><p class="pie-ej">Busca status=sent y relay=debianserver2.lab[IP]:25. Si aparece status=deferred, el mensaje quedó en cola; la línea indica el motivo.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">15.3</span>
+        <div>
+          <h3 class="nombre">Revisar la cola</h3>
+          <p class="desc">Mensajes que no se han podido entregar.</p>
         </div>
-        
-
-        <div class="cmd-row">
-          <div class="cmd-num">14.7</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Dato de configuración para recibir correo mediante Dovecot.</div>
-            <div class="code-wrap">
-              <code>Servidor entrante IMAP: localhost, puerto 143, usuario juan</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="mailq" aria-label="Copiar el comando del paso 15.3">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>mailq</pre><button class="copiar" type="button" data-copiar="mailq">Copiar</button></div><p class="pie-ej">Mail queue is empty indica que todo salió.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>16. Enviar desde Thunderbird</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">16.1</span>
+        <div>
+          <h3 class="nombre">Escribir a tus compañeros</h3>
+          <p class="desc">Redacta un mensaje para uno o varios compañeros y pídeles que respondan.</p>
         </div>
-        
-
-        <div class="cmd-row">
-          <div class="cmd-num">14.8</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Dato de configuración para enviar correo mediante Postfix.</div>
-            <div class="code-wrap">
-              <code>Servidor saliente SMTP: localhost, puerto 25, usuario juan</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <span></span>
+      </div>
+      <div class="detalle">
+        <dl class="opciones"><dt>Para</dt><dd><span class="otro">luis@debianserver2.lab</span>, <span class="otro">sofia@debianserver3.lab</span></dd><dt>Recibir</dt><dd>Usa Obtener mensajes para ver las respuestas.</dd></dl><p class="pie-ej">Thunderbird sigue configurado con localhost. Quien lleva el mensaje a la otra VM es tu Postfix, usando la tabla transport.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>17. Opcional: SMTP a mano</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">17.1</span>
+        <div>
+          <h3 class="nombre">Conversación SMTP con telnet</h3>
+          <p class="desc">Entregar un correo escribiendo los comandos del protocolo uno por uno, como lo hace Postfix.</p>
         </div>
-        
+        <button class="copiar" type="button" data-copiar="sudo apt install telnet -y
+telnet IP_DEL_COMPAÑERO 25" aria-label="Copiar todos los comandos del paso 17.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo apt install telnet -y</pre><button class="copiar" type="button" data-copiar="sudo apt install telnet -y">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>telnet <span class="otro">IP_DEL_COMPAÑERO</span> 25</pre><button class="copiar" type="button" data-copiar="telnet IP_DEL_COMPAÑERO 25">Copiar</button></div><div class="ejemplo archivo"><p class="arch">Escribe cada línea y espera la respuesta del servidor:</p><pre>HELO debianserver<span class="var" data-v="N">N</span>.lab
+MAIL FROM:&lt;<span class="var" data-v="U">usuario</span>@debianserver<span class="var" data-v="N">N</span>.lab&gt;
+RCPT TO:&lt;<span class="otro">luis@debianserver2.lab</span>&gt;
+DATA
+Subject: SMTP a mano
 
-        <div class="cmd-row">
-          <div class="cmd-num">14.9</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Usa la contraseña asignada al crear el usuario con adduser.</div>
-            <div class="code-wrap">
-              <code>Contraseña: la contraseña del usuario Linux juan</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+Este mensaje lo escribí comando por comando.
+.
+QUIT</pre><button class="copiar" type="button" data-copiar="HELO debianserver%N%.lab
+MAIL FROM:&lt;%U%@debianserver%N%.lab&gt;
+RCPT TO:&lt;luis@debianserver2.lab&gt;
+DATA
+Subject: SMTP a mano
+
+Este mensaje lo escribí comando por comando.
+.
+QUIT">Copiar</button></div><dl class="opciones"><dt>220</dt><dd>el servidor está listo</dd><dt>250</dt><dd>comando aceptado</dd><dt>354</dt><dd>puedes escribir el mensaje; termina con un punto solo en una línea</dd><dt>221</dt><dd>cierre de la conexión</dd></dl>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>18. Diagnóstico</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">18.1</span>
+        <div>
+          <h3 class="nombre">Registros y configuración</h3>
+          <p class="desc">Comandos para revisar qué pasó con un mensaje.</p>
         </div>
-        
-</section>
-
-    <section class="card">
-      <h2>15. Comandos útiles de diagnóstico</h2>
-      <p>Estos comandos ayudan a revisar errores y registros del sistema de correo.</p>
-    
-
-        <div class="cmd-row">
-          <div class="cmd-num">15.1</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Muestra los últimos registros del servicio Postfix.</div>
-            <div class="code-wrap">
-              <code>sudo journalctl -u postfix -n 50 --no-pager</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <button class="copiar" type="button" data-copiar="sudo journalctl -u postfix@- -n 50 --no-pager
+sudo journalctl -u dovecot -n 50 --no-pager
+postconf -n
+doveconf -n
+sudo postqueue -f" aria-label="Copiar todos los comandos del paso 18.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo journalctl -u postfix@- -n 50 --no-pager</pre><button class="copiar" type="button" data-copiar="sudo journalctl -u postfix@- -n 50 --no-pager">Copiar</button></div><p class="pie-ej">En Debian 12 los registros de Postfix están en la unidad postfix@-, no en postfix.</p><div class="ejemplo"><pre><span class="p">$</span>sudo journalctl -u dovecot -n 50 --no-pager</pre><button class="copiar" type="button" data-copiar="sudo journalctl -u dovecot -n 50 --no-pager">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>postconf -n</pre><button class="copiar" type="button" data-copiar="postconf -n">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>doveconf -n</pre><button class="copiar" type="button" data-copiar="doveconf -n">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo postqueue -f</pre><button class="copiar" type="button" data-copiar="sudo postqueue -f">Copiar</button></div><p class="pie-ej">Reintenta de inmediato los mensajes en cola, útil después de corregir transport.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">18.2</span>
+        <div>
+          <h3 class="nombre">Errores comunes</h3>
+          <p class="desc">Mensaje que aparece en el registro y qué revisar.</p>
         </div>
-        
+        <span></span>
+      </div>
+      <div class="detalle">
+        <div class="tabla-wrap"><table class="tabla"><thead><tr><th>Mensaje o síntoma</th><th>Qué revisar</th></tr></thead><tbody><tr><td>Host or domain name not found</td><td>El dominio no está en transport, o no ejecutaste postmap.</td></tr><tr><td>Connection refused</td><td>En la VM destino Postfix está detenido o escucha solo en 127.0.0.1.</td></tr><tr><td>Connection timed out</td><td>IP equivocada o cambiada por DHCP, VM en modo NAT o la red bloquea el tráfico.</td></tr><tr><td>status=bounced, mail transport unavailable</td><td>Postfix quedó en Sólo correo local (default_transport = error). Ejecuta dpkg-reconfigure postfix y elige Sitio de Internet.</td></tr><tr><td>Relay access denied</td><td>El dominio está mal escrito o el destino no lo tiene en mydestination.</td></tr><tr><td>loops back to myself</td><td>Pusiste tu propio dominio en transport, o dos VMs tienen el mismo hostname.</td></tr><tr><td>User unknown in local recipient table</td><td>El usuario no existe en la VM destino.</td></tr><tr><td>Thunderbird no puede enviar</td><td>El SMTP saliente debe ir sin autenticación.</td></tr><tr><td>Thunderbird no muestra mensajes</td><td>mail_location de Dovecot no apunta a ~/Maildir.</td></tr></tbody></table></div>
+      </div>
+    </article>
+  </section>
+  <!-- ===================== Conclusión ===================== -->
+  <section class="grupo">
+    <h2>Conclusión</h2>
 
-        <div class="cmd-row">
-          <div class="cmd-num">15.2</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Muestra los últimos registros del servicio Dovecot.</div>
-            <div class="code-wrap">
-              <code>sudo journalctl -u dovecot -n 50 --no-pager</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+    <article class="cmd">
+      <div class="detalle" style="margin-left:0">
+        <p class="texto">Postfix, Dovecot y Thunderbird forman un sistema de correo completo. En la Parte A los tres trabajan dentro de una sola máquina; en la Parte B el mismo mensaje cruza la red y llega a otro servidor, que es como funciona el correo en internet.</p>
+        <div class="tabla-wrap"><table class="tabla"><thead><tr><th>Servicio</th><th>Rol</th><th>En la práctica</th></tr></thead><tbody>
+          <tr><td>Postfix</td><td>MTA y MDA</td><td>Recibe el correo de Thunderbird, lo envía al Postfix del compañero y guarda en Maildir el que llega para ti.</td></tr>
+          <tr><td>Dovecot</td><td>Acceso IMAP/POP3</td><td>Permite a Thunderbird leer tu Maildir.</td></tr>
+          <tr><td>Thunderbird</td><td>MUA</td><td>Redacta, envía y muestra los correos.</td></tr>
+          <tr><td>transport</td><td>Enrutamiento</td><td>Sustituye al DNS: indica la IP de cada dominio .lab.</td></tr>
+        </tbody></table></div>
+      </div>
+    </article>
+
+    <!-- ---------- Del laboratorio a producción ---------- -->
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">C.1</span>
+        <div>
+          <h3 class="nombre">Del laboratorio a producción</h3>
+          <p class="desc">Lo que cambia cuando el servidor de correo atiende a una institución real.</p>
         </div>
-        
+        <span></span>
+      </div>
+      <div class="detalle">
+        <div class="tabla-wrap"><table class="tabla"><thead><tr><th>Aspecto</th><th>Laboratorio</th><th>Producción</th></tr></thead><tbody>
+          <tr><td>Dominio</td><td>Inventado: <code class="inl">debianserverN.lab</code>. Solo existe en tu VM.</td><td>Registrado ante una autoridad, por ejemplo <code class="inl">udg.mx</code> ante NIC México.</td></tr>
+          <tr><td>Encontrar al otro</td><td>Tabla <code class="inl">transport</code> escrita a mano.</td><td>Registro MX en el DNS público, consultado automáticamente.</td></tr>
+          <tr><td>IP</td><td>Privada y dinámica (DHCP del laboratorio).</td><td>Pública y fija, alcanzable desde cualquier parte de internet.</td></tr>
+          <tr><td>Puertos</td><td>25 dentro de la red local.</td><td>25 abierto a internet entre servidores; 587 y 993 para los usuarios.</td></tr>
+          <tr><td>Seguridad</td><td>Sin cifrado ni verificación.</td><td>TLS, autenticación, SPF, DKIM, DMARC, antispam y antivirus.</td></tr>
+        </tbody></table></div>
+      </div>
+    </article>
 
-        <div class="cmd-row">
-          <div class="cmd-num">15.3</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Muestra en tiempo real el registro general de correo, si está disponible.</div>
-            <div class="code-wrap">
-              <code>sudo tail -f /var/log/mail.log</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+    <!-- ---------- Registro MX ---------- -->
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">C.2</span>
+        <div>
+          <h3 class="nombre">Cómo funciona el registro MX</h3>
+          <p class="desc">El DNS no solo traduce nombres a IPs: también indica qué servidor recibe el correo de cada dominio.</p>
         </div>
-        
+        <span></span>
+      </div>
+      <div class="detalle">
+        <p class="texto">Cuando un servidor tiene que entregar un correo para <code class="inl">ana@alumnos.udg.mx</code>, no sabe a quién dárselo. Le pregunta al DNS por el registro MX (Mail eXchanger) del dominio, que es lo que tú resolviste a mano con la tabla transport:</p>
 
-        <div class="cmd-row">
-          <div class="cmd-num">15.4</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Muestra la configuración activa y modificada de Postfix.</div>
-            <div class="code-wrap">
-              <code>postconf -n</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+        <div class="diagrama">
+          <svg viewBox="0 0 900 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="mx-t">
+            <title id="mx-t">Un servidor remitente consulta el registro MX de alumnos.udg.mx en el DNS y entrega el correo a los servidores de Google</title>
+            <defs>
+              <marker id="mx-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#D70A53"/></marker>
+              <marker id="mx-tl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#0F6E78"/></marker>
+            </defs>
+            <rect class="d-box" x="40" y="16" width="190" height="64" rx="4"/>
+            <text class="d-t" x="135" y="44" text-anchor="middle">DNS</text>
+            <text class="d-s" x="135" y="63" text-anchor="middle">zona de udg.mx</text>
+
+            <rect class="d-box" x="40" y="176" width="190" height="64" rx="4"/>
+            <text class="d-t" x="135" y="204" text-anchor="middle">Servidor remitente</text>
+            <text class="d-s" x="135" y="223" text-anchor="middle">MTA, p. ej. Gmail</text>
+
+            <line class="d-imap" x1="105" y1="176" x2="105" y2="84" marker-end="url(#mx-tl)"/>
+            <circle class="d-c t" cx="105" cy="128" r="10"/><text class="d-cn" x="105" y="132" text-anchor="middle">1</text>
+            <line class="d-imap" x1="165" y1="80" x2="165" y2="172" marker-end="url(#mx-tl)"/>
+            <circle class="d-c t" cx="165" cy="128" r="10"/><text class="d-cn" x="165" y="132" text-anchor="middle">2</text>
+            <text class="d-l" x="190" y="114">¿MX de alumnos.udg.mx?</text>
+            <text class="d-l" x="190" y="146">smtp.google.com, prioridad 1</text>
+
+            <line class="d-smtp" x1="230" y1="208" x2="596" y2="208" marker-end="url(#mx-r)"/>
+            <circle class="d-c" cx="413" cy="208" r="10"/><text class="d-cn" x="413" y="212" text-anchor="middle">3</text>
+            <text class="d-l" x="413" y="190" text-anchor="middle">SMTP :25</text>
+            <text class="d-s" x="413" y="233" text-anchor="middle">a la IP pública del servidor MX</text>
+
+            <rect class="d-box" x="600" y="176" width="260" height="64" rx="4"/>
+            <text class="d-t" x="730" y="204" text-anchor="middle">smtp.google.com</text>
+            <text class="d-s" x="730" y="223" text-anchor="middle">buzón de ana@alumnos.udg.mx</text>
+          </svg>
         </div>
-        
+        <ol class="pasos-flujo">
+          <li>El servidor remitente pregunta al DNS por el registro MX de <code class="inl">alumnos.udg.mx</code>.</li>
+          <li>El DNS responde con el nombre del servidor de correo y su prioridad. Después, con otra consulta (registro A), obtiene su IP.</li>
+          <li>El remitente se conecta a esa IP por SMTP en el puerto 25 y entrega el mensaje, igual que tu Postfix lo hizo con el de tu compañero.</li>
+        </ol>
+        <p class="texto">Un dominio puede tener varios registros MX con distinta prioridad: se usa primero el número más bajo y, si no responde, el siguiente. Así funcionan los servidores de respaldo.</p>
+      </div>
+    </article>
 
-        <div class="cmd-row">
-          <div class="cmd-num">15.5</div>
-          <div class="cmd-content">
-            <div class="cmd-desc">Muestra la configuración activa y modificada de Dovecot.</div>
-            <div class="code-wrap">
-              <code>doveconf -n</code>
-              <button onclick="copyCommand(this)">Copiar</button>
-            </div>
-          </div>
+    <!-- ---------- Ejemplo UdG ---------- -->
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">C.3</span>
+        <div>
+          <h3 class="nombre">Ejemplo: los dominios de la UdG</h3>
+          <p class="desc">Un dominio registrado, varios subdominios de correo, y cada uno puede apuntar a un proveedor distinto.</p>
         </div>
-        
-</section>
+        <span></span>
+      </div>
+      <div class="detalle">
+        <p class="texto">La Universidad de Guadalajara registró <code class="inl">udg.mx</code> y administra su zona DNS. Dentro de ella crea subdominios para cada población, como <code class="inl">alumnos.udg.mx</code> para estudiantes y <code class="inl">academicos.udg.mx</code> para profesores, y a cada uno le asigna sus propios registros MX. Las cuentas de alumnos y académicos son cuentas de Google, así que sus MX apuntan a los servidores de Google.</p>
+        <div class="ejemplo archivo"><p class="arch">Zona DNS de udg.mx (ejemplo ilustrativo; los valores reales se consultan con dig en C.5)</p><pre>alumnos.udg.mx.          MX    1   smtp.google.com.
+academicos.udg.mx.       MX    1   smtp.google.com.
+administrativos.udg.mx.  MX   10   correo.udg.mx.
+correo.udg.mx.           A         (IP pública fija de la universidad)
+alumnos.udg.mx.          TXT       "v=spf1 include:_spf.google.com ~all"</pre><button class="copiar" type="button" data-copiar="alumnos.udg.mx.          MX    1   smtp.google.com.
+academicos.udg.mx.       MX    1   smtp.google.com.
+administrativos.udg.mx.  MX   10   correo.udg.mx.
+correo.udg.mx.           A         (IP pública fija de la universidad)
+alumnos.udg.mx.          TXT       &quot;v=spf1 include:_spf.google.com ~all&quot;">Copiar</button></div>
+        <p class="pie-ej">La línea de administrativos.udg.mx es hipotética: muestra que un subdominio podría apuntar a un servidor propio (un Postfix como el tuyo) mientras otros usan Google.</p>
+        <dl class="opciones" style="margin-top:14px">
+          <dt>Por qué subdominios</dt><dd>Cada población puede tener su propio proveedor, políticas, cuotas de almacenamiento y reglas de alta y baja de cuentas sin afectar a las demás.</dd>
+          <dt>Quién hace qué</dt><dd>Google opera los servidores y guarda los buzones. La universidad administra los registros DNS y da de alta las cuentas, por ejemplo desde SIIAU.</dd>
+          <dt>Registro TXT (SPF)</dt><dd>Publica qué servidores pueden enviar correo a nombre del dominio. Un correo de @alumnos.udg.mx que salga de otro servidor se marca como sospechoso.</dd>
+        </dl>
+      </div>
+    </article>
 
-    <section class="card">
-      <h2>Conclusión didáctica</h2>
-      <p>Postfix y Dovecot trabajan juntos para construir un servidor de correo funcional. Postfix se encarga del envío y transferencia de mensajes mediante SMTP, mientras que Dovecot permite que los usuarios consulten sus buzones mediante IMAP o POP3. En un laboratorio local, esta configuración permite comprender la arquitectura básica de un sistema de correo electrónico en Linux.</p>
+    <!-- ---------- IP pública y fija ---------- -->
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">C.4</span>
+        <div>
+          <h3 class="nombre">¿La IP en producción es pública y fija?</h3>
+          <p class="desc">Sí, la del servidor que recibe el correo. Pero no siempre es de la institución.</p>
+        </div>
+        <span></span>
+      </div>
+      <div class="detalle">
+        <dl class="opciones">
+          <dt>Pública</dt><dd>Tiene que ser alcanzable desde cualquier servidor de internet. Una IP privada como las del laboratorio (192.168.x.x) no sale de la red local.</dd>
+          <dt>Fija</dt><dd>El registro A del servidor MX apunta a esa IP. Si cambiara, el correo fallaría hasta que el DNS se actualice y el cambio se propague.</dd>
+          <dt>DNS inverso (PTR)</dt><dd>La IP debe resolver de vuelta al nombre del servidor. Muchos servidores rechazan correo de IPs sin PTR o con uno que no coincide.</dd>
+          <dt>Reputación</dt><dd>Las IPs dinámicas de internet doméstico están en listas negras y los proveedores suelen bloquear el puerto 25, por eso no se monta un servidor de correo en casa.</dd>
+          <dt>Con Google o Microsoft</dt><dd>Las IPs públicas y fijas son del proveedor. La institución no necesita una propia para el correo: solo apunta sus registros MX hacia el proveedor.</dd>
+        </dl>
+      </div>
+    </article>
 
-      <table>
-        <tr>
-          <th>Servicio</th>
-          <th>Rol</th>
-          <th>Ejemplo en la práctica</th>
-        </tr>
-        <tr>
-          <td>Postfix</td>
-          <td>Envía y entrega mensajes</td>
-          <td>Recibe el correo enviado a juan y lo guarda en Maildir.</td>
-        </tr>
-        <tr>
-          <td>Dovecot</td>
-          <td>Permite leer mensajes</td>
-          <td>Thunderbird se conecta a Dovecot para mostrar el buzón de juan.</td>
-        </tr>
-        <tr>
-          <td>Thunderbird</td>
-          <td>Cliente de correo</td>
-          <td>Permite probar visualmente el envío y recepción de mensajes.</td>
-        </tr>
-      </table>
-    </section>
-  </main>
+    <!-- ---------- Pruébalo ---------- -->
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">C.5</span>
+        <div>
+          <h3 class="nombre">Pruébalo: consulta registros MX reales</h3>
+          <p class="desc">Desde tu VM, con salida a internet, consulta los registros de dominios reales.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo apt install dnsutils -y
+dig MX alumnos.udg.mx +short
+dig MX academicos.udg.mx +short
+dig MX gmail.com +short
+dig TXT alumnos.udg.mx +short" aria-label="Copiar todos los comandos del paso C.5">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo apt install dnsutils -y</pre><button class="copiar" type="button" data-copiar="sudo apt install dnsutils -y">Copiar</button></div>
+        <div class="ejemplo"><pre><span class="p">$</span>dig MX alumnos.udg.mx +short</pre><button class="copiar" type="button" data-copiar="dig MX alumnos.udg.mx +short">Copiar</button></div>
+        <div class="ejemplo"><pre><span class="p">$</span>dig MX academicos.udg.mx +short</pre><button class="copiar" type="button" data-copiar="dig MX academicos.udg.mx +short">Copiar</button></div>
+        <div class="ejemplo"><pre><span class="p">$</span>dig MX gmail.com +short</pre><button class="copiar" type="button" data-copiar="dig MX gmail.com +short">Copiar</button></div>
+        <p class="pie-ej">Cada línea muestra la prioridad y el servidor de correo. Compara los MX de la UdG con los de gmail.com.</p>
+        <div class="ejemplo"><pre><span class="p">$</span>dig TXT alumnos.udg.mx +short</pre><button class="copiar" type="button" data-copiar="dig TXT alumnos.udg.mx +short">Copiar</button></div>
+        <p class="pie-ej">Busca la línea que empieza con v=spf1: son los servidores autorizados para enviar como @alumnos.udg.mx.</p>
+        <p class="aviso">⚠ Si dig no responde nada para un subdominio, ese dominio no tiene registro MX propio o usa otro nombre. No todos los subdominios de udg.mx reciben correo.</p>
+      </div>
+    </article>
+  </section>
+</main>
 
-  <footer>
-    Material didáctico para práctica de laboratorio en Debian 12.
-  </footer>
+<footer>
+  <div class="wrap">
+    <p>Para revisar todo el sistema de un vistazo: <code class="inl">postconf -n</code>, <code class="inl">doveconf -n</code> y <code class="inl">mailq</code>.</p>
+    <p>Escuela Politécnica «Ing. Jorge Matute Remus» · Academia de Redes de Cómputo</p>
+  </div>
+</footer>
 
-  <script>
-    function copyCommand(button) {
-      const code = button.parentElement.querySelector("code").innerText;
-      navigator.clipboard.writeText(code).then(() => {
-        const original = button.innerText;
-        button.innerText = "Copiado";
-        setTimeout(() => {
-          button.innerText = original;
-        }, 1400);
-      });
-    }
-  </script>
+<div id="aviso-copia" role="status" aria-live="polite"></div>
+
+<script>
+const datos = {N:'', U:''};
+const porDefecto = {N:'N', U:'usuario'};
+const val = k => datos[k] || porDefecto[k];
+
+function limpiarUsuario(t){
+  return t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ñ/g,'n').replace(/[^a-z0-9._-]/g,'');
+}
+function pintar(){
+  document.querySelectorAll('.var[data-v]').forEach(s => { s.textContent = val(s.dataset.v); });
+}
+function guardar(){ try{ localStorage.setItem('postfix-datos', JSON.stringify(datos)); }catch(e){} }
+
+const fN = document.getElementById('f-n'), fU = document.getElementById('f-u');
+try{
+  const g = JSON.parse(localStorage.getItem('postfix-datos') || '{}');
+  if(g.N) datos.N = String(g.N); if(g.U) datos.U = String(g.U);
+}catch(e){}
+fN.value = datos.N; fU.value = datos.U; pintar();
+
+fN.addEventListener('input', () => { datos.N = fN.value.replace(/\D/g,'').slice(0,2); pintar(); guardar(); });
+fU.addEventListener('input', () => {
+  const l = limpiarUsuario(fU.value);
+  if(l !== fU.value) fU.value = l;
+  datos.U = l; pintar(); guardar();
+});
+
+async function copiar(texto){
+  try{
+    await navigator.clipboard.writeText(texto);
+    return true;
+  }catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = texto;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try{ ok = document.execCommand('copy'); }catch(_){ ok = false; }
+    document.body.removeChild(ta);
+    return ok;
+  }
+}
+
+document.addEventListener('click', async ev => {
+  const btn = ev.target.closest('.copiar');
+  if(!btn) return;
+  const original = btn.textContent;
+  const texto = btn.dataset.copiar.replace(/%N%/g, val('N')).replace(/%U%/g, val('U'));
+  const ok = await copiar(texto);
+  btn.textContent = ok ? 'Copiado' : 'Selecciona y copia';
+  btn.classList.toggle('ok', ok);
+  document.getElementById('aviso-copia').textContent = ok ? 'Copiado: ' + texto : 'No se pudo copiar';
+  setTimeout(() => { btn.textContent = original; btn.classList.remove('ok'); }, 1600);
+});
+</script>
 </body>
 </html>
