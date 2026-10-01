@@ -1162,6 +1162,46 @@ dig TXT alumnos.udg.mx +short" aria-label="Copiar todos los comandos del paso C.
         <p class="aviso">⚠ Si dig no responde nada para un subdominio, ese dominio no tiene registro MX propio o usa otro nombre. No todos los subdominios de udg.mx reciben correo.</p>
       </div>
     </article>
+    <!-- ===================== Postfix en el mundo real (pegar antes del </section> de la Conclusión) ===================== -->
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">C.6</span>
+        <div>
+          <h3 class="nombre">¿Quién usa Postfix en producción?</h3>
+          <p class="desc">Es uno de los servidores de correo más usados en internet; junto con Exim ocupa los primeros lugares entre los servidores SMTP públicos.</p>
+        </div>
+        <span></span>
+      </div>
+      <div class="detalle">
+        <div class="tabla-wrap"><table class="tabla"><thead><tr><th>Dónde</th><th>Ejemplos</th></tr></thead><tbody><tr><td>Distribuciones</td><td>MTA por defecto o recomendado en Debian, Ubuntu y RHEL/Rocky. macOS también lo incluye.</td></tr><tr><td>Suites de correo</td><td>Zimbra, Mailcow, iRedMail y Mail-in-a-Box usan Postfix + Dovecot por dentro, igual que esta práctica.</td></tr><tr><td>Gateways y antispam</td><td>Proxmox Mail Gateway y muchos equipos de filtrado se basan en Postfix.</td></tr><tr><td>Instituciones</td><td>Hosting, universidades y gobierno que operan su propio correo.</td></tr><tr><td>Aplicaciones</td><td>Servidores web, cron y monitoreo que necesitan enviar notificaciones.</td></tr></tbody></table></div><p class="pie-ej">Google, Microsoft y Amazon no lo usan: operan sus propios servidores de correo desarrollados internamente, diseñados para miles de millones de mensajes al día.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">C.7</span>
+        <div>
+          <h3 class="nombre">Cómo está construido</h3>
+          <p class="desc">Lo creó Wietse Venema en IBM a finales de los 90 como alternativa segura a Sendmail. Está escrito en C y es software libre.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="ps aux | grep postfix" aria-label="Copiar el comando del paso C.7">Copiar</button>
+      </div>
+      <div class="detalle">
+        <p class="texto">En lugar de un solo programa grande, Postfix son varios procesos pequeños con permisos mínimos, coordinados por <code class="inl">master</code>. Si uno falla o es atacado, los demás no quedan expuestos.</p><div class="tabla-wrap"><table class="tabla"><thead><tr><th>Proceso</th><th>Función</th></tr></thead><tbody><tr><td>master</td><td>Arranca y vigila a los demás procesos. Es el que viste en el puerto 25.</td></tr><tr><td>smtpd</td><td>Recibe conexiones SMTP.</td></tr><tr><td>cleanup</td><td>Revisa y normaliza el mensaje y lo pone en la cola.</td></tr><tr><td>qmgr</td><td>Administra la cola y decide qué se entrega y cuándo.</td></tr><tr><td>smtp</td><td>Entrega a otros servidores, como al Postfix de tu compañero.</td></tr><tr><td>local</td><td>Entrega en el buzón del usuario (Maildir).</td></tr></tbody></table></div><div class="ejemplo"><pre><span class="p">$</span>ps aux | grep postfix</pre><button class="copiar" type="button" data-copiar="ps aux | grep postfix">Copiar</button></div><p class="pie-ej">Muestra los procesos de Postfix que están corriendo en tu VM.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">C.8</span>
+        <div>
+          <h3 class="nombre">¿Se puede programar un servidor de correo?</h3>
+          <p class="desc">Sí. SMTP es un protocolo abierto y de texto: es el mismo HELO, MAIL FROM, RCPT TO y DATA que escribiste con telnet.</p>
+        </div>
+        <span></span>
+      </div>
+      <div class="detalle">
+        <div class="tabla-wrap"><table class="tabla"><thead><tr><th>Lenguaje</th><th>Librerías</th></tr></thead><tbody><tr><td>Python</td><td>aiosmtpd para recibir, smtplib para enviar.</td></tr><tr><td>Node.js</td><td>smtp-server; Haraka es un servidor de correo completo.</td></tr><tr><td>Go</td><td>go-smtp.</td></tr></tbody></table></div><p class="texto">Hacer uno sencillo es fácil. Hacer uno para producción es muy difícil: lo complicado no es el protocolo, sino las colas y reintentos durante días, la consulta de MX, TLS, SPF, DKIM, DMARC, los rebotes, el antispam y la seguridad de un servicio expuesto a todo internet. Por eso en la práctica se usa Postfix como base y se programa alrededor de él:</p><div class="tabla-wrap"><table class="tabla"><thead><tr><th>Punto de extensión</th><th>Qué permite</th></tr></thead><tbody><tr><td>Policy service</td><td>Postfix le pregunta a tu programa si acepta un correo. Se escribe en cualquier lenguaje.</td></tr><tr><td>Milter</td><td>Filtro que revisa o modifica cada mensaje: antivirus, firmas, DKIM.</td></tr><tr><td>Transport tipo pipe</td><td>Entrega el correo a un script en lugar de un buzón, por ejemplo para crear un ticket.</td></tr><tr><td>Envío desde una app</td><td>La aplicación manda a localhost:25 y Postfix se encarga de la cola y los reintentos.</td></tr></tbody></table></div>
+      </div>
+    </article>
   </section>
 </main>
 
