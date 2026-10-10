@@ -14,11 +14,14 @@
   li{margin-bottom:12px}
   b{font-family:ui-monospace,Consolas,monospace;color:var(--accent)}
   span{color:var(--muted)}
-  .cmd{display:flex;gap:6px;margin-top:4px}
-  code{flex:1;background:var(--code);color:var(--codetx);padding:7px 10px;border-radius:6px;
-       font:13px ui-monospace,Consolas,monospace;overflow-x:auto;white-space:nowrap}
-  button{border:0;border-radius:6px;background:var(--accent);color:#fff;font:600 12px system-ui;padding:0 12px;cursor:pointer}
-  button.ok{background:var(--ok)}
+  .cmd{margin-top:4px}
+  code{display:block;position:relative;background:var(--code);color:var(--codetx);padding:7px 10px;border-radius:6px;
+       font:13px ui-monospace,Consolas,monospace;overflow-x:auto;white-space:nowrap;cursor:pointer;
+       border:2px solid transparent;transition:border-color .15s}
+  code:hover{border-color:var(--accent)}
+  code.ok{border-color:var(--ok)}
+  code.ok::after{content:"✓ Copiado";position:sticky;float:right;right:0;margin-left:12px;
+       background:var(--ok);color:#fff;font:600 11px system-ui;padding:1px 8px;border-radius:4px}
 </style>
 </head>
 <body>
@@ -26,34 +29,35 @@
 <h1>Procedures · 10minilv$evprofe</h1>
 <ol>
   <li><b>alumnos_grupo</b> <span>— alumnos de un grupo (CRN opcional)</span>
-    <div class="cmd"><code>CALL alumnos_grupo('TPEA1AV,265905');</code><button>Copiar</button></div></li>
+    <div class="cmd"><code>CALL alumnos_grupo('TPEA1AV,265905');</code></div></li>
   <li><b>mods_grupo</b> <span>— módulos y CRN del grupo con profesor y núm. de alumnos</span>
-    <div class="cmd"><code>CALL mods_grupo('TBIO1AM');</code><button>Copiar</button></div></li>
+    <div class="cmd"><code>CALL mods_grupo('TBIO1AM');</code></div></li>
   <li><b>crn_grupo</b> <span>— módulos, CRN y profesores únicos del grupo</span>
-    <div class="cmd"><code>CALL crn_grupo('TBIO1AM');</code><button>Copiar</button></div></li>
+    <div class="cmd"><code>CALL crn_grupo('TBIO1AM');</code></div></li>
   <li><b>grupos</b> <span>— todos los grupos M | V con totales</span>
-    <div class="cmd"><code>CALL grupos();</code><button>Copiar</button></div></li>
+    <div class="cmd"><code>CALL grupos();</code></div></li>
   <li><b>alumnos_crn</b> <span>— todos los registros de un CRN</span>
-    <div class="cmd"><code>CALL alumnos_crn(265905);</code><button>Copiar</button></div></li>
+    <div class="cmd"><code>CALL alumnos_crn(265905);</code></div></li>
   <li><b>prof</b> <span>— grupos, módulos y CRN de un profesor</span>
-    <div class="cmd"><code>CALL prof(2963333);</code><button>Copiar</button></div></li>
+    <div class="cmd"><code>CALL prof(2963333);</code></div></li>
   <li><b>buscarp</b> <span>— buscar profesor por parte del nombre</span>
-    <div class="cmd"><code>CALL buscarp('lopez');</code><button>Copiar</button></div></li>
+    <div class="cmd"><code>CALL buscarp('lopez');</code></div></li>
   <li><b>buscarm</b> <span>— buscar módulo por nombre: CRN en evaluacion y materiasnn</span>
-    <div class="cmd"><code>CALL buscarm('perspectiva');</code><button>Copiar</button></div></li>
+    <div class="cmd"><code>CALL buscarm('perspectiva');</code></div></li>
   <li><b>reasignar_crn</b> <span>— cambiar profesor: grupo, CodigoP actual, CodigoP nuevo, CRN</span>
-    <div class="cmd"><code>CALL reasignar_crn('TPIN2AM,2026589,2250458,265298');</code><button>Copiar</button></div></li>
+    <div class="cmd"><code>CALL reasignar_crn('TPIN2AM,2026589,2250458,265298');</code></div></li>
   <li><b>cargar alumnoscrn</b> <span>— paso previo al 11 (entrar con mysql --local-infile=1)</span>
-    <div class="cmd"><code>TRUNCATE TABLE alumnoscrn; LOAD DATA LOCAL INFILE 'alumnos.csv' INTO TABLE alumnoscrn CHARACTER SET utf8 FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"' LINES TERMINATED BY '\r\n' IGNORE 1 LINES (CodigoAl, NombreAl, Grupo, IdMod, CRN, CodigoP);</code><button>Copiar</button></div></li>
+    <div class="cmd"><code>TRUNCATE TABLE alumnoscrn; LOAD DATA LOCAL INFILE 'alumnos.csv' INTO TABLE alumnoscrn CHARACTER SET utf8 FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"' LINES TERMINATED BY '\r\n' IGNORE 1 LINES (CodigoAl, NombreAl, Grupo, IdMod, CRN, CodigoP);</code></div></li>
   <li><b>importar_alumnoscrn</b> <span>— pasa a evaluacion los alumnos faltantes de alumnoscrn</span>
-    <div class="cmd"><code>CALL importar_alumnoscrn();</code><button>Copiar</button></div></li>
+    <div class="cmd"><code>CALL importar_alumnoscrn();</code></div></li>
 </ol>
 </div>
 <script>
-document.querySelectorAll('.cmd button').forEach(function(b){
+document.querySelectorAll('.cmd code').forEach(function(b){
+  b.title='Clic para copiar';
   b.onclick=function(){
-    var t=b.previousElementSibling.innerText;
-    var done=function(){b.textContent='✓';b.classList.add('ok');setTimeout(function(){b.textContent='Copiar';b.classList.remove('ok')},1200)};
+    var t=b.innerText;
+    var done=function(){b.classList.add('ok');setTimeout(function(){b.classList.remove('ok')},1200)};
     if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(done,function(){fb(t);done()})}else{fb(t);done()}
   };
 });
