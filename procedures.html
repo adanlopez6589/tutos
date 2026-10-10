@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Procedures evprofe</title>
+<style>
+  :root{--bg:#f5f6f8;--text:#1d2330;--muted:#5d6678;--accent:#1f5fbf;--code:#0f1720;--codetx:#e6edf3;--ok:#1d8a4e}
+  @media (prefers-color-scheme:dark){:root{--bg:#11151c;--text:#e4e8ef;--muted:#9aa4b5;--accent:#6fa3ff;--code:#0a0e14}}
+  body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,"Segoe UI",sans-serif}
+  .wrap{max-width:900px;margin:0 auto;padding:20px 16px}
+  h1{font-size:1.2rem;margin:0 0 14px}
+  ol{margin:0;padding-left:26px}
+  li{margin-bottom:12px}
+  b{font-family:ui-monospace,Consolas,monospace;color:var(--accent)}
+  span{color:var(--muted)}
+  .cmd{display:flex;gap:6px;margin-top:4px}
+  code{flex:1;background:var(--code);color:var(--codetx);padding:7px 10px;border-radius:6px;
+       font:13px ui-monospace,Consolas,monospace;overflow-x:auto;white-space:nowrap}
+  button{border:0;border-radius:6px;background:var(--accent);color:#fff;font:600 12px system-ui;padding:0 12px;cursor:pointer}
+  button.ok{background:var(--ok)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Procedures · 10minilv$evprofe</h1>
+<ol>
+  <li><b>alumnos_grupo</b> <span>— alumnos de un grupo (CRN opcional)</span>
+    <div class="cmd"><code>CALL alumnos_grupo('TPEA1AV,265905');</code><button>Copiar</button></div></li>
+  <li><b>mods_grupo</b> <span>— módulos y CRN del grupo con profesor y núm. de alumnos</span>
+    <div class="cmd"><code>CALL mods_grupo('TBIO1AM');</code><button>Copiar</button></div></li>
+  <li><b>crn_grupo</b> <span>— módulos, CRN y profesores únicos del grupo</span>
+    <div class="cmd"><code>CALL crn_grupo('TBIO1AM');</code><button>Copiar</button></div></li>
+  <li><b>grupos</b> <span>— todos los grupos M | V con totales</span>
+    <div class="cmd"><code>CALL grupos();</code><button>Copiar</button></div></li>
+  <li><b>alumnos_crn</b> <span>— todos los registros de un CRN</span>
+    <div class="cmd"><code>CALL alumnos_crn(265905);</code><button>Copiar</button></div></li>
+  <li><b>prof</b> <span>— grupos, módulos y CRN de un profesor</span>
+    <div class="cmd"><code>CALL prof(2963333);</code><button>Copiar</button></div></li>
+  <li><b>buscarp</b> <span>— buscar profesor por parte del nombre</span>
+    <div class="cmd"><code>CALL buscarp('lopez');</code><button>Copiar</button></div></li>
+  <li><b>buscarm</b> <span>— buscar módulo por nombre: CRN en evaluacion y materiasnn</span>
+    <div class="cmd"><code>CALL buscarm('perspectiva');</code><button>Copiar</button></div></li>
+  <li><b>reasignar_crn</b> <span>— cambiar profesor: grupo, CodigoP actual, CodigoP nuevo, CRN</span>
+    <div class="cmd"><code>CALL reasignar_crn('TPIN2AM,2026589,2250458,265298');</code><button>Copiar</button></div></li>
+  <li><b>cargar alumnoscrn</b> <span>— paso previo al 11 (entrar con mysql --local-infile=1)</span>
+    <div class="cmd"><code>TRUNCATE TABLE alumnoscrn; LOAD DATA LOCAL INFILE 'alumnos.csv' INTO TABLE alumnoscrn CHARACTER SET utf8 FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"' LINES TERMINATED BY '\r\n' IGNORE 1 LINES (CodigoAl, NombreAl, Grupo, IdMod, CRN, CodigoP);</code><button>Copiar</button></div></li>
+  <li><b>importar_alumnoscrn</b> <span>— pasa a evaluacion los alumnos faltantes de alumnoscrn</span>
+    <div class="cmd"><code>CALL importar_alumnoscrn();</code><button>Copiar</button></div></li>
+</ol>
+</div>
+<script>
+document.querySelectorAll('.cmd button').forEach(function(b){
+  b.onclick=function(){
+    var t=b.previousElementSibling.innerText;
+    var done=function(){b.textContent='✓';b.classList.add('ok');setTimeout(function(){b.textContent='Copiar';b.classList.remove('ok')},1200)};
+    if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(done,function(){fb(t);done()})}else{fb(t);done()}
+  };
+});
+function fb(t){var a=document.createElement('textarea');a.value=t;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a)}
+</script>
+</body>
+</html>
