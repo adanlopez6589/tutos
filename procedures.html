@@ -46,10 +46,16 @@
     <div class="cmd"><code>CALL buscarm('perspectiva');</code></div></li>
   <li><b>reasignar_crn</b> <span>— cambiar profesor: grupo, CodigoP actual, CodigoP nuevo, CRN</span>
     <div class="cmd"><code>CALL reasignar_crn('TPIN2AM,2026589,2250458,265298');</code></div></li>
-  <li><b>cargar alumnoscrn</b> <span>— paso previo al 11 (entrar con mysql --local-infile=1)</span>
-    <div class="cmd"><code>TRUNCATE TABLE alumnoscrn; LOAD DATA LOCAL INFILE 'alumnos.csv' INTO TABLE alumnoscrn CHARACTER SET utf8 FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"' LINES TERMINATED BY '\r\n' IGNORE 1 LINES (CodigoAl, NombreAl, Grupo, IdMod, CRN, CodigoP);</code></div></li>
-  <li><b>importar_alumnoscrn</b> <span>— pasa a evaluacion los alumnos faltantes de alumnoscrn</span>
+  <li><b>entrar a mysql</b> <span>— consola Bash, con carga local habilitada (paso previo al 11)</span>
+    <div class="cmd"><code>mysql --local-infile=1 -u 10minilv -h 10minilv.mysql.pythonanywhere-services.com -p '10minilv$evprofe'</code></div>
+    <span>— cargar alumnoscrn.csv (sin encabezado: Id,CodigoAl,NombreAl,Grupo,IdMod,CRN,CodigoP)</span>
+    <div class="cmd"><code>TRUNCATE TABLE alumnoscrn; LOAD DATA LOCAL INFILE '/home/10minilv/alumnoscrn.csv' INTO TABLE alumnoscrn CHARACTER SET utf8 FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"' LINES TERMINATED BY '\n' (Id, CodigoAl, NombreAl, Grupo, IdMod, CRN, CodigoP); SELECT COUNT(*) FROM alumnoscrn;</code></div></li>
+  <li><b>importar_alumnoscrn</b> <span>— pasa a evaluacion y materiasnn los alumnos faltantes de alumnoscrn</span>
     <div class="cmd"><code>CALL importar_alumnoscrn();</code></div></li>
+  <li><b>respaldar procedures</b> <span>— consola Bash, genera procedures_evprofe_FECHA.sql en /home/10minilv</span>
+    <div class="cmd"><code>mysqldump -u 10minilv -h 10minilv.mysql.pythonanywhere-services.com -p --routines --no-data --no-create-info --skip-triggers --no-create-db --set-gtid-purged=OFF --no-tablespaces '10minilv$evprofe' > procedures_evprofe_$(date +%F).sql</code></div></li>
+  <li><b>restaurar procedures</b> <span>— consola Bash, cambia la fecha por la del respaldo</span>
+    <div class="cmd"><code>mysql -u 10minilv -h 10minilv.mysql.pythonanywhere-services.com -p '10minilv$evprofe' < procedures_evprofe_2026-10-12.sql</code></div></li>
 </ol>
 </div>
 <script>
