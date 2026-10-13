@@ -28,7 +28,11 @@
 <div class="wrap">
 <h1>Procedures · 10minilv$evprofe</h1>
 <ol>
-  <li><b>alumnos_grupo</b> <span>— alumnos de un grupo (CRN opcional)</span>
+  <li><b>alumno</b> <span>— todos los módulos, CRN y profesores de un alumno</span>
+    <div class="cmd"><code>CALL alumno(226126177);</code></div></li>
+  <li><b>reg_alumno</b> <span>— registrar alumno en evaluacion y materiasnn: CodigoAl, 'GRUPO', IdMod, CRN</span>
+    <div class="cmd"><code>CALL reg_alumno(326020336, 'BTEA1BV', 299, 266421);</code></div></li>
+  <li><b>alumnos_grupo</b> <span>— datos generales del grupo y alumnos con Cal y retroalimentación (CRN opcional)</span>
     <div class="cmd"><code>CALL alumnos_grupo('TPEA1AV,265905');</code></div></li>
   <li><b>mods_grupo</b> <span>— módulos y CRN del grupo con profesor y núm. de alumnos</span>
     <div class="cmd"><code>CALL mods_grupo('TBIO1AM');</code></div></li>
@@ -38,9 +42,9 @@
     <div class="cmd"><code>CALL grupos();</code></div></li>
   <li><b>alumnos_crn</b> <span>— todos los registros de un CRN</span>
     <div class="cmd"><code>CALL alumnos_crn(265905);</code></div></li>
-  <li><b>prof</b> <span>— grupos, módulos y CRN de un profesor</span>
+  <li><b>prof</b> <span>— grupos, módulos y CRN de un profesor con núm. de alumnos</span>
     <div class="cmd"><code>CALL prof(2963333);</code></div></li>
-  <li><b>buscarp</b> <span>— buscar profesor por parte del nombre</span>
+  <li><b>buscarp</b> <span>— buscar profesor por parte del nombre en evaluacion y profesor</span>
     <div class="cmd"><code>CALL buscarp('lopez');</code></div></li>
   <li><b>buscarm</b> <span>— buscar módulo por nombre: CRN en evaluacion y materiasnn</span>
     <div class="cmd"><code>CALL buscarm('perspectiva');</code></div></li>
