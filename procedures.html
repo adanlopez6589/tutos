@@ -61,6 +61,24 @@
   <li><b>restaurar procedures</b> <span>— consola Bash, cambia la fecha por la del respaldo</span>
     <div class="cmd"><code>mysql -u 10minilv -h 10minilv.mysql.pythonanywhere-services.com -p '10minilv$evprofe' < procedures_evprofe_2026-10-12.sql</code></div></li>
 </ol>
+
+<h1 style="margin-top:28px">Funciones consultas.sh · consola Bash</h1>
+<ol>
+  <li><b>cargar consultas.sh</b> <span>— activa las funciones en la consola (una vez por sesión o tras editar el archivo)</span>
+    <div class="cmd"><code>source ~/consultas.sh</code></div></li>
+  <li><b>evaluacion</b> <span>— reporte general de todas las evaluaciones → evaluacion&lt;calendario&gt;.csv</span>
+    <div class="cmd"><code>evaluacion 2026B</code></div></li>
+  <li><b>sin_evaluar</b> <span>— CRN con alumnos sin evaluar por profesor → Sin_Evaluar&lt;calendario&gt;.csv</span>
+    <div class="cmd"><code>sin_evaluar 2026B</code></div></li>
+  <li><b>evaluacionAlumno</b> <span>— evaluaciones de un alumno → evaluacion_alumno_&lt;CodigoAl&gt;.csv</span>
+    <div class="cmd"><code>evaluacionAlumno 226126177</code></div></li>
+  <li><b>evaluacionGrupo</b> <span>— evaluaciones de un grupo → evaluacion_grupo_&lt;GRUPO&gt;.csv</span>
+    <div class="cmd"><code>evaluacionGrupo TBIO1AM</code></div></li>
+  <li><b>importar_tabla</b> <span>— importar CSV a cualquier tabla; con "vaciar" borra antes (pide confirmación)</span>
+    <div class="cmd"><code>importar_tabla alumnoscrn.csv alumnoscrn vaciar</code></div></li>
+  <li><b>importar_tabla + importar_alumnoscrn</b> <span>— flujo completo de alumnos en una línea</span>
+    <div class="cmd"><code>importar_tabla alumnoscrn.csv alumnoscrn vaciar && mysql -t -u 10minilv -h 10minilv.mysql.pythonanywhere-services.com '10minilv$evprofe' -e "CALL importar_alumnoscrn();"</code></div></li>
+</ol>
 </div>
 <script>
 document.querySelectorAll('.cmd code').forEach(function(b){
