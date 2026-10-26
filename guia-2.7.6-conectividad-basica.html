@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía 2.7.6 – Conectividad básica</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#ffffff; --text:#1d2330; --muted:#5b6475;
+    --accent:#0b6e99; --accent-soft:#e3f2f8; --border:#dde2ea;
+    --code-bg:#14191f; --code-text:#e6edf3; --prompt:#7ee787; --comment:#8b949e;
+    --warn-bg:#fff6e0; --warn-border:#e8b339; --ok-bg:#e8f6ec; --ok-border:#3fa35b;
+    --info-bg:#eef3ff; --info-border:#5b7cfa;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0f1318; --card:#171c23; --text:#e4e8ee; --muted:#9aa4b2;
+      --accent:#4fb3dd; --accent-soft:#16303c; --border:#2a313b;
+      --code-bg:#0b0e12; --warn-bg:#2e2512; --ok-bg:#132a1b; --info-bg:#161e36;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.6;font-size:16px}
+  header{background:var(--accent);color:#fff;padding:32px 16px}
+  header .wrap{max-width:960px;margin:0 auto}
+  header h1{margin:0 0 6px;font-size:1.8rem}
+  header p{margin:0;opacity:.9}
+  nav{max-width:960px;margin:20px auto 0;padding:0 16px}
+  nav .toc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 20px}
+  nav ol{margin:6px 0 0;padding-left:20px;columns:2;column-gap:32px}
+  nav a{color:var(--accent);text-decoration:none}
+  nav a:hover{text-decoration:underline}
+  main{max-width:960px;margin:0 auto;padding:16px}
+  section{background:var(--card);border:1px solid var(--border);border-radius:10px;
+    padding:22px 24px;margin:20px 0}
+  h2{margin-top:0;color:var(--accent);border-bottom:2px solid var(--accent-soft);padding-bottom:6px}
+  h3{margin-top:26px}
+  h4{margin:18px 0 6px}
+  table{border-collapse:collapse;width:100%;margin:12px 0;font-size:.95rem}
+  th,td{border:1px solid var(--border);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:var(--accent-soft)}
+  .tablewrap{overflow-x:auto}
+  code{font-family:Consolas,"Courier New",monospace;background:var(--accent-soft);
+    padding:1px 5px;border-radius:4px;font-size:.92em}
+  pre{position:relative;background:var(--code-bg);color:var(--code-text);padding:14px 16px;
+    border-radius:8px;overflow-x:auto;font-family:Consolas,"Courier New",monospace;
+    font-size:.92rem;line-height:1.5;margin:12px 0}
+  pre code{background:none;padding:0;color:inherit}
+  .p{color:var(--prompt)}
+  .c{color:var(--comment);font-style:italic}
+  .copy{position:absolute;top:8px;right:8px;background:#2b333d;color:#cfd6df;border:0;
+    border-radius:5px;padding:3px 9px;font-size:.78rem;cursor:pointer}
+  .copy:hover{background:#3a4552}
+  .box{border-left:4px solid;border-radius:6px;padding:10px 14px;margin:14px 0}
+  .warn{background:var(--warn-bg);border-color:var(--warn-border)}
+  .ok{background:var(--ok-bg);border-color:var(--ok-border)}
+  .info{background:var(--info-bg);border-color:var(--info-border)}
+  .box strong:first-child{display:block;margin-bottom:2px}
+  details{border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin:12px 0;background:var(--bg)}
+  summary{cursor:pointer;font-weight:600;color:var(--accent)}
+  .step{display:inline-block;background:var(--accent);color:#fff;border-radius:20px;
+    padding:1px 11px;font-size:.82rem;margin-right:6px;vertical-align:middle}
+  .diagram{font-family:Consolas,monospace;white-space:pre;background:var(--bg);
+    border:1px dashed var(--border);border-radius:8px;padding:14px;overflow-x:auto;font-size:.9rem}
+  footer{text-align:center;color:var(--muted);font-size:.85rem;padding:24px 16px 40px}
+  @media (max-width:640px){ nav ol{columns:1} section{padding:18px 16px} header h1{font-size:1.4rem} }
+  @media print{
+    body{background:#fff;color:#000;font-size:12px}
+    header{background:#fff;color:#000;border-bottom:2px solid #000;padding:10px 0}
+    section{border:none;padding:0;page-break-inside:auto}
+    .copy{display:none}
+    details{display:block} details>*{display:block}
+    pre{background:#f2f2f2;color:#000;border:1px solid #ccc}
+    .p{color:#000;font-weight:bold} .c{color:#555}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>2.7.6 Packet Tracer – Implementación de conectividad básica</h1>
+    <p>CCNA Introducción a las Redes (ITN v7) · Módulo 2 · Guía paso a paso con explicación de cada comando</p>
+  </div>
+</header>
+
+<nav>
+  <div class="toc">
+    <strong>Contenido</strong>
+    <ol>
+      <li><a href="#objetivos">Objetivos y topología</a></li>
+      <li><a href="#modos">Modos de IOS</a></li>
+      <li><a href="#parte1">Parte 1: Configuración básica de S1 y S2</a></li>
+      <li><a href="#parte2">Parte 2: Configurar las PCs</a></li>
+      <li><a href="#mascara">La máscara de red</a></li>
+      <li><a href="#parte3">Parte 3: Interfaz de administración (SVI)</a></li>
+      <li><a href="#parte4">Parte 4: Verificar conectividad</a></li>
+      <li><a href="#showrun">Leer el show running-config</a></li>
+      <li><a href="#errores">Errores comunes</a></li>
+      <li><a href="#resumen">Resumen de comandos</a></li>
+      <li><a href="#preguntas">Preguntas de repaso</a></li>
+    </ol>
+  </div>
+</nav>
+
+<main>
+
+<!-- ============ OBJETIVOS ============ -->
+<section id="objetivos">
+  <h2>1. Objetivos y topología</h2>
+  <p>En esta práctica vas a:</p>
+  <ul>
+    <li><strong>Parte 1:</strong> Configurar nombre, contraseñas y banner en los switches S1 y S2, y guardar la configuración.</li>
+    <li><strong>Parte 2:</strong> Asignar dirección IP a las PCs.</li>
+    <li><strong>Parte 3:</strong> Darle una IP de administración a cada switch (interfaz VLAN 1).</li>
+    <li><strong>Parte 4:</strong> Comprobar que todos los equipos se comunican con <code>ping</code>.</li>
+  </ul>
+
+  <h3>Topología</h3>
+  <div class="diagram">  PC1 ─────── S1 ─────── S2 ─────── PC2
+192.168.1.1   .253       .254    192.168.1.2</div>
+
+  <h3>Tabla de direccionamiento</h3>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Dispositivo</th><th>Interfaz</th><th>Dirección IP</th><th>Máscara de subred</th></tr>
+    <tr><td>S1</td><td>VLAN 1</td><td>192.168.1.253</td><td>255.255.255.0</td></tr>
+    <tr><td>S2</td><td>VLAN 1</td><td>192.168.1.254</td><td>255.255.255.0</td></tr>
+    <tr><td>PC1</td><td>NIC</td><td>192.168.1.1</td><td>255.255.255.0</td></tr>
+    <tr><td>PC2</td><td>NIC</td><td>192.168.1.2</td><td>255.255.255.0</td></tr>
+  </table>
+  </div>
+
+  <div class="box warn"><strong>Importante</strong>
+    Las contraseñas de esta guía (<code>cisco</code> para consola y <code>class</code> para modo privilegiado) y el texto del banner corresponden a ITN v7. Confírmalos en las instrucciones de tu archivo. El <em>Check Results</em> de Packet Tracer distingue mayúsculas, minúsculas y espacios.</div>
+</section>
+
+<!-- ============ MODOS ============ -->
+<section id="modos">
+  <h2>2. Antes de empezar: los modos de Cisco IOS</h2>
+  <p>El sistema operativo de los switches y routers Cisco (IOS) funciona por <strong>niveles</strong>. Cada nivel permite ciertos comandos, y el <strong>prompt</strong> (el texto antes del cursor) indica en qué nivel estás.</p>
+
+  <div class="diagram">S1&gt;                    Modo usuario (EXEC)          → solo consultas básicas
+ │ enable
+S1#                    Modo privilegiado            → show, copy, reload, ping
+ │ configure terminal
+S1(config)#            Configuración global         → hostname, enable secret, banner
+ │ line console 0  /  interface vlan 1
+S1(config-line)#       Configuración de línea       → password, login
+S1(config-if)#         Configuración de interfaz    → ip address, no shutdown</div>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>Comando</th><th>Qué hace</th></tr>
+    <tr><td><code>enable</code></td><td>Pasa de modo usuario (<code>&gt;</code>) a privilegiado (<code>#</code>).</td></tr>
+    <tr><td><code>configure terminal</code></td><td>Entra a configuración global.</td></tr>
+    <tr><td><code>exit</code></td><td>Sube <strong>un</strong> nivel.</td></tr>
+    <tr><td><code>end</code> o <code>Ctrl+Z</code></td><td>Regresa directo a modo privilegiado (<code>#</code>) desde cualquier submodo.</td></tr>
+  </table>
+  </div>
+
+  <div class="box info"><strong>El prefijo "no"</strong>
+    En IOS, escribir <code>no</code> antes de un comando lo <strong>cancela o deshace</strong>. Por ejemplo, <code>no hostname</code> regresa el nombre a <code>Switch</code>, y <code>no shutdown</code> enciende una interfaz.</div>
+</section>
+
+<!-- ============ PARTE 1 ============ -->
+<section id="parte1">
+  <h2>3. Parte 1: Configuración básica de S1 y S2</h2>
+  <p>Haz clic en <strong>S1 → pestaña CLI</strong>. Presiona Enter para obtener el prompt <code>Switch&gt;</code>.</p>
+
+  <h3><span class="step">Paso 1</span> Asignar nombre al switch</h3>
+<pre><code><span class="p">Switch&gt;</span> enable
+<span class="p">Switch#</span> configure terminal
+<span class="p">Switch(config)#</span> hostname S1
+<span class="p">S1(config)#</span></code></pre>
+  <p><code>hostname</code> cambia el nombre del dispositivo. El prompt cambia de inmediato a <code>S1</code>. Sirve para identificar en qué equipo estás trabajando, algo indispensable cuando hay muchos.</p>
+
+  <h3><span class="step">Paso 2</span> Contraseña de consola</h3>
+<pre><code><span class="p">S1(config)#</span> line console 0
+<span class="p">S1(config-line)#</span> password cisco
+<span class="p">S1(config-line)#</span> login
+<span class="p">S1(config-line)#</span> exit
+<span class="p">S1(config)#</span></code></pre>
+
+  <h4>¿Por qué <code>line console 0</code>?</h4>
+  <p>La contraseña de consola no es global: se asigna a una <strong>línea de acceso</strong> específica. Este comando entra al modo de configuración del <strong>puerto de consola</strong> (donde se conecta el cable azul o rollover). El prompt cambia a <code>(config-line)#</code>.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Parte</th><th>Significado</th></tr>
+    <tr><td><code>line</code></td><td>Configurar una línea de acceso al dispositivo</td></tr>
+    <tr><td><code>console</code></td><td>El tipo de línea: el puerto físico de consola</td></tr>
+    <tr><td><code>0</code></td><td>Número de línea. Los switches tienen una sola consola, la 0</td></tr>
+  </table>
+  </div>
+  <p>Otros tipos de línea: <code>line vty 0 15</code> (acceso remoto por Telnet/SSH, 16 líneas virtuales) y <code>line aux 0</code> (puerto auxiliar en algunos routers). Cada una se protege por separado.</p>
+
+  <h4>¿Por qué <code>password</code> y luego <code>login</code>?</h4>
+  <p><code>password cisco</code> solo <strong>guarda</strong> la contraseña. <code>login</code> hace que el switch la <strong>pida</strong> al conectarse. Son complementarios.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Configuración</th><th>Resultado al conectarse</th></tr>
+    <tr><td><code>password</code> sin <code>login</code></td><td>Entra directo, no pide nada</td></tr>
+    <tr><td><code>password</code> + <code>login</code></td><td>Muestra <code>Password:</code> y solo entra con la contraseña correcta</td></tr>
+    <tr><td><code>login</code> sin <code>password</code></td><td>Error: <em>Login disabled on line 0, until 'password' is set</em></td></tr>
+  </table>
+  </div>
+
+  <h4>¿Por qué <code>exit</code>?</h4>
+  <p>Regresa de <code>(config-line)#</code> a <code>(config)#</code>. El siguiente comando (<code>enable secret</code>) es <strong>global</strong>: afecta a todo el switch y no solo a la consola, por eso se escribe desde configuración global. Es una buena práctica para cerrar cada bloque de configuración.</p>
+
+  <h3><span class="step">Paso 2b</span> Contraseña cifrada de modo privilegiado</h3>
+<pre><code><span class="p">S1(config)#</span> enable secret class</code></pre>
+  <p>Protege el paso de modo usuario (<code>S1&gt;</code>) a modo privilegiado (<code>S1#</code>). Es la <strong>segunda capa de seguridad</strong>: la consola protege la entrada al equipo y el enable protege los comandos de administración.</p>
+
+  <h4><code>enable secret</code> vs <code>enable password</code></h4>
+  <div class="tablewrap">
+  <table>
+    <tr><th></th><th><code>enable password class</code></th><th><code>enable secret class</code></th></tr>
+    <tr><td>Cómo se guarda</td><td><strong>Texto plano</strong>, cualquiera la lee</td><td><strong>Hash MD5</strong> (tipo 5), no reversible</td></tr>
+    <tr><td>En <code>show running-config</code></td><td><code>enable password class</code></td><td><code>enable secret 5 $1$mERr$9cTj...</code></td></tr>
+    <tr><td>Estado</td><td>Obsoleto</td><td><strong>Recomendado</strong></td></tr>
+  </table>
+  </div>
+  <p>Si se configuran los dos, <strong>siempre gana <code>enable secret</code></strong>.</p>
+
+  <details>
+    <summary>¿Y qué es <code>service password-encryption</code>?</summary>
+    <p>Cifra las contraseñas que están en texto plano (consola, vty y enable password) con <strong>tipo 7</strong>. Es un cifrado débil que se revierte fácilmente con herramientas en línea; solo evita que se lean a simple vista. <strong>No sustituye</strong> a <code>enable secret</code>. No se pide en esta práctica.</p>
+<pre><code>line con 0
+ password 7 0822455D0A16       <span class="c">← tipo 7 (reversible)</span>
+enable secret 5 $1$mERr$...    <span class="c">← tipo 5 (hash, no reversible)</span></code></pre>
+  </details>
+
+  <h3><span class="step">Paso 3</span> Verificar las contraseñas</h3>
+<pre><code><span class="p">S1(config)#</span> end
+<span class="p">S1#</span> show running-config</code></pre>
+  <p>Observa:</p>
+  <ul>
+    <li><code>enable secret 5 $1$...</code>: la contraseña de enable aparece <strong>cifrada</strong>.</li>
+    <li>En <code>line con 0</code>, la línea <code>password cisco</code> aparece <strong>en texto plano</strong>.</li>
+  </ul>
+  <p>Para probarlo, escribe <code>exit</code> hasta salir de la sesión, presiona Enter y verifica que pida la contraseña de consola y después la de enable.</p>
+
+  <h3><span class="step">Paso 4</span> Banner MOTD</h3>
+<pre><code><span class="p">S1#</span> configure terminal
+<span class="p">S1(config)#</span> banner motd #Authorized access only.#
+<span class="p">S1(config)#</span> end</code></pre>
+  <p>Un <strong>banner</strong> es un mensaje de texto que el switch muestra automáticamente cuando alguien se conecta, <strong>antes</strong> de pedir la contraseña. Se usa como <strong>aviso legal</strong> de acceso restringido.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Parte</th><th>Significado</th></tr>
+    <tr><td><code>banner</code></td><td>Configurar un mensaje</td></tr>
+    <tr><td><code>motd</code></td><td><em>Message Of The Day</em>, el mensaje del día</td></tr>
+    <tr><td><code>#</code> … <code>#</code></td><td><strong>Delimitadores</strong>: marcan el inicio y el fin del texto. Puede ser cualquier carácter que no aparezca dentro del mensaje (<code>#</code>, <code>$</code>, <code>%</code>)</td></tr>
+  </table>
+  </div>
+  <p>Así se ve al conectarse:</p>
+<pre><code>Authorized access only.
+
+User Access Verification
+
+Password:</code></pre>
+  <div class="box info"><strong>¿Por qué un aviso y no "Bienvenido"?</strong>
+    Un mensaje de bienvenida puede interpretarse como una invitación a entrar. El banner debe advertir y no debe revelar información útil para un atacante (modelo del equipo, ubicación, empresa).</div>
+  <p>En <code>show running-config</code> aparece como <code>banner motd ^CAuthorized access only.^C</code>. IOS muestra el delimitador como <code>^C</code>, sin importar cuál usaste.</p>
+
+  <h3><span class="step">Paso 5</span> Guardar la configuración en NVRAM</h3>
+<pre><code><span class="p">S1#</span> copy running-config startup-config
+Destination filename [startup-config]?   <span class="c">← presiona Enter</span>
+Building configuration...
+[OK]                                     <span class="c">← se guardó</span></code></pre>
+
+  <h4>¿Qué es la NVRAM y por qué hay que guardar?</h4>
+  <p><strong>NVRAM</strong> (<em>Non-Volatile RAM</em>) es una memoria que <strong>conserva su contenido aunque se apague el equipo</strong>. El switch maneja dos configuraciones:</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th></th><th><code>running-config</code></th><th><code>startup-config</code></th></tr>
+    <tr><td>Dónde vive</td><td><strong>RAM</strong> (volátil)</td><td><strong>NVRAM</strong> (no volátil)</td></tr>
+    <tr><td>Qué es</td><td>La configuración <strong>activa ahora</strong></td><td>La que se <strong>carga al encender</strong></td></tr>
+    <tr><td>Cuándo cambia</td><td>Con cada comando que escribes</td><td>Solo cuando la guardas</td></tr>
+    <tr><td>Al apagar o reiniciar</td><td><strong>Se pierde</strong></td><td><strong>Se conserva</strong></td></tr>
+  </table>
+  </div>
+  <p>Todo lo que configuraste vive en RAM. Si el switch se reinicia sin guardar, arranca de nuevo como <code>Switch&gt;</code> sin configuración.</p>
+
+  <h4>Desglose del comando</h4>
+<pre><code>copy   running-config   startup-config
+ │          │                 │
+acción   ORIGEN (RAM)     DESTINO (NVRAM)</code></pre>
+  <p>La palabra que se refiere a la NVRAM es <strong><code>startup-config</code></strong>, que es un atajo de la ruta completa <code>nvram:startup-config</code>.</p>
+  <ul>
+    <li>Se ejecuta en <strong>modo privilegiado</strong> (<code>S1#</code>). Si estás en <code>(config)#</code>, sal primero con <code>end</code>.</li>
+    <li>Atajos equivalentes: <code>copy run start</code>, <code>write memory</code>, <code>wr</code>.</li>
+    <li>Para comprobarlo: <code>show startup-config</code>. Si aparece <em>startup-config is not present</em>, no se guardó.</li>
+  </ul>
+
+  <details>
+    <summary>Memorias del switch y proceso de arranque</summary>
+    <div class="tablewrap">
+    <table>
+      <tr><th>Memoria</th><th>¿Volátil?</th><th>Contiene</th></tr>
+      <tr><td>ROM</td><td>No</td><td>Instrucciones de arranque y autodiagnóstico (POST)</td></tr>
+      <tr><td>Flash</td><td>No</td><td>Sistema operativo IOS</td></tr>
+      <tr><td>NVRAM</td><td>No</td><td><code>startup-config</code></td></tr>
+      <tr><td>RAM</td><td><strong>Sí</strong></td><td><code>running-config</code>, tablas MAC y ARP, procesos</td></tr>
+    </table>
+    </div>
+<pre><code>1. ROM    → POST y cargador de arranque
+2. Flash  → carga el IOS
+3. NVRAM  → busca startup-config
+             ├─ existe    → la copia a RAM (running-config)
+             └─ no existe → arranca vacío (Switch&gt;)</code></pre>
+  </details>
+
+  <h3><span class="step">Paso 6</span> Repetir en S2</h3>
+<pre><code><span class="p">Switch&gt;</span> enable
+<span class="p">Switch#</span> configure terminal
+<span class="p">Switch(config)#</span> hostname S2
+<span class="p">S2(config)#</span> line console 0
+<span class="p">S2(config-line)#</span> password cisco
+<span class="p">S2(config-line)#</span> login
+<span class="p">S2(config-line)#</span> exit
+<span class="p">S2(config)#</span> enable secret class
+<span class="p">S2(config)#</span> banner motd #Authorized access only.#
+<span class="p">S2(config)#</span> end
+<span class="p">S2#</span> copy running-config startup-config</code></pre>
+</section>
+
+<!-- ============ PARTE 2 ============ -->
+<section id="parte2">
+  <h2>4. Parte 2: Configurar las PCs</h2>
+  <p>En cada PC: <strong>Desktop → IP Configuration → Static</strong>.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Campo</th><th>PC1</th><th>PC2</th></tr>
+    <tr><td>IPv4 Address</td><td>192.168.1.1</td><td>192.168.1.2</td></tr>
+    <tr><td>Subnet Mask</td><td>255.255.255.0</td><td>255.255.255.0</td></tr>
+  </table>
+  </div>
+  <p>Prueba desde PC1 en <strong>Desktop → Command Prompt</strong>:</p>
+<pre><code><span class="p">C:\&gt;</span> ping 192.168.1.2</code></pre>
+  <div class="box ok"><strong>Dato clave</strong>
+    PC1 y PC2 ya se comunican <strong>antes</strong> de configurar la IP de los switches. El switch no necesita IP para reenviar tráfico entre las PCs, porque trabaja con direcciones MAC.</div>
+</section>
+
+<!-- ============ MASCARA ============ -->
+<section id="mascara">
+  <h2>5. La máscara de red</h2>
+  <p>La <strong>máscara</strong> es un número de 32 bits que indica qué parte de la IP identifica a la <strong>red</strong> y qué parte identifica al <strong>equipo (host)</strong>.</p>
+<pre><code>IP:       192 . 168 .   1  .  1
+Máscara:  255 . 255 . 255  .  0
+          └──── RED ─────┘  └HOST┘</code></pre>
+  <p>Todos los equipos de la práctica comparten <strong>192.168.1</strong>, así que están en la <strong>misma red</strong> y se comunican sin router.</p>
+
+  <h3>¿Por qué 255.255.255.0?</h3>
+<pre><code>255.255.255.0 = 11111111.11111111.11111111.00000000
+                └────── 24 bits de red ──────┘└ 8 host ┘</code></pre>
+  <ul>
+    <li>Los bits en 1 marcan la red. Al ser 24 bits, también se escribe <strong>/24</strong>.</li>
+    <li>Con 8 bits de host hay 2⁸ = 256 direcciones, pero 2 están reservadas: la <strong>.0</strong> es la dirección de red y la <strong>.255</strong> es el broadcast. Quedan <strong>254 hosts</strong> utilizables (fórmula: 2ⁿ − 2).</li>
+    <li>Es fácil de leer y alcanza para redes pequeñas, por eso es la más usada en casas, oficinas y laboratorios.</li>
+  </ul>
+
+  <h3>Otras máscaras</h3>
+  <p>No siempre es /24. Cada octeto de una máscara solo puede valer <strong>0, 128, 192, 224, 240, 248, 252, 254 o 255</strong>, porque los bits en 1 deben ir seguidos a la izquierda.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Máscara</th><th>CIDR</th><th>Hosts útiles</th><th>Uso típico</th></tr>
+    <tr><td>255.0.0.0</td><td>/8</td><td>16,777,214</td><td>Redes enormes</td></tr>
+    <tr><td>255.255.0.0</td><td>/16</td><td>65,534</td><td>Campus o empresas grandes</td></tr>
+    <tr><td><strong>255.255.255.0</strong></td><td><strong>/24</strong></td><td><strong>254</strong></td><td>Casa, oficina, laboratorio</td></tr>
+    <tr><td>255.255.255.128</td><td>/25</td><td>126</td><td>Dividir una /24 en 2</td></tr>
+    <tr><td>255.255.255.192</td><td>/26</td><td>62</td><td>Un laboratorio de cómputo</td></tr>
+    <tr><td>255.255.255.224</td><td>/27</td><td>30</td><td>Área pequeña</td></tr>
+    <tr><td>255.255.255.252</td><td>/30</td><td>2</td><td>Enlace entre 2 routers</td></tr>
+  </table>
+  </div>
+  <div class="box warn"><strong>Error frecuente</strong>
+    Todos los equipos de una misma red deben tener la <strong>misma máscara</strong>. Si dos equipos tienen distinta parte de red (por ejemplo 192.168.1.1 y 192.168.2.1 con /24), no se comunican sin un router.</div>
+  <p>El tema completo (binario y subneteo) se ve en los Módulos 5 y 11 de ITN.</p>
+</section>
+
+<!-- ============ PARTE 3 ============ -->
+<section id="parte3">
+  <h2>6. Parte 3: Interfaz de administración del switch (SVI)</h2>
+
+  <h3>¿Qué es una interfaz VLAN?</h3>
+  <p>Es una <strong>interfaz virtual</strong> del switch (no existe físicamente) a la que se le asigna una IP. Su nombre técnico es <strong>SVI</strong> (<em>Switch Virtual Interface</em>).</p>
+  <p>Los puertos físicos de un switch de capa 2 (Fa0/1, Fa0/2…) <strong>no pueden tener IP</strong>. Para que el switch responda a un <code>ping</code> o acepte conexiones remotas (Telnet/SSH), necesita una IP, y esa IP va en la SVI.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th></th><th>Sin SVI</th><th>Con SVI</th></tr>
+    <tr><td>¿Reenvía tráfico entre PCs?</td><td>Sí</td><td>Sí</td></tr>
+    <tr><td>¿Responde a ping?</td><td>No</td><td><strong>Sí</strong></td></tr>
+    <tr><td>¿Administración remota?</td><td>No, solo por consola</td><td><strong>Sí</strong></td></tr>
+  </table>
+  </div>
+  <p>Se usa <strong>VLAN 1</strong> porque es la VLAN por defecto: todos los puertos pertenecen a ella de fábrica. En redes reales se recomienda una VLAN de administración dedicada (por ejemplo, VLAN 99); eso se ve en el curso SRWE.</p>
+
+  <h3><span class="step">Paso 1</span> Configurar la SVI en S1</h3>
+<pre><code><span class="p">S1&gt;</span> enable
+Password: class
+<span class="p">S1#</span> configure terminal
+<span class="p">S1(config)#</span> interface vlan 1
+<span class="p">S1(config-if)#</span> ip address 192.168.1.253 255.255.255.0
+<span class="p">S1(config-if)#</span> no shutdown
+<span class="p">S1(config-if)#</span> end
+<span class="p">S1#</span> copy running-config startup-config</code></pre>
+
+  <h3><span class="step">Paso 2</span> Configurar la SVI en S2</h3>
+<pre><code><span class="p">S2&gt;</span> enable
+Password: class
+<span class="p">S2#</span> configure terminal
+<span class="p">S2(config)#</span> interface vlan 1
+<span class="p">S2(config-if)#</span> ip address 192.168.1.254 255.255.255.0
+<span class="p">S2(config-if)#</span> no shutdown
+<span class="p">S2(config-if)#</span> end
+<span class="p">S2#</span> copy running-config startup-config</code></pre>
+
+  <h4>¿Qué significa <code>no shutdown</code>?</h4>
+  <p><code>shutdown</code> apaga una interfaz y <code>no shutdown</code> la <strong>enciende</strong>. La SVI de VLAN 1 viene <strong>apagada de fábrica</strong>; sin este comando tiene IP pero no responde.</p>
+<pre><code>%LINK-5-CHANGED: Interface Vlan1, changed state to up
+%LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1, changed state to up</code></pre>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Tipo de interfaz</th><th>Estado de fábrica</th></tr>
+    <tr><td>SVI (<code>interface vlan 1</code>)</td><td>Apagada, requiere <code>no shutdown</code></td></tr>
+    <tr><td>Puertos físicos del switch</td><td>Encendidos</td></tr>
+    <tr><td>Interfaces de router</td><td>Apagadas, requieren <code>no shutdown</code> (Módulo 10)</td></tr>
+  </table>
+  </div>
+
+  <h3><span class="step">Paso 3</span> Verificar</h3>
+<pre><code><span class="p">S1#</span> show ip interface brief
+Interface    IP-Address      OK? Method Status   Protocol
+Vlan1        192.168.1.253   YES manual up       up</code></pre>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Status / Protocol</th><th>Significado</th></tr>
+    <tr><td><code>administratively down / down</code></td><td>Falta <code>no shutdown</code></td></tr>
+    <tr><td><code>down / down</code></td><td>Encendida, pero sin puertos activos en esa VLAN</td></tr>
+    <tr><td><code>up / up</code></td><td><strong>Funcionando</strong></td></tr>
+  </table>
+  </div>
+</section>
+
+<!-- ============ PARTE 4 ============ -->
+<section id="parte4">
+  <h2>7. Parte 4: Verificar la conectividad de extremo a extremo</h2>
+  <p>Desde PC1:</p>
+<pre><code><span class="p">C:\&gt;</span> ping 192.168.1.2      <span class="c">← PC2</span>
+<span class="p">C:\&gt;</span> ping 192.168.1.253    <span class="c">← S1</span>
+<span class="p">C:\&gt;</span> ping 192.168.1.254    <span class="c">← S2</span></code></pre>
+  <p>Desde PC2:</p>
+<pre><code><span class="p">C:\&gt;</span> ping 192.168.1.1
+<span class="p">C:\&gt;</span> ping 192.168.1.253
+<span class="p">C:\&gt;</span> ping 192.168.1.254</code></pre>
+
+  <h3>¿Cómo se interpreta el resultado de ping?</h3>
+  <p><code>ping</code> envía mensajes <strong>ICMP Echo Request</strong> y el destino responde con <strong>ICMP Echo Reply</strong>. Si llega la respuesta, hay conectividad.</p>
+<pre><code>Pinging 192.168.1.2 with 32 bytes of data:
+
+Reply from 192.168.1.2: bytes=32 time&lt;1ms TTL=128
+Reply from 192.168.1.2: bytes=32 time&lt;1ms TTL=128
+Reply from 192.168.1.2: bytes=32 time&lt;1ms TTL=128
+Reply from 192.168.1.2: bytes=32 time&lt;1ms TTL=128
+
+Ping statistics for 192.168.1.2:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 0ms, Maximum = 0ms, Average = 0ms</code></pre>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Campo</th><th>Significado</th></tr>
+    <tr><td><code>32 bytes of data</code></td><td>Tamaño de cada paquete de prueba (valor por defecto)</td></tr>
+    <tr><td><code>Reply from 192.168.1.2</code></td><td>Respondió el equipo destino</td></tr>
+    <tr><td><code>bytes=32</code></td><td>Regresaron los 32 bytes completos</td></tr>
+    <tr><td><code>time&lt;1ms</code></td><td>Tiempo de ida y vuelta (RTT). Menos de 1 ms porque es una red local</td></tr>
+    <tr><td><code>TTL=128</code></td><td><em>Time To Live</em>: contador que baja 1 por cada router que cruza. 128 es el valor inicial de Windows; llegó completo, así que <strong>no pasó por ningún router</strong></td></tr>
+    <tr><td><code>Sent = 4, Received = 4, Lost = 0</code></td><td>4 enviados, 4 recibidos, 0 perdidos: conectividad al 100%</td></tr>
+    <tr><td><code>Minimum / Maximum / Average</code></td><td>Tiempos de ida y vuelta: el más rápido, el más lento y el promedio</td></tr>
+  </table>
+  </div>
+  <div class="box info"><strong>TTL según el equipo</strong>
+    Windows inicia en 128, Linux en 64 y los equipos Cisco en 255. Por eso, al hacer ping a S1 o S2 verás <code>TTL=255</code>.</div>
+
+  <h3>Otros resultados posibles</h3>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Mensaje</th><th>Significado</th><th>Causa común</th></tr>
+    <tr><td><code>Reply from …</code></td><td>Conectividad correcta</td><td>—</td></tr>
+    <tr><td><code>Request timed out.</code></td><td>No llegó respuesta a tiempo</td><td>IP o máscara mal configurada en el destino, cable desconectado, SVI sin <code>no shutdown</code></td></tr>
+    <tr><td><code>Destination host unreachable.</code></td><td>El origen no sabe cómo llegar al destino</td><td>IP de otra red sin gateway, o error en la IP del origen</td></tr>
+    <tr><td>1.º <code>timed out</code>, luego <code>Reply</code></td><td><strong>Normal</strong></td><td>El primer paquete espera a que se resuelva la MAC del destino (ARP)</td></tr>
+  </table>
+  </div>
+</section>
+
+<!-- ============ SHOW RUN ============ -->
+<section id="showrun">
+  <h2>8. Cómo leer el <code>show running-config</code></h2>
+<pre><code>no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname S1
+!
+enable secret 5 $1$mERr$9cTjUIEqNGurQiFU.ZeCi1
+!
+spanning-tree mode pvst
+spanning-tree extend system-id</code></pre>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Línea</th><th>Significado</th><th>¿La configuraste?</th></tr>
+    <tr><td><code>no service timestamps log …</code></td><td>Sin fecha y hora en los mensajes de log</td><td>No (por defecto)</td></tr>
+    <tr><td><code>no service timestamps debug …</code></td><td>Sin fecha y hora en los mensajes de depuración</td><td>No (por defecto)</td></tr>
+    <tr><td><code>no service password-encryption</code></td><td>Cifrado tipo 7 desactivado; por eso la contraseña de consola se ve en texto plano</td><td>No (por defecto)</td></tr>
+    <tr><td><code>hostname S1</code></td><td>Nombre del dispositivo</td><td><strong>Sí</strong></td></tr>
+    <tr><td><code>enable secret 5 …</code></td><td>Contraseña de enable como hash MD5</td><td><strong>Sí</strong></td></tr>
+    <tr><td><code>!</code></td><td>Separador visual, no es un comando</td><td>—</td></tr>
+    <tr><td><code>spanning-tree …</code></td><td>Protocolo STP que evita bucles entre switches (se estudia en SRWE)</td><td>No (por defecto)</td></tr>
+  </table>
+  </div>
+  <h4>Desglose del hash</h4>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Parte</th><th>Significado</th></tr>
+    <tr><td><code>5</code></td><td>Tipo de cifrado: MD5</td></tr>
+    <tr><td><code>$1$</code></td><td>Identificador del algoritmo MD5</td></tr>
+    <tr><td><code>mERr</code></td><td><em>Salt</em>: valor aleatorio que se mezcla con la contraseña para que el hash sea único</td></tr>
+    <tr><td><code>9cTjUIEqNGurQiFU.ZeCi1</code></td><td>Hash resultante</td></tr>
+  </table>
+  </div>
+  <p>Más abajo en el mismo <code>show</code> aparecen las interfaces, <code>interface Vlan1</code> con su IP, el <code>banner motd</code> y <code>line con 0</code> con <code>password cisco</code> y <code>login</code>.</p>
+</section>
+
+<!-- ============ ERRORES ============ -->
+<section id="errores">
+  <h2>9. Errores comunes que bajan el porcentaje en Check Results</h2>
+  <ol>
+    <li>Usar <code>enable password</code> en lugar de <code>enable secret</code>.</li>
+    <li>Olvidar <code>login</code> en <code>line console 0</code>.</li>
+    <li>Escribir mal el hostname (por ejemplo, <code>s1</code> en minúsculas).</li>
+    <li>Texto del banner distinto al que pide la práctica.</li>
+    <li>No dar <code>no shutdown</code> en <code>interface vlan 1</code>.</li>
+    <li>Máscara distinta en algún equipo.</li>
+    <li>No guardar con <code>copy running-config startup-config</code>: varios ítems revisan la startup-config.</li>
+    <li>Ejecutar <code>copy</code> desde <code>(config)#</code> en lugar de modo privilegiado.</li>
+  </ol>
+</section>
+
+<!-- ============ RESUMEN ============ -->
+<section id="resumen">
+  <h2>10. Resumen de comandos</h2>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Comando</th><th>Modo</th><th>Función</th></tr>
+    <tr><td><code>enable</code></td><td><code>&gt;</code></td><td>Entrar a modo privilegiado</td></tr>
+    <tr><td><code>configure terminal</code></td><td><code>#</code></td><td>Entrar a configuración global</td></tr>
+    <tr><td><code>hostname S1</code></td><td><code>(config)#</code></td><td>Nombrar el dispositivo</td></tr>
+    <tr><td><code>line console 0</code></td><td><code>(config)#</code></td><td>Configurar el puerto de consola</td></tr>
+    <tr><td><code>password cisco</code></td><td><code>(config-line)#</code></td><td>Definir contraseña de la línea</td></tr>
+    <tr><td><code>login</code></td><td><code>(config-line)#</code></td><td>Exigir la contraseña al conectarse</td></tr>
+    <tr><td><code>exit</code></td><td>cualquiera</td><td>Subir un nivel</td></tr>
+    <tr><td><code>enable secret class</code></td><td><code>(config)#</code></td><td>Contraseña cifrada de modo privilegiado</td></tr>
+    <tr><td><code>banner motd #…#</code></td><td><code>(config)#</code></td><td>Mensaje de aviso al conectarse</td></tr>
+    <tr><td><code>end</code></td><td>cualquiera</td><td>Regresar a modo privilegiado</td></tr>
+    <tr><td><code>show running-config</code></td><td><code>#</code></td><td>Ver la configuración activa</td></tr>
+    <tr><td><code>copy running-config startup-config</code></td><td><code>#</code></td><td>Guardar la configuración en NVRAM</td></tr>
+    <tr><td><code>interface vlan 1</code></td><td><code>(config)#</code></td><td>Configurar la SVI de administración</td></tr>
+    <tr><td><code>ip address IP MÁSCARA</code></td><td><code>(config-if)#</code></td><td>Asignar dirección IP</td></tr>
+    <tr><td><code>no shutdown</code></td><td><code>(config-if)#</code></td><td>Encender la interfaz</td></tr>
+    <tr><td><code>show ip interface brief</code></td><td><code>#</code></td><td>Resumen de interfaces, IP y estado</td></tr>
+    <tr><td><code>ping IP</code></td><td>PC / <code>#</code></td><td>Probar conectividad</td></tr>
+  </table>
+  </div>
+  <p><strong>Dónde se repasan en el curso:</strong> Módulo 2 (switches), Módulo 10 (los mismos comandos en router) y Módulo 16 (seguridad de dispositivos y SSH).</p>
+</section>
+
+<!-- ============ PREGUNTAS ============ -->
+<section id="preguntas">
+  <h2>11. Preguntas de repaso</h2>
+  <details><summary>1. ¿Qué pasa si configuras <code>password cisco</code> en la consola pero no escribes <code>login</code>?</summary>
+    <p>La contraseña se guarda, pero el switch no la pide: cualquiera con cable de consola entra directo.</p></details>
+  <details><summary>2. ¿Por qué se prefiere <code>enable secret</code> sobre <code>enable password</code>?</summary>
+    <p>Porque guarda la contraseña como hash MD5 no reversible, mientras que <code>enable password</code> la deja en texto plano.</p></details>
+  <details><summary>3. Configuraste todo, apagaste el switch y al encenderlo aparece <code>Switch&gt;</code>. ¿Qué faltó?</summary>
+    <p>Guardar con <code>copy running-config startup-config</code>. La configuración estaba solo en RAM y se perdió.</p></details>
+  <details><summary>4. ¿Por qué PC1 hace ping a PC2 antes de configurar la SVI?</summary>
+    <p>Porque el switch reenvía tramas con direcciones MAC; no necesita IP para conmutar. La SVI solo sirve para administrar el switch.</p></details>
+  <details><summary>5. La SVI tiene IP pero no responde al ping. ¿Qué revisas primero?</summary>
+    <p>Que se haya dado <code>no shutdown</code>. En <code>show ip interface brief</code> aparecería como <code>administratively down</code>.</p></details>
+  <details><summary>6. ¿Cuántos hosts permite una red /24 y por qué?</summary>
+    <p>254. Hay 8 bits de host (2⁸ = 256) menos la dirección de red (.0) y la de broadcast (.255).</p></details>
+  <details><summary>7. Al hacer ping a S1 desde PC1 ves <code>TTL=255</code>. ¿Por qué no 128?</summary>
+    <p>Porque el TTL lo pone quien responde. Los equipos Cisco inician en 255 y las PCs Windows en 128.</p></details>
+  <details><summary>8. ¿Qué palabra del comando <code>copy running-config startup-config</code> se refiere a la NVRAM?</summary>
+    <p><code>startup-config</code>, que equivale a <code>nvram:startup-config</code>.</p></details>
+</section>
+
+</main>
+
+<footer>Guía de apoyo · Práctica 2.7.6 · CCNA ITN v7 (Cisco Networking Academy)</footer>
+
+<script>
+  document.querySelectorAll('pre').forEach(function(pre){
+    var btn=document.createElement('button');
+    btn.className='copy'; btn.textContent='Copiar';
+    btn.addEventListener('click',function(){
+      var src=pre.querySelector('code')||pre;
+      var lines=src.innerText.split('\n').map(function(l){
+        return l.replace(/^\S+[>#]\s?/,'').replace(/\s+←.*$/,'');
+      });
+      var text=lines.join('\n').trim();
+      if(navigator.clipboard){navigator.clipboard.writeText(text).then(function(){
+        btn.textContent='Copiado'; setTimeout(function(){btn.textContent='Copiar';},1500);
+      });}
+    });
+    pre.appendChild(btn);
+  });
+</script>
+</body>
+</html>
