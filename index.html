@@ -136,7 +136,7 @@ const GRUPOS = [
     titulo: "Servidores web y despliegue de aplicaciones",
     items: [
       { archivo: "webapps_apache_debian12.html", nombre: "Aplicaciones web con Apache", desc: "Publicación de aplicaciones web con Apache en Debian 12." },
-      { archivo: "tomcat.html", nombre: "Apache Tomcat", desc: "Instalación y configuración de Tomcat para aplicaciones Java." },
+      { archivo: "tomcat.html", nombre: "Apache Tomcat", desc: "Instalación de Tomcat como servicio systemd para ejecutar aplicaciones Java (.war)." },
       { archivo: "gunicorn.html", nombre: "Gunicorn", desc: "Servir aplicaciones Python con Gunicorn." },
       { archivo: "gunicorn2.html", nombre: "Gunicorn (parte 2)", desc: "Continuación de la práctica con Gunicorn." },
       { archivo: "despliegue_railway_appflask.html", nombre: "Despliegue de app Flask en Railway", desc: "Publicar una aplicación Flask en la plataforma Railway." }
@@ -146,7 +146,8 @@ const GRUPOS = [
     titulo: "Correo electrónico",
     items: [
       { archivo: "postfix.html", nombre: "Postfix", desc: "Instalación y configuración del servidor de correo Postfix." },
-      { archivo: "postfix_smtp.html", nombre: "Postfix con SMTP", desc: "Configuración de envío de correo por SMTP con Postfix." }
+      { archivo: "postfix_smtp.html", nombre: "Postfix con SMTP", desc: "Servidor de correo con Postfix, Dovecot y Thunderbird; correo entre VMs del laboratorio (red con DHCP)." },
+      { archivo: "postfix_smtp_nat.html", nombre: "Postfix con SMTP (laboratorio con IP fija)", desc: "La misma práctica para laboratorios sin DHCP: VM en NAT con reenvío del puerto 25." }
     ]
   },
   {
@@ -159,7 +160,7 @@ const GRUPOS = [
     titulo: "Aplicaciones empresariales y colaboración",
     items: [
       { archivo: "Instalacion_Odoo_Debian12.html", nombre: "Instalación de Odoo", desc: "Instalación del ERP Odoo en Debian 12." },
-      { archivo: "nextcloud.html", nombre: "Nextcloud", desc: "Nube privada de archivos con Nextcloud." },
+      { archivo: "nextcloud.html", nombre: "Nextcloud", desc: "Nube privada de archivos con Nextcloud sobre Nginx, PHP-FPM y PostgreSQL." },
       { archivo: "ms3_stockmanagement.html", nombre: "MS3 Stock Management", desc: "Sistema de gestión de inventario." }
     ]
   }

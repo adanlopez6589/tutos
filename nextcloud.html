@@ -1,68 +1,476 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-MX">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Guía de Instalación de Nextcloud en LEMP con PostgreSQL y Nginx en Debian</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nextcloud con Nginx y PostgreSQL · Referencia de laboratorio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    h1, h2 { color: #333; }
-    .command-row { display: flex; align-items: center; margin-bottom: 15px; }
-    .cmd-number { width: 60px; font-weight: bold; }
-    .cmd-box { position: relative; flex: 1; }
-    pre { background: #f4f4f4; padding: 10px; border-radius: 5px; margin: 0; overflow-x: auto; }
-    button.copy-button { position: absolute; top: 5px; right: 5px; padding: 5px 10px; font-size: 0.8em; cursor: pointer; }
+  :root{
+    --paper:#EFEDF0;
+    --paper-2:#E5E2E8;
+    --ink:#2A1B25;
+    --muted:#6E5C68;
+    --rubine:#D70A53;
+    --teal:#0F6E78;
+    --term-bg:#2A1B25;
+    --term-fg:#F3E9EE;
+    --term-dim:#A78E9C;
+    --rule:#CFC9D3;
+    --sans:'Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,'DejaVu Sans Mono',Consolas,monospace;
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:940px;margin:0 auto;padding:0 20px}
+
+  /* ---------- Encabezado ---------- */
+  header.top{
+    background:var(--term-bg);
+    color:var(--term-fg);
+    padding:56px 0 44px;
+  }
+  .prompt{
+    font-family:var(--mono);
+    font-size:clamp(14px,3.2vw,19px);
+    color:var(--term-dim);
+    margin-bottom:18px;
+  }
+  .prompt .user{color:#8FD3C9}
+  .prompt .path{color:#9BB8E8}
+  .prompt .sig{color:var(--rubine);font-weight:600}
+  .cursor{
+    display:inline-block;
+    width:.62em;height:1.05em;
+    background:var(--rubine);
+    vertical-align:-.18em;
+    margin-left:.15em;
+    animation:blink 1.05s steps(1) infinite;
+  }
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+
+  header.top h1{
+    font-size:clamp(30px,6vw,52px);
+    line-height:1.06;
+    font-weight:700;
+    letter-spacing:-.02em;
+    margin:0 0 10px;
+    max-width:18ch;
+  }
+  .sub{
+    font-family:var(--mono);
+    font-size:13px;
+    color:var(--term-dim);
+    margin:0;
+  }
+
+  /* ---------- Introducción ---------- */
+  .intro{padding:44px 0 30px;border-bottom:1px solid var(--rule)}
+  .intro p{max-width:68ch;margin:0 0 16px;font-size:17px}
+  .intro .lead{font-size:19px;line-height:1.5;text-align:justify}
+  .nota{
+    margin-top:26px;
+    border-left:3px solid var(--rubine);
+    padding:2px 0 2px 16px;
+    max-width:68ch;
+  }
+  .nota h2{font-size:15px;margin:0 0 6px;font-weight:600}
+  .nota p{font-size:15px;color:var(--muted);margin:0}
+  code.inl{font-family:var(--mono);font-size:.9em;background:var(--paper-2);padding:1px 5px;border-radius:3px}
+
+  /* ---------- Grupos ---------- */
+  .grupo{margin:44px 0 0}
+  .grupo > h2{
+    font-family:var(--mono);
+    font-size:14px;
+    font-weight:600;
+    color:var(--rubine);
+    margin:0 0 4px;
+    padding-bottom:10px;
+    border-bottom:2px solid var(--rubine);
+  }
+
+  /* ---------- Paso ---------- */
+  .cmd{
+    border-bottom:1px solid var(--rule);
+    padding:22px 0;
+  }
+  .cmd-head{
+    display:grid;
+    grid-template-columns:44px 1fr auto;
+    gap:14px;
+    align-items:baseline;
+  }
+  .num{
+    font-family:var(--mono);
+    font-size:14px;
+    color:var(--muted);
+    font-variant-numeric:tabular-nums;
+    padding-top:4px;
+  }
+  .nombre{
+    font-family:var(--mono);
+    font-size:22px;
+    font-weight:600;
+    letter-spacing:-.01em;
+    margin:0;
+  }
+  .desc{margin:4px 0 0;color:var(--muted);font-size:15px;max-width:62ch}
+
+  /* ---------- Botón copiar ---------- */
+  .copiar{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--ink);
+    background:transparent;
+    border:1px solid var(--rule);
+    border-radius:3px;
+    padding:5px 11px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .copiar:hover{border-color:var(--ink)}
+  .copiar:focus-visible{outline:2px solid var(--rubine);outline-offset:2px}
+  .copiar.ok{background:var(--rubine);border-color:var(--rubine);color:#fff}
+
+  /* ---------- Detalle: comandos del paso ---------- */
+  .detalle{margin:16px 0 0 58px}
+  @media (max-width:640px){.detalle{margin-left:0}}
+
+  .opciones{
+    display:grid;
+    grid-template-columns:auto 1fr;
+    gap:5px 14px;
+    margin:0 0 16px;
+    font-size:14px;
+  }
+  .opciones dt{font-family:var(--mono);font-weight:500;color:var(--teal);white-space:nowrap}
+  .opciones dd{margin:0;color:var(--muted)}
+
+  .ejemplo{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    background:var(--term-bg);
+    border-radius:4px;
+    padding:9px 10px 9px 12px;
+    margin-bottom:6px;
+  }
+  .ejemplo pre{
+    margin:0;
+    flex:1;
+    font-family:var(--mono);
+    font-size:13.5px;
+    line-height:1.5;
+    color:var(--term-fg);
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
+  .ejemplo pre .p{color:var(--rubine);user-select:none;margin-right:.5em}
+  .ejemplo .copiar{
+    color:var(--term-dim);
+    border-color:#4B3742;
+    flex:none;
+  }
+  .ejemplo .copiar:hover{color:var(--term-fg);border-color:var(--term-dim)}
+  .ejemplo .copiar.ok{background:var(--rubine);border-color:var(--rubine);color:#fff}
+  .pie-ej{
+    font-size:13px;
+    color:var(--muted);
+    margin:-2px 0 12px 12px;
+  }
+  .aviso{
+    font-size:13px;
+    color:var(--rubine);
+    font-weight:500;
+    margin:0 0 12px;
+  }
+
+  footer{
+    margin-top:56px;
+    padding:30px 0 60px;
+    border-top:1px solid var(--rule);
+    color:var(--muted);
+    font-size:14px;
+  }
+  footer p{max-width:68ch;margin:0 0 8px}
+
+  #aviso-copia{position:fixed;left:-9999px}
+
+  /* ---------- Variables del alumno ---------- */
+  .var{color:var(--teal);font-weight:600;border-bottom:1px dotted currentColor}
+  .ejemplo .var{color:#8FD3C9}
+  .otro{font-style:italic;color:var(--muted)}
+  .ejemplo .otro{color:#E8B4C8}
+  .datos{
+    margin-top:26px;padding:18px 20px;max-width:68ch;
+    background:var(--paper-2);border-radius:4px;
+  }
+  .datos h2{font-size:15px;margin:0 0 4px;font-weight:600}
+  .datos p{font-size:14px;color:var(--muted);margin:0 0 14px}
+  .campos{display:flex;flex-wrap:wrap;gap:12px 22px;align-items:flex-end}
+  .campos label{display:flex;flex-direction:column;gap:4px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .campos input{
+    font-family:var(--mono);font-size:16px;color:var(--ink);
+    background:var(--paper);border:1px solid var(--rule);border-radius:3px;padding:7px 10px;
+  }
+  .campos input:focus-visible{outline:2px solid var(--rubine);outline-offset:1px}
+  #f-n{width:90px} #f-u{width:180px}
+  .correo{font-family:var(--mono);font-size:16px;padding-bottom:7px}
+  .correo b{color:var(--rubine);font-weight:600}
+
+  /* ---------- Bloque de archivo / sesión ---------- */
+  .ejemplo.archivo{flex-wrap:wrap;border-left:3px solid var(--teal)}
+  .ejemplo.archivo .arch{
+    width:100%;font-family:var(--mono);font-size:11.5px;color:var(--term-dim);
+    margin:0 0 2px;
+  }
+
+  /* ---------- Partes ---------- */
+  .parte{margin:72px 0 0}
+  .parte h2{font-size:clamp(24px,4vw,32px);font-weight:700;letter-spacing:-.015em;margin:0 0 6px;line-height:1.15}
+  .parte p{margin:0;color:var(--muted);max-width:68ch}
+
+  /* ---------- Texto y tablas dentro de grupos ---------- */
+  .texto{max-width:68ch;margin:0 0 14px}
+  .detalle .texto{font-size:15px;margin-top:4px}
+  .tabla-wrap{overflow-x:auto;margin:0 0 16px}
+  table.tabla{border-collapse:collapse;width:100%;font-size:14px;min-width:520px}
+  .tabla th{font-family:var(--mono);font-weight:500;font-size:12.5px;color:var(--teal);text-align:left;padding:6px 12px 6px 0;border-bottom:1px solid var(--ink)}
+  .tabla td{padding:8px 12px 8px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+  .tabla td:first-child{font-family:var(--mono);white-space:nowrap}
+
+  /* ---------- Diagrama ---------- */
+  .diagrama{overflow-x:auto;margin:6px 0 10px}
+  .diagrama svg{display:block;width:100%;min-width:640px;height:auto}
+  .d-vm{fill:none;stroke:var(--muted);stroke-width:1.2;stroke-dasharray:5 4}
+  .d-box{fill:#FAF9FB;stroke:var(--ink);stroke-width:1.3}
+  .d-box.tr{stroke-dasharray:4 3;stroke:var(--muted)}
+  .d-t{font-family:var(--mono);font-size:14px;font-weight:600;fill:var(--ink)}
+  .d-s{font-family:var(--mono);font-size:11.5px;fill:var(--muted)}
+  .d-vmt{font-family:var(--mono);font-size:14px;font-weight:600;fill:var(--rubine)}
+  .d-l{font-family:var(--mono);font-size:11.5px;fill:var(--ink)}
+  .d-smtp{stroke:var(--rubine);stroke-width:2;fill:none}
+  .d-imap{stroke:var(--teal);stroke-width:2;fill:none}
+  .d-dash{stroke:var(--muted);stroke-width:1.3;stroke-dasharray:3 3;fill:none}
+  .d-c{fill:var(--rubine)} .d-c.t{fill:var(--teal)}
+  .d-cn{font-family:var(--mono);font-size:11px;font-weight:600;fill:#fff}
+  ol.pasos-flujo{margin:0 0 6px;padding-left:22px;max-width:68ch;font-size:15px}
+  ol.pasos-flujo li{margin:0 0 4px}
+
+  ul.lista{margin:0 0 14px;padding-left:20px;max-width:68ch;font-size:15px}
+  ul.lista li{margin:0 0 5px}
 </style>
-<script>
-function copyCode(button) {
-    const code = button.previousElementSibling.innerText;
-    navigator.clipboard.writeText(code).then(() => {
-        button.textContent = 'Copiado';
-        setTimeout(() => { button.textContent = 'Copiar'; }, 2000);
-    });
-}
-</script>
 </head>
 <body>
+<!-- ===== Barra para regresar al índice (pegar justo después de <body>) ===== -->
+<style>
+  .nav-indice{position:sticky;top:0;z-index:100;height:44px;box-sizing:border-box;background:#1E131A;border-bottom:1px solid #3A2833;font-family:'IBM Plex Mono',ui-monospace,Consolas,monospace;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+  .nav-indice .nav-wrap{max-width:940px;height:100%;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  /* Si la guía tiene su propia barra fija (.toolbar), se acomoda debajo de esta */
+  .toolbar{top:44px !important}
+  html{scroll-padding-top:132px}
+  .nav-indice a{color:#F3E9EE;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+  .nav-indice a .flecha{color:#D70A53;font-weight:700;font-size:20px;line-height:1;transition:transform .15s}
+  .nav-indice a:hover .flecha{transform:translateX(-3px)}
+  .nav-indice a:hover{color:#D70A53}
+  .nav-indice a:focus-visible,.btn-indice:focus-visible{outline:2px solid #D70A53;outline-offset:3px}
+  .nav-indice .ruta{color:#A78E9C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nav-indice .ruta .u{color:#8FD3C9}
+  .nav-indice .ruta .h{color:#9BB8E8}
+  .nav-indice .ruta .s{color:#D70A53;font-weight:600}
+  .nav-indice .ruta .c{color:#F3E9EE}
+  .nav-indice .cursor-nav{display:inline-block;width:.6em;height:1.05em;background:#D70A53;vertical-align:-.2em;margin-left:.2em;animation:nav-blink 1.05s steps(1) infinite}
+  @keyframes nav-blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.nav-indice .cursor-nav{animation:none}}
+  .btn-indice{position:fixed;right:18px;bottom:18px;z-index:50;background:#D70A53;color:#fff;font-family:'IBM Plex Mono',ui-monospace,Consolas,monospace;font-size:13px;font-weight:600;text-decoration:none;padding:10px 14px;border-radius:4px;box-shadow:0 4px 14px rgba(42,27,37,.25)}
+  .btn-indice:hover{background:#B00845}
+  @media (max-width:560px){.nav-indice .ruta{display:none}}
+  @media print{.nav-indice,.btn-indice{display:none}}
+</style>
+<nav class="nav-indice" aria-label="Navegación">
+  <div class="nav-wrap">
+    <a href="https://adanlopez6589.github.io/tutos/"><span class="flecha">←</span> Guías de laboratorio</a>
+    <span class="ruta" aria-hidden="true"><span class="u">alumno</span>@<span class="h">debian12</span>:~/guias<span class="s">$</span> <span class="c">cd ..</span><span class="cursor-nav"></span></span>
+  </div>
+</nav>
+<a class="btn-indice" href="https://adanlopez6589.github.io/tutos/" title="Regresar al índice de guías">☰ Índice</a>
+<!-- ===== Fin barra índice ===== -->
 
-<h1>Guía Paso a Paso: Instalación de Nextcloud en LEMP con PostgreSQL y Nginx en Debian</h1>
+<header class="top">
+  <div class="wrap">
+    <p class="prompt"><span class="user">alumno</span>@<span class="path">debian12</span>:~<span class="sig">$</span> sudo -u postgres psql<span class="cursor"></span></p>
+    <h1>Nextcloud con Nginx, PHP y PostgreSQL</h1>
+    <p class="sub">Referencia de laboratorio · Administración y Configuración Cliente/Servidor</p>
+  </div>
+</header>
 
-<h2>1. Instalar dependencias</h2>
-<div class="command-row"><div class="cmd-number">1.1</div><div class="cmd-box"><pre>sudo apt update && sudo apt upgrade -y</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
-<div class="command-row"><div class="cmd-number">1.2</div><div class="cmd-box"><pre>sudo apt install nginx php php-fpm php-pgsql php-cli php-curl php-gd php-xml php-zip php-mbstring php-intl php-bcmath php-imagick php-gmp unzip curl wget gnupg2 -y</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+<section class="intro">
+  <div class="wrap">
+    <p class="lead">Esta guía instala Nextcloud, una nube privada de archivos, en Debian 12. Nginx atiende el navegador, PHP-FPM ejecuta Nextcloud y PostgreSQL guarda sus datos. Al final tendrás Nextcloud en http://localhost/nextcloud.</p>
+  </div>
+</section>
 
-<h2>2. Instalar y configurar PostgreSQL</h2>
-<div class="command-row"><div class="cmd-number">2.1</div><div class="cmd-box"><pre>sudo apt install postgresql -y</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
-<div class="command-row"><div class="cmd-number">2.2</div><div class="cmd-box"><pre>sudo -u postgres psql</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+<main class="wrap">
 
-<p>Dentro de PostgreSQL ejecuta:</p>
-<div class="command-row"><div class="cmd-number">2.3.1</div><div class="cmd-box"><pre>CREATE DATABASE nextcloud;</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
-<div class="command-row"><div class="cmd-number">2.4.1</div><div class="cmd-box"><pre>CREATE USER nextclouduser WITH PASSWORD 'tu_password_segura';</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
-<div class="command-row"><div class="cmd-number">2.5.1</div><div class="cmd-box"><pre>GRANT ALL PRIVILEGES ON DATABASE nextcloud TO nextclouduser;</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
-<div class="command-row"><div class="cmd-number">2.5.2</div><div class="cmd-box"><pre>\c nextcloud</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
-<div class="command-row"><div class="cmd-number">2.5.3</div><div class="cmd-box"><pre>GRANT ALL PRIVILEGES ON SCHEMA public TO nextclouduser;</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
-<div class="command-row"><div class="cmd-number">2.6.1</div><div class="cmd-box"><pre>\q</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
-
-<h3>2.7 Configuración opcional de red (IPv4/IPv6)</h3>
-<div class="command-row"><div class="cmd-number">2.7.1</div><div class="cmd-box"><pre>sudo nano /etc/postgresql/14/main/postgresql.conf</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
-<div class="command-row"><div class="cmd-number">2.7.4</div><div class="cmd-box"><pre>sudo systemctl restart postgresql</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
-
-<h2>3. Descargar Nextcloud y moverlo</h2>
-<div class="command-row"><div class="cmd-number">3.1</div><div class="cmd-box"><pre>cd /tmp</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
-<div class="command-row"><div class="cmd-number">3.2</div><div class="cmd-box"><pre>wget https://download.nextcloud.com/server/releases/latest.zip</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
-<div class="command-row"><div class="cmd-number">3.3</div><div class="cmd-box"><pre>unzip latest.zip</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
-<div class="command-row"><div class="cmd-number">3.4</div><div class="cmd-box"><pre>sudo mv nextcloud /var/www/html/</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
-<div class="command-row"><div class="cmd-number">3.5</div><div class="cmd-box"><pre>cd /var/www/html/</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
-<div class="command-row"><div class="cmd-number">3.6</div><div class="cmd-box"><pre>sudo chown -R www-data:www-data nextcloud</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
-<div class="command-row"><div class="cmd-number">3.7</div><div class="cmd-box"><pre>sudo chmod -R 755 nextcloud</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
-
-<h2>4. Configurar Nginx</h2>
-<div class="command-row"><div class="cmd-number">4.1</div><div class="cmd-box"><pre>sudo systemctl stop apache2</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
-<div class="command-row"><div class="cmd-number">4.2</div><div class="cmd-box"><pre>sudo nano /etc/nginx/sites-available/nextcloud</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
-
-<p>Contenido del archivo:</p>
-<div class="cmd-box">
-<pre>server {
+  <section class="grupo">
+    <h2>Qué vas a instalar</h2>
+    <article class="cmd">
+      <div class="detalle" style="margin-left:0">
+        <p class="texto">Nextcloud es una nube privada de archivos, parecida a Google Drive, que se instala en tu propio servidor. Necesita tres servicios trabajando juntos:</p><div class="diagrama"><svg viewBox="0 0 900 130" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Navegador, Nginx, PHP-FPM y PostgreSQL"><defs><marker id="fl-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#D70A53"/></marker></defs><rect class="d-box" x="10" y="40" width="170" height="64" rx="4"/><text class="d-t" x="95" y="68" text-anchor="middle">Navegador</text><text class="d-s" x="95" y="87" text-anchor="middle">localhost/nextcloud</text><line class="d-smtp" x1="180" y1="72" x2="243" y2="72" marker-end="url(#fl-r)"/><text class="d-l" x="213" y="60" text-anchor="middle">HTTP :80</text><rect class="d-box" x="247" y="40" width="170" height="64" rx="4"/><text class="d-t" x="332" y="68" text-anchor="middle">Nginx</text><text class="d-s" x="332" y="87" text-anchor="middle">servidor web</text><line class="d-smtp" x1="417" y1="72" x2="479" y2="72" marker-end="url(#fl-r)"/><text class="d-l" x="450" y="60" text-anchor="middle">socket</text><rect class="d-box" x="483" y="40" width="170" height="64" rx="4"/><text class="d-t" x="568" y="68" text-anchor="middle">PHP-FPM</text><text class="d-s" x="568" y="87" text-anchor="middle">ejecuta Nextcloud</text><line class="d-smtp" x1="653" y1="72" x2="716" y2="72" marker-end="url(#fl-r)"/><text class="d-l" x="687" y="60" text-anchor="middle">SQL :5432</text><rect class="d-box" x="720" y="40" width="170" height="64" rx="4"/><text class="d-t" x="805" y="68" text-anchor="middle">PostgreSQL</text><text class="d-s" x="805" y="87" text-anchor="middle">base de datos</text></svg></div><div class="tabla-wrap"><table class="tabla"><thead><tr><th>Componente</th><th>Función en la práctica</th></tr></thead><tbody><tr><td>Nginx</td><td>Recibe las peticiones del navegador y entrega los archivos estáticos (CSS, JS, imágenes).</td></tr><tr><td>PHP-FPM</td><td>Ejecuta el código PHP de Nextcloud. Nginx le pasa las peticiones .php por un socket.</td></tr><tr><td>PostgreSQL</td><td>Guarda usuarios, permisos y la información de los archivos.</td></tr><tr><td>/var/www/html/nextcloud</td><td>Carpeta con el código de Nextcloud.</td></tr></tbody></table></div>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>1. Instalar dependencias</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">1.1</span>
+        <div>
+          <h3 class="nombre">Actualizar el sistema</h3>
+          <p class="desc">Actualizar la lista de paquetes y los paquetes instalados.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo apt update
+sudo apt upgrade -y" aria-label="Copiar todos los comandos del paso 1.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo apt update</pre><button class="copiar" type="button" data-copiar="sudo apt update">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo apt upgrade -y</pre><button class="copiar" type="button" data-copiar="sudo apt upgrade -y">Copiar</button></div>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">1.2</span>
+        <div>
+          <h3 class="nombre">Instalar Nginx, PHP y herramientas</h3>
+          <p class="desc">Nginx como servidor web, PHP-FPM con las extensiones que pide Nextcloud, y utilidades para descargar y descomprimir.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo apt install nginx php php-fpm php-pgsql php-cli php-curl php-gd php-xml php-zip php-mbstring php-intl php-bcmath php-imagick php-gmp unzip curl wget gnupg2 -y
+ls /run/php/" aria-label="Copiar todos los comandos del paso 1.2">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo apt install nginx php php-fpm php-pgsql php-cli php-curl php-gd php-xml php-zip php-mbstring php-intl php-bcmath php-imagick php-gmp unzip curl wget gnupg2 -y</pre><button class="copiar" type="button" data-copiar="sudo apt install nginx php php-fpm php-pgsql php-cli php-curl php-gd php-xml php-zip php-mbstring php-intl php-bcmath php-imagick php-gmp unzip curl wget gnupg2 -y">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>ls /run/php/</pre><button class="copiar" type="button" data-copiar="ls /run/php/">Copiar</button></div><p class="pie-ej">Debe aparecer php8.2-fpm.sock. Es el socket que se usa en la configuración de Nginx del paso 4.2; si tu versión es otra, ajústala ahí.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>2. Instalar y configurar PostgreSQL</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">2.1</span>
+        <div>
+          <h3 class="nombre">Instalar PostgreSQL</h3>
+          <p class="desc">En Debian 12 se instala la versión 15.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo apt install postgresql -y" aria-label="Copiar el comando del paso 2.1">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo apt install postgresql -y</pre><button class="copiar" type="button" data-copiar="sudo apt install postgresql -y">Copiar</button></div>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">2.2</span>
+        <div>
+          <h3 class="nombre">Entrar a la consola de PostgreSQL</h3>
+          <p class="desc">Se entra como el usuario postgres, administrador de la base de datos.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo -u postgres psql" aria-label="Copiar el comando del paso 2.2">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo -u postgres psql</pre><button class="copiar" type="button" data-copiar="sudo -u postgres psql">Copiar</button></div><p class="pie-ej">El prompt cambia a postgres=#. Los comandos del siguiente paso se escriben ahí.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">2.3</span>
+        <div>
+          <h3 class="nombre">Crear la base de datos y el usuario</h3>
+          <p class="desc">Base de datos nextcloud y usuario nextclouduser con permisos sobre ella. Cambia la contraseña por una tuya y anótala.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="CREATE DATABASE nextcloud;
+CREATE USER nextclouduser WITH PASSWORD &#x27;tu_password_segura&#x27;;
+GRANT ALL PRIVILEGES ON DATABASE nextcloud TO nextclouduser;
+\c nextcloud
+GRANT ALL PRIVILEGES ON SCHEMA public TO nextclouduser;
+\q" aria-label="Copiar todos los comandos del paso 2.3">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">postgres=#</span>CREATE DATABASE nextcloud;</pre><button class="copiar" type="button" data-copiar="CREATE DATABASE nextcloud;">Copiar</button></div><div class="ejemplo"><pre><span class="p">postgres=#</span>CREATE USER nextclouduser WITH PASSWORD '<span class="otro">tu_password_segura</span>';</pre><button class="copiar" type="button" data-copiar="CREATE USER nextclouduser WITH PASSWORD &#x27;tu_password_segura&#x27;;">Copiar</button></div><div class="ejemplo"><pre><span class="p">postgres=#</span>GRANT ALL PRIVILEGES ON DATABASE nextcloud TO nextclouduser;</pre><button class="copiar" type="button" data-copiar="GRANT ALL PRIVILEGES ON DATABASE nextcloud TO nextclouduser;">Copiar</button></div><div class="ejemplo"><pre><span class="p">postgres=#</span>\c nextcloud</pre><button class="copiar" type="button" data-copiar="\c nextcloud">Copiar</button></div><div class="ejemplo"><pre><span class="p">postgres=#</span>GRANT ALL PRIVILEGES ON SCHEMA public TO nextclouduser;</pre><button class="copiar" type="button" data-copiar="GRANT ALL PRIVILEGES ON SCHEMA public TO nextclouduser;">Copiar</button></div><div class="ejemplo"><pre><span class="p">postgres=#</span>\q</pre><button class="copiar" type="button" data-copiar="\q">Copiar</button></div><p class="pie-ej"><code class="inl">\c nextcloud</code> cambia a la base nueva. El permiso sobre el esquema public es necesario desde PostgreSQL 15: sin él, Nextcloud no puede crear sus tablas. <code class="inl">\q</code> sale de la consola.</p><p class="pie-ej">La configuración de PostgreSQL (/etc/postgresql/15/main/) no se modifica: Nextcloud y la base de datos están en la misma VM y se conectan por localhost.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>3. Descargar Nextcloud</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">3.1</span>
+        <div>
+          <h3 class="nombre">Descargar y descomprimir</h3>
+          <p class="desc">Descargar la última versión desde el sitio oficial en una carpeta temporal.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="cd /tmp
+wget https://download.nextcloud.com/server/releases/latest.zip
+unzip -q latest.zip" aria-label="Copiar todos los comandos del paso 3.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>cd /tmp</pre><button class="copiar" type="button" data-copiar="cd /tmp">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>wget https://download.nextcloud.com/server/releases/latest.zip</pre><button class="copiar" type="button" data-copiar="wget https://download.nextcloud.com/server/releases/latest.zip">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>unzip -q latest.zip</pre><button class="copiar" type="button" data-copiar="unzip -q latest.zip">Copiar</button></div>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">3.2</span>
+        <div>
+          <h3 class="nombre">Mover y asignar permisos</h3>
+          <p class="desc">Copiar Nextcloud a la carpeta web y entregarla al usuario www-data, con el que trabajan Nginx y PHP.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo mv /tmp/nextcloud /var/www/html/
+sudo chown -R www-data:www-data /var/www/html/nextcloud
+sudo chmod -R 755 /var/www/html/nextcloud" aria-label="Copiar todos los comandos del paso 3.2">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo mv /tmp/nextcloud /var/www/html/</pre><button class="copiar" type="button" data-copiar="sudo mv /tmp/nextcloud /var/www/html/">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo chown -R www-data:www-data /var/www/html/nextcloud</pre><button class="copiar" type="button" data-copiar="sudo chown -R www-data:www-data /var/www/html/nextcloud">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo chmod -R 755 /var/www/html/nextcloud</pre><button class="copiar" type="button" data-copiar="sudo chmod -R 755 /var/www/html/nextcloud">Copiar</button></div><p class="pie-ej">Si /var/www/html/nextcloud ya existe de un intento anterior, bórrala antes con <code class="inl">sudo rm -rf /var/www/html/nextcloud</code>.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>4. Configurar Nginx</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">4.1</span>
+        <div>
+          <h3 class="nombre">Liberar el puerto 80</h3>
+          <p class="desc">Apache y Nginx no pueden usar el puerto 80 al mismo tiempo. Si Apache está instalado, se detiene.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo systemctl stop apache2" aria-label="Copiar el comando del paso 4.1">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo systemctl stop apache2</pre><button class="copiar" type="button" data-copiar="sudo systemctl stop apache2">Copiar</button></div><p class="aviso">⚠ Mientras Apache esté detenido no funcionan las apps instaladas con él (WordPress, PrestaShop). Al reiniciar la VM Apache vuelve a arrancar y Nginx falla; para alternar usa los comandos del paso 7.2.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">4.2</span>
+        <div>
+          <h3 class="nombre">Crear el sitio de Nextcloud</h3>
+          <p class="desc">Crear un archivo nuevo con la configuración de Nginx para /nextcloud.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo nano /etc/nginx/sites-available/nextcloud" aria-label="Copiar el comando del paso 4.2">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo nano /etc/nginx/sites-available/nextcloud</pre><button class="copiar" type="button" data-copiar="sudo nano /etc/nginx/sites-available/nextcloud">Copiar</button></div><div class="ejemplo archivo"><p class="arch">/etc/nginx/sites-available/nextcloud</p><pre>server {
     listen 80;
     server_name localhost;
 
@@ -72,62 +480,220 @@ function copyCode(button) {
     client_max_body_size 512M;
     fastcgi_buffers 64 4K;
 
+    # Nextcloud usa archivos .mjs; Nginx de Debian 12 no los reconoce
+    include mime.types;
+    types { text/javascript mjs; }
+
     access_log /var/log/nginx/nextcloud_access.log;
     error_log /var/log/nginx/nextcloud_error.log;
+
+    # Carpetas internas que no deben verse desde el navegador
+    location ~ ^/nextcloud/(?:build|tests|config|lib|3rdparty|templates|data)(?:$|/) {
+        return 404;
+    }
+    location ~ ^/nextcloud/(?:\.|autotest|occ|issue|indie|db_|console) {
+        return 404;
+    }
 
     location /nextcloud/ {
         try_files $uri $uri/ /nextcloud/index.php$request_uri;
     }
 
-    location ~ ^/nextcloud/.*\.php$ {
+    location ~ ^/nextcloud/.+?\.php(?:$|/) {
         include snippets/fastcgi-php.conf;
         fastcgi_pass unix:/run/php/php8.2-fpm.sock;
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-        include fastcgi_params;
     }
 
-    location ~* ^/nextcloud/\.(?:css|js|woff2?|svg|gif|map)$ {
+    location ~* ^/nextcloud/.+\.(?:css|js|mjs|svg|gif|png|jpg|ico|wasm|woff2?|map)$ {
         try_files $uri /nextcloud/index.php$request_uri;
         access_log off;
         expires 6M;
-        add_header Cache-Control "public";
+    }
+}</pre><button class="copiar" type="button" data-copiar="server {
+    listen 80;
+    server_name localhost;
+
+    root /var/www/html;
+    index index.php index.html;
+
+    client_max_body_size 512M;
+    fastcgi_buffers 64 4K;
+
+    # Nextcloud usa archivos .mjs; Nginx de Debian 12 no los reconoce
+    include mime.types;
+    types { text/javascript mjs; }
+
+    access_log /var/log/nginx/nextcloud_access.log;
+    error_log /var/log/nginx/nextcloud_error.log;
+
+    # Carpetas internas que no deben verse desde el navegador
+    location ~ ^/nextcloud/(?:build|tests|config|lib|3rdparty|templates|data)(?:$|/) {
+        return 404;
+    }
+    location ~ ^/nextcloud/(?:\.|autotest|occ|issue|indie|db_|console) {
+        return 404;
     }
 
-    location ~ ^/nextcloud/\.ht {
-        deny all;
+    location /nextcloud/ {
+        try_files $uri $uri/ /nextcloud/index.php$request_uri;
     }
-}</pre>
-<button class="copy-button" onclick="copyCode(this)">Copiar todo</button>
-</div>
 
-<div class="command-row"><div class="cmd-number">4.4.1</div><div class="cmd-box"><pre>sudo ln -s /etc/nginx/sites-available/nextcloud /etc/nginx/sites-enabled/</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
-<div class="command-row"><div class="cmd-number">4.5.1</div><div class="cmd-box"><pre>sudo nginx -t</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
-<div class="command-row"><div class="cmd-number">4.6.1</div><div class="cmd-box"><pre>sudo systemctl restart nginx</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+    location ~ ^/nextcloud/.+?\.php(?:$|/) {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.2-fpm.sock;
+    }
 
-<h2>5. Configurar PHP</h2>
-<div class="command-row"><div class="cmd-number">5.1</div><div class="cmd-box"><pre>sudo nano /etc/php/8.2/fpm/php.ini</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
-
-<p>Modificar los siguientes parámetros dentro de <b>php.ini</b>:</p>
-<div class="cmd-box">
-<pre>memory_limit = 512M
+    location ~* ^/nextcloud/.+\.(?:css|js|mjs|svg|gif|png|jpg|ico|wasm|woff2?|map)$ {
+        try_files $uri /nextcloud/index.php$request_uri;
+        access_log off;
+        expires 6M;
+    }
+}">Copiar</button></div><p class="pie-ej">El bloque de .php pasa las peticiones a PHP-FPM, incluidas rutas como /nextcloud/index.php/apps/files. Los bloques que regresan 404 impiden descargar desde el navegador la configuración y los archivos de los usuarios.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">4.3</span>
+        <div>
+          <h3 class="nombre">Activar el sitio y aplicar</h3>
+          <p class="desc">Crear el enlace en sites-enabled, revisar la sintaxis y reiniciar Nginx.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo ln -s /etc/nginx/sites-available/nextcloud /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl restart nginx" aria-label="Copiar todos los comandos del paso 4.3">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo ln -s /etc/nginx/sites-available/nextcloud /etc/nginx/sites-enabled/</pre><button class="copiar" type="button" data-copiar="sudo ln -s /etc/nginx/sites-available/nextcloud /etc/nginx/sites-enabled/">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo nginx -t</pre><button class="copiar" type="button" data-copiar="sudo nginx -t">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo systemctl restart nginx</pre><button class="copiar" type="button" data-copiar="sudo systemctl restart nginx">Copiar</button></div><p class="pie-ej">Resultado esperado de nginx -t: syntax is ok y test is successful. Si marca error, indica el archivo y la línea.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>5. Configurar PHP</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">5.1</span>
+        <div>
+          <h3 class="nombre">Ajustar límites de PHP</h3>
+          <p class="desc">Aumentar memoria, tamaño de subida y tiempo de ejecución para manejar archivos grandes.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo nano /etc/php/8.2/fpm/php.ini" aria-label="Copiar el comando del paso 5.1">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo nano /etc/php/8.2/fpm/php.ini</pre><button class="copiar" type="button" data-copiar="sudo nano /etc/php/8.2/fpm/php.ini">Copiar</button></div><div class="ejemplo archivo"><p class="arch">Busca cada línea con Ctrl+W y cambia su valor:</p><pre>memory_limit = 512M
 upload_max_filesize = 512M
 post_max_size = 512M
-max_execution_time = 360</pre>
-<button class="copy-button" onclick="copyCode(this)">Copiar</button>
-</div>
+max_execution_time = 360</pre><button class="copiar" type="button" data-copiar="memory_limit = 512M
+upload_max_filesize = 512M
+post_max_size = 512M
+max_execution_time = 360">Copiar</button></div><p class="pie-ej">Estas líneas ya existen en el archivo. Cambia el valor; no las agregues repetidas al final.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">5.2</span>
+        <div>
+          <h3 class="nombre">Aplicar</h3>
+          <p class="desc">Reiniciar PHP-FPM para que lea los nuevos valores.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo systemctl restart php8.2-fpm" aria-label="Copiar el comando del paso 5.2">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo systemctl restart php8.2-fpm</pre><button class="copiar" type="button" data-copiar="sudo systemctl restart php8.2-fpm">Copiar</button></div>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>6. Finalizar la instalación</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">6.1</span>
+        <div>
+          <h3 class="nombre">Abrir el asistente</h3>
+          <p class="desc">Desde el navegador de la VM.</p>
+        </div>
+        <span></span>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo archivo"><p class="arch">Navegador</p><pre>http://localhost/nextcloud/</pre><button class="copiar" type="button" data-copiar="http://localhost/nextcloud/">Copiar</button></div>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">6.2</span>
+        <div>
+          <h3 class="nombre">Llenar el asistente</h3>
+          <p class="desc">Crea la cuenta de administrador de Nextcloud y conecta la base de datos del paso 2.</p>
+        </div>
+        <span></span>
+      </div>
+      <div class="detalle">
+        <div class="tabla-wrap"><table class="tabla"><thead><tr><th>Campo</th><th>Valor</th></tr></thead><tbody><tr><td>Cuenta de administrador</td><td>Usuario y contraseña que tú elijas. Es distinta del usuario de la base de datos.</td></tr><tr><td>Carpeta de datos</td><td>Deja la que propone.</td></tr><tr><td>Base de datos</td><td>PostgreSQL</td></tr><tr><td>Usuario de la base</td><td>nextclouduser</td></tr><tr><td>Contraseña de la base</td><td><span class="otro">tu_password_segura</span> (la del paso 2.3)</td></tr><tr><td>Nombre de la base</td><td>nextcloud</td></tr><tr><td>Servidor</td><td>localhost</td></tr></tbody></table></div><p class="pie-ej">La instalación tarda uno o dos minutos. Al terminar entras al panel de Nextcloud.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>7. Diagnóstico</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">7.1</span>
+        <div>
+          <h3 class="nombre">Errores comunes</h3>
+          <p class="desc">Síntoma y qué revisar.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo tail -n 30 /var/log/nginx/nextcloud_error.log
+sudo journalctl -u php8.2-fpm -n 30 --no-pager" aria-label="Copiar todos los comandos del paso 7.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="tabla-wrap"><table class="tabla"><thead><tr><th>Síntoma</th><th>Qué revisar</th></tr></thead><tbody><tr><td>502 Bad Gateway</td><td>PHP-FPM detenido o socket distinto: <code class="inl">sudo systemctl status php8.2-fpm</code> y <code class="inl">ls /run/php/</code>.</td></tr><tr><td>Nginx no arranca: Address already in use</td><td>Apache sigue usando el puerto 80 (paso 4.1).</td></tr><tr><td>404 en /nextcloud</td><td>El sitio no está en sites-enabled o Nextcloud no está en /var/www/html/nextcloud.</td></tr><tr><td>Página en blanco o sin estilos</td><td>Falta la línea <code class="inl">types { text/javascript mjs; }</code> en la configuración de Nginx.</td></tr><tr><td>Error de base de datos en el asistente</td><td>Contraseña distinta a la del paso 2.3, o falta el permiso sobre el esquema public.</td></tr><tr><td>Versión de PHP no soportada</td><td>La última versión de Nextcloud ya no admite PHP 8.2. Descarga una versión anterior desde download.nextcloud.com/server/releases/.</td></tr></tbody></table></div><div class="ejemplo"><pre><span class="p">$</span>sudo tail -n 30 /var/log/nginx/nextcloud_error.log</pre><button class="copiar" type="button" data-copiar="sudo tail -n 30 /var/log/nginx/nextcloud_error.log">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo journalctl -u php8.2-fpm -n 30 --no-pager</pre><button class="copiar" type="button" data-copiar="sudo journalctl -u php8.2-fpm -n 30 --no-pager">Copiar</button></div>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">7.2</span>
+        <div>
+          <h3 class="nombre">Alternar entre Apache y Nginx</h3>
+          <p class="desc">Para volver a tus apps de Apache, o regresar a Nextcloud.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo systemctl stop nginx &amp;&amp; sudo systemctl start apache2
+sudo systemctl stop apache2 &amp;&amp; sudo systemctl start nginx" aria-label="Copiar todos los comandos del paso 7.2">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo systemctl stop nginx &amp;&amp; sudo systemctl start apache2</pre><button class="copiar" type="button" data-copiar="sudo systemctl stop nginx &amp;&amp; sudo systemctl start apache2">Copiar</button></div><p class="pie-ej">Activa Apache (WordPress, PrestaShop).</p><div class="ejemplo"><pre><span class="p">$</span>sudo systemctl stop apache2 &amp;&amp; sudo systemctl start nginx</pre><button class="copiar" type="button" data-copiar="sudo systemctl stop apache2 &amp;&amp; sudo systemctl start nginx">Copiar</button></div><p class="pie-ej">Activa Nginx (Nextcloud).</p>
+      </div>
+    </article>
+  </section>
+</main>
 
-<div class="command-row"><div class="cmd-number">5.3.1</div><div class="cmd-box"><pre>sudo systemctl restart php8.2-fpm</pre><button class="copy-button" onclick="copyCode(this)">Copiar</button></div></div>
+<footer>
+  <div class="wrap">
+    <p>Para ver el estado de los tres servicios: <code class="inl">systemctl status nginx php8.2-fpm postgresql</code>.</p>
+    <p>Escuela Politécnica «Ing. Jorge Matute Remus» · Academia de Redes de Cómputo</p>
+  </div>
+</footer>
 
-<h2>6. Finalizar instalación</h2>
-<p>6.1 Acceder a:</p>
-<pre>http://localhost/nextcloud/</pre>
-<p>6.2 Configurar:</p>
-<ul>
-<li>6.2.1 Usuario: <b>nextclouduser</b></li>
-<li>6.2.2 Contraseña: <i>tu_password_segura</i></li>
-<li>6.2.3 Base de datos: <b>nextcloud</b></li>
-<li>6.2.4 Servidor: <b>localhost</b></li>
-</ul>
+<div id="aviso-copia" role="status" aria-live="polite"></div>
 
+<script>
+async function copiar(texto){
+  try{ await navigator.clipboard.writeText(texto); return true; }
+  catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = texto; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    let ok = false; try{ ok = document.execCommand('copy'); }catch(_){ ok = false; }
+    document.body.removeChild(ta); return ok;
+  }
+}
+document.addEventListener('click', async ev => {
+  const btn = ev.target.closest('.copiar');
+  if(!btn) return;
+  const original = btn.textContent;
+  const ok = await copiar(btn.dataset.copiar);
+  btn.textContent = ok ? 'Copiado' : 'Selecciona y copia';
+  btn.classList.toggle('ok', ok);
+  document.getElementById('aviso-copia').textContent = ok ? 'Copiado' : 'No se pudo copiar';
+  setTimeout(() => { btn.textContent = original; btn.classList.remove('ok'); }, 1600);
+});
+</script>
 </body>
 </html>
