@@ -417,7 +417,12 @@ php -m | grep -Ei &#x27;intl|zip|gd|curl|mbstring|xml|soap|bcmath|mysql&#x27;" a
   </div>
   <div class="detalle">
 <div class="ejemplo"><pre><span class="p">$</span>sudo nano /etc/apache2/conf-available/webapps.conf</pre><button class="copiar" type="button" data-copiar="sudo nano /etc/apache2/conf-available/webapps.conf">Copiar</button></div>
-<div class="ejemplo archivo"><pre><span class="ruta"># /etc/apache2/conf-available/webapps.conf</span>&lt;Directory /var/www/html&gt;
+<div class="ejemplo archivo"><pre>
+  <span class="ruta"># Moodle (5.1+, raíz web en /public)</span>Alias /moodle /var/www/html/moodle/public
+  <span class="ruta"># Bloquea el código fuente que queda fuera de /public</span>&lt;Directory /var/www/html/moodle&gt;
+    Require all denied
+&lt;/Directory&gt;
+  <span class="ruta"># /etc/apache2/conf-available/webapps.conf</span>&lt;Directory /var/www/html&gt;
     Options -Indexes +FollowSymLinks
     AllowOverride All
     Require all granted
