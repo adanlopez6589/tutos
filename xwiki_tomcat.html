@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>XWiki sobre Tomcat en Debian 12 · Referencia de laboratorio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EFEDF0;
+    --paper-2:#E5E2E8;
+    --ink:#2A1B25;
+    --muted:#6E5C68;
+    --rubine:#D70A53;
+    --teal:#0F6E78;
+    --term-bg:#2A1B25;
+    --term-fg:#F3E9EE;
+    --term-dim:#A78E9C;
+    --rule:#CFC9D3;
+    --sans:'Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,'DejaVu Sans Mono',Consolas,monospace;
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:940px;margin:0 auto;padding:0 20px}
+
+  /* ---------- Encabezado ---------- */
+  header.top{
+    background:var(--term-bg);
+    color:var(--term-fg);
+    padding:56px 0 44px;
+  }
+  .prompt{
+    font-family:var(--mono);
+    font-size:clamp(14px,3.2vw,19px);
+    color:var(--term-dim);
+    margin-bottom:18px;
+  }
+  .prompt .user{color:#8FD3C9}
+  .prompt .path{color:#9BB8E8}
+  .prompt .sig{color:var(--rubine);font-weight:600}
+  .cursor{
+    display:inline-block;
+    width:.62em;height:1.05em;
+    background:var(--rubine);
+    vertical-align:-.18em;
+    margin-left:.15em;
+    animation:blink 1.05s steps(1) infinite;
+  }
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+
+  header.top h1{
+    font-size:clamp(30px,6vw,52px);
+    line-height:1.06;
+    font-weight:700;
+    letter-spacing:-.02em;
+    margin:0 0 10px;
+    max-width:18ch;
+  }
+  .sub{
+    font-family:var(--mono);
+    font-size:13px;
+    color:var(--term-dim);
+    margin:0;
+  }
+
+  /* ---------- Introducción ---------- */
+  .intro{padding:44px 0 30px;border-bottom:1px solid var(--rule)}
+  .intro p{max-width:68ch;margin:0 0 16px;font-size:17px}
+  .intro .lead{font-size:19px;line-height:1.5;text-align:justify}
+  .nota{
+    margin-top:26px;
+    border-left:3px solid var(--rubine);
+    padding:2px 0 2px 16px;
+    max-width:68ch;
+  }
+  .nota h2{font-size:15px;margin:0 0 6px;font-weight:600}
+  .nota p{font-size:15px;color:var(--muted);margin:0}
+  code.inl{font-family:var(--mono);font-size:.9em;background:var(--paper-2);padding:1px 5px;border-radius:3px}
+
+  /* ---------- Grupos ---------- */
+  .grupo{margin:44px 0 0}
+  .grupo > h2{
+    font-family:var(--mono);
+    font-size:14px;
+    font-weight:600;
+    color:var(--rubine);
+    margin:0 0 4px;
+    padding-bottom:10px;
+    border-bottom:2px solid var(--rubine);
+  }
+
+  /* ---------- Paso ---------- */
+  .cmd{
+    border-bottom:1px solid var(--rule);
+    padding:22px 0;
+  }
+  .cmd-head{
+    display:grid;
+    grid-template-columns:44px 1fr auto;
+    gap:14px;
+    align-items:baseline;
+  }
+  .num{
+    font-family:var(--mono);
+    font-size:14px;
+    color:var(--muted);
+    font-variant-numeric:tabular-nums;
+    padding-top:4px;
+  }
+  .nombre{
+    font-family:var(--mono);
+    font-size:22px;
+    font-weight:600;
+    letter-spacing:-.01em;
+    margin:0;
+  }
+  .desc{margin:4px 0 0;color:var(--muted);font-size:15px;max-width:62ch}
+
+  /* ---------- Botón copiar ---------- */
+  .copiar{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--ink);
+    background:transparent;
+    border:1px solid var(--rule);
+    border-radius:3px;
+    padding:5px 11px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .copiar:hover{border-color:var(--ink)}
+  .copiar:focus-visible{outline:2px solid var(--rubine);outline-offset:2px}
+  .copiar.ok{background:var(--rubine);border-color:var(--rubine);color:#fff}
+
+  /* ---------- Detalle: comandos del paso ---------- */
+  .detalle{margin:16px 0 0 58px}
+  @media (max-width:640px){.detalle{margin-left:0}}
+
+  .opciones{
+    display:grid;
+    grid-template-columns:auto 1fr;
+    gap:5px 14px;
+    margin:0 0 16px;
+    font-size:14px;
+  }
+  .opciones dt{font-family:var(--mono);font-weight:500;color:var(--teal);white-space:nowrap}
+  .opciones dd{margin:0;color:var(--muted)}
+
+  .ejemplo{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    background:var(--term-bg);
+    border-radius:4px;
+    padding:9px 10px 9px 12px;
+    margin-bottom:6px;
+  }
+  .ejemplo pre{
+    margin:0;
+    flex:1;
+    font-family:var(--mono);
+    font-size:13.5px;
+    line-height:1.5;
+    color:var(--term-fg);
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
+  .ejemplo pre .p{color:var(--rubine);user-select:none;margin-right:.5em}
+  .ejemplo .copiar{
+    color:var(--term-dim);
+    border-color:#4B3742;
+    flex:none;
+  }
+  .ejemplo .copiar:hover{color:var(--term-fg);border-color:var(--term-dim)}
+  .ejemplo .copiar.ok{background:var(--rubine);border-color:var(--rubine);color:#fff}
+  .pie-ej{
+    font-size:13px;
+    color:var(--muted);
+    margin:-2px 0 12px 12px;
+  }
+  .aviso{
+    font-size:13px;
+    color:var(--rubine);
+    font-weight:500;
+    margin:0 0 12px;
+  }
+
+  footer{
+    margin-top:56px;
+    padding:30px 0 60px;
+    border-top:1px solid var(--rule);
+    color:var(--muted);
+    font-size:14px;
+  }
+  footer p{max-width:68ch;margin:0 0 8px}
+
+  #aviso-copia{position:fixed;left:-9999px}
+
+  /* ---------- Variables del alumno ---------- */
+  .var{color:var(--teal);font-weight:600;border-bottom:1px dotted currentColor}
+  .ejemplo .var{color:#8FD3C9}
+  .otro{font-style:italic;color:var(--muted)}
+  .ejemplo .otro{color:#E8B4C8}
+  .datos{
+    margin-top:26px;padding:18px 20px;max-width:68ch;
+    background:var(--paper-2);border-radius:4px;
+  }
+  .datos h2{font-size:15px;margin:0 0 4px;font-weight:600}
+  .datos p{font-size:14px;color:var(--muted);margin:0 0 14px}
+  .campos{display:flex;flex-wrap:wrap;gap:12px 22px;align-items:flex-end}
+  .campos label{display:flex;flex-direction:column;gap:4px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .campos input{
+    font-family:var(--mono);font-size:16px;color:var(--ink);
+    background:var(--paper);border:1px solid var(--rule);border-radius:3px;padding:7px 10px;
+  }
+  .campos input:focus-visible{outline:2px solid var(--rubine);outline-offset:1px}
+  #f-n{width:90px} #f-u{width:180px}
+  .correo{font-family:var(--mono);font-size:16px;padding-bottom:7px}
+  .correo b{color:var(--rubine);font-weight:600}
+
+  /* ---------- Bloque de archivo / sesión ---------- */
+  .ejemplo.archivo{flex-wrap:wrap;border-left:3px solid var(--teal)}
+  .ejemplo.archivo .arch{
+    width:100%;font-family:var(--mono);font-size:11.5px;color:var(--term-dim);
+    margin:0 0 2px;
+  }
+
+  /* ---------- Partes ---------- */
+  .parte{margin:72px 0 0}
+  .parte h2{font-size:clamp(24px,4vw,32px);font-weight:700;letter-spacing:-.015em;margin:0 0 6px;line-height:1.15}
+  .parte p{margin:0;color:var(--muted);max-width:68ch}
+
+  /* ---------- Texto y tablas dentro de grupos ---------- */
+  .texto{max-width:68ch;margin:0 0 14px}
+  .detalle .texto{font-size:15px;margin-top:4px}
+  .tabla-wrap{overflow-x:auto;margin:0 0 16px}
+  table.tabla{border-collapse:collapse;width:100%;font-size:14px;min-width:520px}
+  .tabla th{font-family:var(--mono);font-weight:500;font-size:12.5px;color:var(--teal);text-align:left;padding:6px 12px 6px 0;border-bottom:1px solid var(--ink)}
+  .tabla td{padding:8px 12px 8px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+  .tabla td:first-child{font-family:var(--mono);white-space:nowrap}
+
+  /* ---------- Diagrama ---------- */
+  .diagrama{overflow-x:auto;margin:6px 0 10px}
+  .diagrama svg{display:block;width:100%;min-width:640px;height:auto}
+  .d-vm{fill:none;stroke:var(--muted);stroke-width:1.2;stroke-dasharray:5 4}
+  .d-box{fill:#FAF9FB;stroke:var(--ink);stroke-width:1.3}
+  .d-box.tr{stroke-dasharray:4 3;stroke:var(--muted)}
+  .d-t{font-family:var(--mono);font-size:14px;font-weight:600;fill:var(--ink)}
+  .d-s{font-family:var(--mono);font-size:11.5px;fill:var(--muted)}
+  .d-vmt{font-family:var(--mono);font-size:14px;font-weight:600;fill:var(--rubine)}
+  .d-l{font-family:var(--mono);font-size:11.5px;fill:var(--ink)}
+  .d-smtp{stroke:var(--rubine);stroke-width:2;fill:none}
+  .d-imap{stroke:var(--teal);stroke-width:2;fill:none}
+  .d-dash{stroke:var(--muted);stroke-width:1.3;stroke-dasharray:3 3;fill:none}
+  .d-c{fill:var(--rubine)} .d-c.t{fill:var(--teal)}
+  .d-cn{font-family:var(--mono);font-size:11px;font-weight:600;fill:#fff}
+  ol.pasos-flujo{margin:0 0 6px;padding-left:22px;max-width:68ch;font-size:15px}
+  ol.pasos-flujo li{margin:0 0 4px}
+
+  ul.lista{margin:0 0 14px;padding-left:20px;max-width:68ch;font-size:15px}
+  ul.lista li{margin:0 0 5px}
+
+  /* ---------- Agregados de esta guía ---------- */
+  #f-ip{width:170px} #f-pw{width:190px}
+  .d-ok{stroke:var(--teal);stroke-width:2;fill:none}
+  .d-no{stroke:var(--rubine);stroke-width:2;fill:none;stroke-dasharray:6 4}
+  .d-tr{font-family:var(--mono);font-size:12px;font-weight:600;fill:var(--teal)}
+  .d-tx{font-family:var(--mono);font-size:12px;font-weight:600;fill:var(--rubine)}
+  .ejemplo.archivo pre .com{color:var(--term-dim)}
+  .ejemplo.archivo pre .nuevo{color:#8FD3C9}
+  .tabla td.ok{color:var(--teal);font-weight:600}
+</style>
+</head>
+<body>
+<!-- ===== Barra para regresar al índice (pegar justo después de <body>) ===== -->
+<style>
+  .nav-indice{position:sticky;top:0;z-index:100;height:44px;box-sizing:border-box;background:#1E131A;border-bottom:1px solid #3A2833;font-family:'IBM Plex Mono',ui-monospace,Consolas,monospace;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+  .nav-indice .nav-wrap{max-width:940px;height:100%;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  /* Si la guía tiene su propia barra fija (.toolbar), se acomoda debajo de esta */
+  .toolbar{top:44px !important}
+  html{scroll-padding-top:132px}
+  .nav-indice a{color:#F3E9EE;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+  .nav-indice a .flecha{color:#D70A53;font-weight:700;font-size:20px;line-height:1;transition:transform .15s}
+  .nav-indice a:hover .flecha{transform:translateX(-3px)}
+  .nav-indice a:hover{color:#D70A53}
+  .nav-indice a:focus-visible,.btn-indice:focus-visible{outline:2px solid #D70A53;outline-offset:3px}
+  .nav-indice .ruta{color:#A78E9C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nav-indice .ruta .u{color:#8FD3C9}
+  .nav-indice .ruta .h{color:#9BB8E8}
+  .nav-indice .ruta .s{color:#D70A53;font-weight:600}
+  .nav-indice .ruta .c{color:#F3E9EE}
+  .nav-indice .cursor-nav{display:inline-block;width:.6em;height:1.05em;background:#D70A53;vertical-align:-.2em;margin-left:.2em;animation:nav-blink 1.05s steps(1) infinite}
+  @keyframes nav-blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.nav-indice .cursor-nav{animation:none}}
+  .btn-indice{position:fixed;right:18px;bottom:18px;z-index:50;background:#D70A53;color:#fff;font-family:'IBM Plex Mono',ui-monospace,Consolas,monospace;font-size:13px;font-weight:600;text-decoration:none;padding:10px 14px;border-radius:4px;box-shadow:0 4px 14px rgba(42,27,37,.25)}
+  .btn-indice:hover{background:#B00845}
+  @media (max-width:560px){.nav-indice .ruta{display:none}}
+  @media print{.nav-indice,.btn-indice{display:none}}
+</style>
+<nav class="nav-indice" aria-label="Navegación">
+  <div class="nav-wrap">
+    <a href="https://adanlopez6589.github.io/tutos/"><span class="flecha">←</span> Guías de laboratorio</a>
+    <span class="ruta" aria-hidden="true"><span class="u">alumno</span>@<span class="h">debian12</span>:~/guias<span class="s">$</span> <span class="c">cd ..</span><span class="cursor-nav"></span></span>
+  </div>
+</nav>
+<a class="btn-indice" href="https://adanlopez6589.github.io/tutos/" title="Regresar al índice de guías">☰ Índice</a>
+<!-- ===== Fin barra índice ===== -->
+
+<header class="top">
+  <div class="wrap">
+    <p class="prompt"><span class="user">alumno</span>@<span class="path">debian12</span>:~<span class="sig">$</span> sudo unzip -q xwiki.war -d /opt/tomcat/webapps/xwiki<span class="cursor"></span></p>
+    <h1>XWiki sobre Tomcat en Debian 12</h1>
+    <p class="sub">Referencia de laboratorio · Administración y Configuración Cliente/Servidor</p>
+  </div>
+</header>
+
+<section class="intro">
+  <div class="wrap">
+    <p class="lead">Esta guía despliega XWiki, un wiki colaborativo escrito en Java, sobre el Tomcat que instalaste en la práctica anterior y con MySQL como base de datos. Es la primera aplicación Java del curso: aprenderás qué es un archivo .war, cómo se despliega y cómo se conecta con la base de datos. Al final tendrás tu wiki en http://IP:8080/xwiki.</p>
+    <div class="datos">
+      <h2>Tus datos</h2>
+      <p>Escribe la IP de tu VM (paso 10.3) y la contraseña que usarás para el usuario xwiki de MySQL. Los comandos de la guía se actualizan con ellos.</p>
+      <div class="campos">
+        <label for="f-ip">IP de la VM<input id="f-ip" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="192.168.1.50"></label>
+        <label for="f-pw">Contraseña BD xwiki<input id="f-pw" type="text" autocomplete="off" spellcheck="false" placeholder="Xwiki#Lab2026"></label>
+        <span class="correo" aria-live="polite">http://<b><span class="var" data-v="IP">192.168.1.50</span></b>:8080/xwiki</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<main class="wrap">
+
+  <section class="grupo">
+    <h2>Antes de empezar</h2>
+    <article class="cmd">
+      <div class="detalle" style="margin-left:0">
+        <p class="texto">Esta práctica es la continuación de la guía <strong>Apache Tomcat en Debian 12</strong>. Se asume que ya tienes:</p><ul class="lista"><li>Tomcat 10.1 instalado en <code class="inl">/opt/tomcat</code>, funcionando como servicio <code class="inl">tomcat</code> con el usuario <code class="inl">tomcatuser</code>.</li><li>Java (OpenJDK 17) instalado con <code class="inl">default-jdk</code>.</li><li>Un servidor MySQL o MariaDB funcionando en la misma VM.</li><li>La VM con <strong>al menos 3 GB de RAM</strong> (XWiki es más pesado que WordPress) y acceso a internet.</li></ul><p class="texto">Es la primera aplicación Java que instalamos en el curso. Por eso, antes de los comandos hay cuatro conceptos: qué es el JDK, qué es un archivo .war, cómo despliega Tomcat una aplicación y por qué se usa la IP y no localhost.</p>
+      </div>
+    </article>
+  </section>
+  <section class="parte">
+    <h2>Conceptos previos</h2>
+    <p>Léelos antes de instalar: explican lo que vas a hacer en cada paso.</p>
+  </section>
+  <section class="grupo">
+    <h2>A. Recordatorio: ¿qué es el JDK?</h2>
+    <article class="cmd">
+      <div class="detalle" style="margin-left:0">
+        <p class="texto">Java es un lenguaje <strong>compilado a bytecode</strong>. El código fuente (<code class="inl">.java</code>) no se ejecuta directo: primero se compila a un formato intermedio (<code class="inl">.class</code>) y ese formato lo ejecuta la <strong>máquina virtual de Java (JVM)</strong>. Así un mismo programa corre en cualquier sistema que tenga una JVM.</p><div class="diagrama"><svg viewBox="0 0 900 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Del código fuente Java a la ejecución en la JVM"><defs><marker id="fj" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#D70A53"/></marker></defs>
+<rect class="d-box" x="10" y="36" width="170" height="64" rx="4"/><text class="d-t" x="95" y="64" text-anchor="middle">Hola.java</text><text class="d-s" x="95" y="83" text-anchor="middle">código fuente</text>
+<line class="d-smtp" x1="180" y1="68" x2="361" y2="68" marker-end="url(#fj)"/><text class="d-l" x="272" y="56" text-anchor="middle">javac (JDK)</text>
+<rect class="d-box" x="365" y="36" width="170" height="64" rx="4"/><text class="d-t" x="450" y="64" text-anchor="middle">Hola.class</text><text class="d-s" x="450" y="83" text-anchor="middle">bytecode</text>
+<line class="d-smtp" x1="535" y1="68" x2="716" y2="68" marker-end="url(#fj)"/><text class="d-l" x="628" y="56" text-anchor="middle">java (JVM)</text>
+<rect class="d-box" x="720" y="36" width="170" height="64" rx="4"/><text class="d-t" x="805" y="64" text-anchor="middle">Programa</text><text class="d-s" x="805" y="83" text-anchor="middle">en ejecución</text>
+<text class="d-s" x="450" y="132" text-anchor="middle">El mismo .class corre en Linux, Windows o macOS: solo necesita una JVM</text></svg></div><dl class="opciones"><dt>JVM</dt><dd>Java Virtual Machine. El programa que ejecuta el bytecode. Es lo que ves como proceso <code class="inl">java</code> en <code class="inl">ps</code> o <code class="inl">ss</code>.</dd><dt>JRE</dt><dd>Java Runtime Environment. La JVM más las bibliotecas estándar: lo necesario para <em>ejecutar</em> programas Java.</dd><dt>JDK</dt><dd>Java Development Kit. El JRE más las herramientas para <em>desarrollar</em>: el compilador <code class="inl">javac</code>, <code class="inl">jar</code>, depuradores, etc.</dd><dt>OpenJDK</dt><dd>La implementación libre de Java. Es la que instala Debian 12 con <code class="inl">default-jdk</code> (versión 17).</dd><dt>JAVA_HOME</dt><dd>Variable que indica dónde está instalado Java. En la guía de Tomcat la pusimos en el servicio: <code class="inl">/usr/lib/jvm/default-java</code>.</dd></dl><p class="texto"><strong>¿Y Tomcat qué tiene que ver?</strong> Tomcat también es un programa escrito en Java: cuando arranca el servicio, en realidad arranca una JVM, y dentro de ella corren todas las aplicaciones .war que despliegues. Por eso sin Java no hay Tomcat, y por eso la memoria que le damos a XWiki se configura como memoria de la JVM (paso 8).</p><p class="texto">XWiki 17 necesita <strong>Java 17 o superior</strong>, justo lo que trae Debian 12.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>B. ¿Qué es un archivo .war?</h2>
+    <article class="cmd">
+      <div class="detalle" style="margin-left:0">
+        <p class="texto">Un <strong>.war</strong> (Web Application Archive) es la aplicación web Java completa empaquetada en un solo archivo. Por dentro <strong>es un .zip</strong> con una estructura de carpetas fija que todos los servidores Java entienden. Lo puedes abrir con <code class="inl">unzip</code> igual que cualquier zip.</p><p class="texto">Compáralo con WordPress: ahí copiaste a <code class="inl">/var/www/html</code> una carpeta llena de archivos <code class="inl">.php</code> que Apache lee e interpreta en cada visita. En Java la aplicación ya viene <strong>compilada</strong> (bytecode en <code class="inl">.class</code> y <code class="inl">.jar</code>) y empaquetada: tú no ves el código fuente, solo despliegas el paquete.</p><div class="ejemplo archivo"><p class="arch">Estructura de un .war (ejemplo: XWiki)</p><pre>xwiki.war
+├── META-INF/            información del paquete
+├── WEB-INF/             zona privada: no se puede ver desde el navegador
+│   ├── web.xml          descriptor: le dice a Tomcat cómo cargar la app
+│   ├── lib/             bibliotecas .jar (aquí va el driver de MySQL)
+│   ├── classes/         clases .class propias de la aplicación
+│   ├── hibernate.cfg.xml   conexión a la base de datos
+│   ├── xwiki.cfg           configuración general de XWiki
+│   └── xwiki.properties    configuración (directorio de datos, etc.)
+├── resources/           imágenes, CSS y JavaScript públicos
+├── skins/               apariencia del sitio
+└── templates/           plantillas de las páginas</pre></div><dl class="opciones" style="margin-top:14px"><dt>.jar</dt><dd>Java Archive. Un zip con clases Java: una biblioteca o un programa. Un .war contiene muchos .jar dentro de <code class="inl">WEB-INF/lib</code>.</dd><dt>.war</dt><dd>Un zip con una aplicación <em>web</em> completa, lista para un servidor como Tomcat.</dd><dt>WEB-INF</dt><dd>Carpeta protegida: Tomcat nunca la entrega al navegador. Ahí van la configuración y las contraseñas de la base de datos.</dd></dl><div class="tabla-wrap"><table class="tabla"><thead><tr><th>Concepto</th><th>WordPress (LAMP)</th><th>XWiki (Java)</th></tr></thead><tbody><tr><td>Código</td><td>Archivos .php sueltos</td><td>Un paquete .war compilado</td></tr><tr><td>Quién lo ejecuta</td><td>Apache + PHP</td><td>Tomcat (dentro de la JVM)</td></tr><tr><td>Carpeta</td><td>/var/www/html</td><td>/opt/tomcat/webapps</td></tr><tr><td>Puerto</td><td>80</td><td>8080</td></tr><tr><td>Conexión a la BD</td><td>wp-config.php</td><td>WEB-INF/hibernate.cfg.xml</td></tr><tr><td>Driver de la BD</td><td>Paquete php-mysql</td><td>Archivo mysql-connector-j.jar</td></tr></tbody></table></div>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>C. ¿Cómo despliega Tomcat una aplicación?</h2>
+    <article class="cmd">
+      <div class="detalle" style="margin-left:0">
+        <p class="texto"><strong>Desplegar</strong> es poner la aplicación en el servidor para que empiece a atender peticiones. Tomcat vigila la carpeta <code class="inl">/opt/tomcat/webapps</code>: cada archivo .war o carpeta que encuentra ahí es una aplicación.</p><div class="diagrama"><svg viewBox="0 0 900 170" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Despliegue de un archivo war en Tomcat"><defs><marker id="fd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#D70A53"/></marker></defs>
+<rect class="d-box" x="10" y="40" width="170" height="64" rx="4"/><text class="d-t" x="95" y="68" text-anchor="middle">xwiki.war</text><text class="d-s" x="95" y="87" text-anchor="middle">paquete (zip)</text>
+<line class="d-smtp" x1="180" y1="72" x2="361" y2="72" marker-end="url(#fd)"/><text class="d-l" x="272" y="60" text-anchor="middle">unzip</text>
+<rect class="d-box" x="365" y="40" width="170" height="64" rx="4"/><text class="d-t" x="450" y="68" text-anchor="middle">webapps/xwiki/</text><text class="d-s" x="450" y="87" text-anchor="middle">carpeta de la app</text>
+<line class="d-smtp" x1="535" y1="72" x2="716" y2="72" marker-end="url(#fd)"/><text class="d-l" x="628" y="60" text-anchor="middle">Tomcat la carga</text>
+<rect class="d-box" x="720" y="40" width="170" height="64" rx="4"/><text class="d-t" x="805" y="68" text-anchor="middle">/xwiki</text><text class="d-s" x="805" y="87" text-anchor="middle">ruta en la URL</text>
+<text class="d-s" x="450" y="132" text-anchor="middle">El nombre de la carpeta dentro de webapps se convierte en la ruta de la URL:</text>
+<text class="d-l" x="450" y="152" text-anchor="middle">webapps/xwiki  →  http://IP:8080/xwiki</text></svg></div><p class="texto">Hay tres formas de desplegar:</p><div class="tabla-wrap"><table class="tabla"><thead><tr><th>Forma</th><th>Cómo funciona</th><th>¿La usamos?</th></tr></thead><tbody><tr><td>Copiar el .war</td><td>Copias xwiki.war a webapps/ y Tomcat lo descomprime solo (autoDeploy).</td><td>No</td></tr><tr><td>Descomprimir a mano</td><td>Tú creas webapps/xwiki/ y descomprimes ahí el .war.</td><td><b>Sí</b></td></tr><tr><td>Manager web</td><td>Subes el .war desde la página del Manager de Tomcat (/manager/html).</td><td>No</td></tr></tbody></table></div><p class="texto"><strong>¿Por qué a mano?</strong> Porque XWiki no puede arrancar con la configuración de fábrica: antes de que Tomcat la cargue hay que agregar el driver de MySQL en <code class="inl">WEB-INF/lib</code> y editar dos archivos dentro de <code class="inl">WEB-INF</code>. Si copiaras el .war directo, Tomcat la arrancaría de inmediato con la configuración equivocada. Por eso: detener Tomcat → descomprimir → configurar → arrancar.</p><p class="texto">La carpeta especial <code class="inl">webapps/ROOT</code> es la que responde en la raíz (<code class="inl">http://IP:8080/</code>): es la página del gato que viste al instalar Tomcat.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>D. ¿Por qué http://IP:8080 y no localhost?</h2>
+    <article class="cmd">
+      <div class="detalle" style="margin-left:0">
+        <p class="texto"><code class="inl">localhost</code> (dirección <code class="inl">127.0.0.1</code>) no es un servidor en particular: significa <strong>«esta misma máquina»</strong>, la máquina donde se escribe. Cada equipo tiene su propio localhost.</p><p class="texto">En el laboratorio hay dos equipos: la <strong>PC anfitrión</strong> (Windows, donde está el navegador) y la <strong>VM Debian</strong> (donde está Tomcat). Si en el navegador de Windows escribes <code class="inl">localhost:8080</code>, la petición nunca sale de Windows: busca un Tomcat en Windows y no lo encuentra. Para llegar a la VM hay que usar <strong>su IP</strong>.</p><div class="diagrama"><svg viewBox="0 0 900 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diferencia entre localhost y la IP de la VM"><defs><marker id="fi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#0F6E78"/></marker></defs><defs><marker id="fx" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#D70A53"/></marker></defs>
+<rect class="d-vm" x="10" y="14" width="330" height="200" rx="6"/><text class="d-vmt" x="26" y="38">PC anfitrión (Windows)</text>
+<rect class="d-box" x="40" y="70" width="170" height="64" rx="4"/><text class="d-t" x="125" y="98" text-anchor="middle">Navegador</text><text class="d-s" x="125" y="117" text-anchor="middle">127.0.0.1 = esta PC</text>
+<path class="d-no" d="M125 134 C125 190 270 190 270 134 C270 100 240 88 212 96" marker-end="url(#fx)"/><text class="d-tx" x="198" y="200" text-anchor="middle">localhost:8080 → se queda en la PC ✗</text>
+<line class="d-ok" x1="210" y1="92" x2="556" y2="92" marker-end="url(#fi)"/><text class="d-tr" x="400" y="80" text-anchor="middle">192.168.1.50:8080 ✓</text>
+<rect class="d-vm" x="540" y="14" width="350" height="200" rx="6"/><text class="d-vmt" x="556" y="38">VM Debian 12 · 192.168.1.50</text>
+<rect class="d-box" x="560" y="60" width="150" height="64" rx="4"/><text class="d-t" x="635" y="88" text-anchor="middle">Tomcat</text><text class="d-s" x="635" y="107" text-anchor="middle">escucha :8080</text>
+<rect class="d-box" x="730" y="60" width="140" height="64" rx="4"/><text class="d-t" x="800" y="88" text-anchor="middle">MySQL</text><text class="d-s" x="800" y="107" text-anchor="middle">:3306</text>
+<path class="d-ok" d="M635 124 C635 158 800 158 800 128" marker-end="url(#fi)"/><text class="d-tr" x="717" y="180" text-anchor="middle">XWiki → localhost:3306 ✓</text><text class="d-s" x="717" y="198" text-anchor="middle">(misma máquina)</text></svg></div><div class="tabla-wrap"><table class="tabla"><thead><tr><th>Desde dónde abres el navegador</th><th>Dirección</th><th>Por qué</th></tr></thead><tbody><tr><td>Dentro de la VM (o con curl en la VM)</td><td>http://localhost:8080/xwiki</td><td>El navegador y Tomcat están en la misma máquina.</td></tr><tr><td>PC anfitrión, VM en Adaptador puente</td><td>http://IP-de-la-VM:8080/xwiki</td><td>La VM tiene su propia IP en la red del laboratorio.</td></tr><tr><td>Otra PC del laboratorio</td><td>http://IP-de-la-VM:8080/xwiki</td><td>Igual que el anterior: así lo verían tus compañeros.</td></tr><tr><td>PC anfitrión, VM en NAT</td><td>http://localhost:8080/xwiki</td><td>Solo si en VirtualBox reenvías el puerto 8080 del anfitrión al 8080 de la VM.</td></tr></tbody></table></div><p class="texto"><strong>Fíjate en el detalle:</strong> en el paso 6 configurarás XWiki para conectarse a MySQL en <code class="inl">localhost</code>. Ahí sí es correcto, porque XWiki (dentro de Tomcat) y MySQL están en la <em>misma</em> VM. La pregunta siempre es: ¿desde qué máquina sale la conexión?</p><p class="texto">Para que la IP funcione, Tomcat debe escuchar en todas las interfaces (<code class="inl">0.0.0.0</code> o <code class="inl">*</code>), no solo en 127.0.0.1. Lo comprobarás en el paso 10.2.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>E. ¿Qué es XWiki?</h2>
+    <article class="cmd">
+      <div class="detalle" style="margin-left:0">
+        <p class="texto">XWiki es un <strong>wiki colaborativo</strong> de código abierto, parecido a Wikipedia o a Confluence: los usuarios crean y editan páginas desde el navegador, suben archivos, comentan y se organizan por espacios. Está hecho en Java y se distribuye como .war. Guarda las páginas en MySQL y los archivos adjuntos e índices en un directorio del disco.</p><div class="diagrama"><svg viewBox="0 0 900 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arquitectura: navegador, Tomcat, XWiki y MySQL"><defs><marker id="fa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#D70A53"/></marker></defs><defs><marker id="fa2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#0F6E78"/></marker></defs>
+<rect class="d-box" x="10" y="70" width="160" height="64" rx="4"/><text class="d-t" x="90" y="98" text-anchor="middle">Navegador</text><text class="d-s" x="90" y="117" text-anchor="middle">PC anfitrión</text>
+<line class="d-smtp" x1="170" y1="102" x2="266" y2="102" marker-end="url(#fa)"/><text class="d-l" x="218" y="90" text-anchor="middle">IP:8080</text>
+<rect class="d-vm" x="245" y="14" width="645" height="222" rx="6"/><text class="d-vmt" x="262" y="38">VM Debian 12</text>
+<rect class="d-box" x="270" y="56" width="350" height="92" rx="4"/><text class="d-t" x="290" y="80">Tomcat :8080</text><text class="d-s" x="290" y="98">JVM · OpenJDK 17</text>
+<rect class="d-box" x="440" y="70" width="160" height="64" rx="4"/><text class="d-t" x="520" y="98" text-anchor="middle">XWiki</text><text class="d-s" x="520" y="117" text-anchor="middle">webapps/xwiki</text>
+<line class="d-imap" x1="600" y1="102" x2="716" y2="102" marker-end="url(#fa2)"/><text class="d-l" x="668" y="90" text-anchor="middle">JDBC</text><text class="d-s" x="658" y="124" text-anchor="middle">localhost:3306</text>
+<rect class="d-box" x="720" y="70" width="160" height="64" rx="4"/><text class="d-t" x="800" y="98" text-anchor="middle">MySQL</text><text class="d-s" x="800" y="117" text-anchor="middle">BD xwiki</text>
+<line class="d-dash" x1="520" y1="134" x2="520" y2="176"/>
+<rect class="d-box tr" x="400" y="176" width="240" height="46" rx="4"/><text class="d-t" x="520" y="196" text-anchor="middle">/var/lib/xwiki/data</text><text class="d-s" x="520" y="213" text-anchor="middle">directorio permanente</text></svg></div>
+      </div>
+    </article>
+  </section>
+  <section class="parte">
+    <h2>Instalación</h2>
+    <p>Ejecuta los pasos en orden dentro de la VM. Los valores en color se toman de «Tus datos».</p>
+  </section>
+  <section class="grupo">
+    <h2>1. Verificar los requisitos</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">1.1</span>
+        <div>
+          <h3 class="nombre">Java y Tomcat</h3>
+          <p class="desc">Confirmar que Java responde y que el servicio Tomcat de la guía anterior está activo.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="java -version
+sudo systemctl status tomcat --no-pager" aria-label="Copiar todos los comandos del paso 1.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>java -version</pre><button class="copiar" type="button" data-copiar="java -version">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo systemctl status tomcat --no-pager</pre><button class="copiar" type="button" data-copiar="sudo systemctl status tomcat --no-pager">Copiar</button></div><p class="pie-ej">Debe aparecer openjdk version "17..." y active (running).</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">1.2</span>
+        <div>
+          <h3 class="nombre">Servidor de base de datos</h3>
+          <p class="desc">Comprobar que MySQL (o MariaDB) está activo.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo systemctl status mysql --no-pager" aria-label="Copiar el comando del paso 1.2">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo systemctl status mysql --no-pager</pre><button class="copiar" type="button" data-copiar="sudo systemctl status mysql --no-pager">Copiar</button></div><p class="pie-ej">En MariaDB el servicio se llama mariadb, pero <code class="inl">mysql</code> funciona como alias.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">1.3</span>
+        <div>
+          <h3 class="nombre">Memoria disponible</h3>
+          <p class="desc">Revisar cuánta RAM tiene la VM.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="free -h" aria-label="Copiar el comando del paso 1.3">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>free -h</pre><button class="copiar" type="button" data-copiar="free -h">Copiar</button></div><p class="pie-ej">En la columna total de «Mem» deben aparecer 3 GB o más. Si hay menos, apaga la VM y súbele la memoria en VirtualBox.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>2. Instalar herramientas</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">2.1</span>
+        <div>
+          <h3 class="nombre">unzip, wget y curl</h3>
+          <p class="desc">unzip sirve para abrir el .war, wget para descargar archivos y curl para probar la aplicación desde la terminal.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo apt update
+sudo apt install unzip wget curl -y" aria-label="Copiar todos los comandos del paso 2.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo apt update</pre><button class="copiar" type="button" data-copiar="sudo apt update">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo apt install unzip wget curl -y</pre><button class="copiar" type="button" data-copiar="sudo apt install unzip wget curl -y">Copiar</button></div>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>3. Crear la base de datos</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">3.1</span>
+        <div>
+          <h3 class="nombre">Entrar a MySQL</h3>
+          <p class="desc">Abrir la consola de MySQL como administrador.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo mysql" aria-label="Copiar el comando del paso 3.1">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo mysql</pre><button class="copiar" type="button" data-copiar="sudo mysql">Copiar</button></div><p class="pie-ej">Si te pide contraseña o marca «Access denied», usa <code class="inl">mysql -u root -p</code> y escribe la contraseña de root que pusiste al instalar MySQL.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">3.2</span>
+        <div>
+          <h3 class="nombre">BD y usuario xwiki</h3>
+          <p class="desc">Crear la base de datos con codificación utf8mb4 y un usuario exclusivo para la aplicación.</p>
+        </div>
+        <span></span>
+      </div>
+      <div class="detalle">
+        <div style="display:flex;justify-content:flex-end;margin:0 0 6px"><button class="copiar" type="button" data-copiar="CREATE DATABASE xwiki DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
+CREATE USER &#x27;xwiki&#x27;@&#x27;localhost&#x27; IDENTIFIED BY &#x27;%PW%&#x27;;
+GRANT ALL PRIVILEGES ON *.* TO &#x27;xwiki&#x27;@&#x27;localhost&#x27;;
+FLUSH PRIVILEGES;">Copiar todo</button></div><div class="ejemplo"><pre><span class="p">mysql&gt;</span>CREATE DATABASE xwiki DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;</pre><button class="copiar" type="button" data-copiar="CREATE DATABASE xwiki DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;">Copiar</button></div><div class="ejemplo"><pre><span class="p">mysql&gt;</span>CREATE USER 'xwiki'@'localhost' IDENTIFIED BY '<span class="var" data-v="PW">Xwiki#Lab2026</span>';</pre><button class="copiar" type="button" data-copiar="CREATE USER &#x27;xwiki&#x27;@&#x27;localhost&#x27; IDENTIFIED BY &#x27;%PW%&#x27;;">Copiar</button></div><div class="ejemplo"><pre><span class="p">mysql&gt;</span>GRANT ALL PRIVILEGES ON *.* TO 'xwiki'@'localhost';</pre><button class="copiar" type="button" data-copiar="GRANT ALL PRIVILEGES ON *.* TO &#x27;xwiki&#x27;@&#x27;localhost&#x27;;">Copiar</button></div><div class="ejemplo"><pre><span class="p">mysql&gt;</span>FLUSH PRIVILEGES;</pre><button class="copiar" type="button" data-copiar="FLUSH PRIVILEGES;">Copiar</button></div><div class="ejemplo"><pre><span class="p">mysql&gt;</span>EXIT;</pre><button class="copiar" type="button" data-copiar="EXIT;">Copiar</button></div><p class="pie-ej"><code class="inl">utf8mb4_bin</code> es la codificación que exige XWiki (acentos, ñ y emojis). XWiki pide privilegios en <code class="inl">*.*</code> porque cada subwiki es una base de datos nueva; en producción se restringen.</p><p class="aviso">La contraseña debe ser la misma que pondrás en el paso 6. Si MySQL responde «Your password does not satisfy the current policy», usa una más compleja (mayúscula, minúscula, número y símbolo) y actualiza «Tus datos».</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">3.3</span>
+        <div>
+          <h3 class="nombre">Probar el usuario</h3>
+          <p class="desc">Entrar con el usuario nuevo para confirmar la contraseña y ver la base de datos.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="mysql -u xwiki -p -e &#x27;SHOW DATABASES;&#x27;" aria-label="Copiar el comando del paso 3.3">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>mysql -u xwiki -p -e 'SHOW DATABASES;'</pre><button class="copiar" type="button" data-copiar="mysql -u xwiki -p -e &#x27;SHOW DATABASES;&#x27;">Copiar</button></div><p class="pie-ej">Escribe la contraseña del paso 3.2. En la lista debe aparecer <code class="inl">xwiki</code>.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>4. Descargar XWiki</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">4.1</span>
+        <div>
+          <h3 class="nombre">Descargar el .war</h3>
+          <p class="desc">Descargar la versión LTS (soporte extendido) de XWiki en /tmp y guardarla con el nombre corto xwiki.war.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="cd /tmp
+wget https://maven.xwiki.org/releases/org/xwiki/platform/xwiki-platform-distribution-war/17.10.14/xwiki-platform-distribution-war-17.10.14.war -O xwiki.war" aria-label="Copiar todos los comandos del paso 4.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>cd /tmp</pre><button class="copiar" type="button" data-copiar="cd /tmp">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>wget https://maven.xwiki.org/releases/org/xwiki/platform/xwiki-platform-distribution-war/17.10.14/xwiki-platform-distribution-war-17.10.14.war -O xwiki.war</pre><button class="copiar" type="button" data-copiar="wget https://maven.xwiki.org/releases/org/xwiki/platform/xwiki-platform-distribution-war/17.10.14/xwiki-platform-distribution-war-17.10.14.war -O xwiki.war">Copiar</button></div><p class="pie-ej">Pesa varios cientos de MB, puede tardar. Se usa la rama 17.10 porque es la LTS y la primera que funciona en Tomcat 10 (usa Jakarta EE). Las versiones 16.x o anteriores <strong>no</strong> funcionan en Tomcat 10. Para una versión más nueva de la rama 17.10, consúltala en xwiki.org/xwiki/bin/view/Download y cambia el número en los dos lugares de la URL.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">4.2</span>
+        <div>
+          <h3 class="nombre">Ver qué hay dentro</h3>
+          <p class="desc">Comprobar que el .war es un zip y listar sus archivos de configuración, sin descomprimirlo.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="file xwiki.war
+unzip -l xwiki.war &#x27;WEB-INF/*.xml&#x27; &#x27;WEB-INF/*.cfg&#x27; &#x27;WEB-INF/*.properties&#x27;
+unzip -l xwiki.war &#x27;WEB-INF/lib/*&#x27; | wc -l" aria-label="Copiar todos los comandos del paso 4.2">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>file xwiki.war</pre><button class="copiar" type="button" data-copiar="file xwiki.war">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>unzip -l xwiki.war 'WEB-INF/*.xml' 'WEB-INF/*.cfg' 'WEB-INF/*.properties'</pre><button class="copiar" type="button" data-copiar="unzip -l xwiki.war &#x27;WEB-INF/*.xml&#x27; &#x27;WEB-INF/*.cfg&#x27; &#x27;WEB-INF/*.properties&#x27;">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>unzip -l xwiki.war 'WEB-INF/lib/*' | wc -l</pre><button class="copiar" type="button" data-copiar="unzip -l xwiki.war &#x27;WEB-INF/lib/*&#x27; | wc -l">Copiar</button></div><p class="pie-ej"><code class="inl">file</code> responde «Zip archive» o «Java archive». El último comando cuenta las bibliotecas .jar que trae: son cientos. Toda la aplicación viaja en este único archivo.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>5. Desplegar (descomprimir en webapps)</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">5.1</span>
+        <div>
+          <h3 class="nombre">Detener Tomcat</h3>
+          <p class="desc">Se detiene para que no cargue la aplicación a medias mientras la configuras.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo systemctl stop tomcat" aria-label="Copiar el comando del paso 5.1">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo systemctl stop tomcat</pre><button class="copiar" type="button" data-copiar="sudo systemctl stop tomcat">Copiar</button></div>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">5.2</span>
+        <div>
+          <h3 class="nombre">Descomprimir en webapps/xwiki</h3>
+          <p class="desc">Crear la carpeta de la aplicación y extraer ahí el contenido del .war.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo mkdir /opt/tomcat/webapps/xwiki
+sudo unzip -q /tmp/xwiki.war -d /opt/tomcat/webapps/xwiki" aria-label="Copiar todos los comandos del paso 5.2">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo mkdir /opt/tomcat/webapps/xwiki</pre><button class="copiar" type="button" data-copiar="sudo mkdir /opt/tomcat/webapps/xwiki">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo unzip -q /tmp/xwiki.war -d /opt/tomcat/webapps/xwiki</pre><button class="copiar" type="button" data-copiar="sudo unzip -q /tmp/xwiki.war -d /opt/tomcat/webapps/xwiki">Copiar</button></div><p class="pie-ej">El nombre de la carpeta, <code class="inl">xwiki</code>, define la URL: <code class="inl">http://IP:8080/xwiki</code>. Si la llamaras <code class="inl">wiki</code>, la URL sería /wiki. <code class="inl">-q</code> solo evita que liste miles de archivos.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">5.3</span>
+        <div>
+          <h3 class="nombre">Revisar el resultado</h3>
+          <p class="desc">Ver las aplicaciones que tiene Tomcat y el contenido de WEB-INF.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="ls /opt/tomcat/webapps
+ls /opt/tomcat/webapps/xwiki/WEB-INF" aria-label="Copiar todos los comandos del paso 5.3">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>ls /opt/tomcat/webapps</pre><button class="copiar" type="button" data-copiar="ls /opt/tomcat/webapps">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>ls /opt/tomcat/webapps/xwiki/WEB-INF</pre><button class="copiar" type="button" data-copiar="ls /opt/tomcat/webapps/xwiki/WEB-INF">Copiar</button></div><p class="pie-ej">En webapps verás <code class="inl">xwiki</code> junto a las que trae Tomcat (ROOT, docs, examples, manager…). En WEB-INF están los archivos que vas a editar.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>6. Conectar XWiki con MySQL</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">6.1</span>
+        <div>
+          <h3 class="nombre">Driver JDBC</h3>
+          <p class="desc">Descargar el conector de MySQL para Java y copiarlo a las bibliotecas de la aplicación.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="cd /tmp
+wget https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/26.7.0/mysql-connector-j-26.7.0.jar
+sudo cp mysql-connector-j-26.7.0.jar /opt/tomcat/webapps/xwiki/WEB-INF/lib/" aria-label="Copiar todos los comandos del paso 6.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <p class="texto"><strong>JDBC</strong> (Java Database Connectivity) es la forma estándar en que un programa Java habla con una base de datos. El <strong>driver</strong> es un .jar que traduce entre Java y el protocolo de MySQL. Es el equivalente al paquete <code class="inl">php-mysql</code> que instalaste para WordPress. XWiki no lo trae incluido.</p><div class="ejemplo"><pre><span class="p">$</span>cd /tmp</pre><button class="copiar" type="button" data-copiar="cd /tmp">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>wget https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/26.7.0/mysql-connector-j-26.7.0.jar</pre><button class="copiar" type="button" data-copiar="wget https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/26.7.0/mysql-connector-j-26.7.0.jar">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo cp mysql-connector-j-26.7.0.jar /opt/tomcat/webapps/xwiki/WEB-INF/lib/</pre><button class="copiar" type="button" data-copiar="sudo cp mysql-connector-j-26.7.0.jar /opt/tomcat/webapps/xwiki/WEB-INF/lib/">Copiar</button></div><p class="pie-ej">Este driver también se conecta a MariaDB 10.11, el que trae Debian 12.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">6.2</span>
+        <div>
+          <h3 class="nombre">Editar hibernate.cfg.xml</h3>
+          <p class="desc">Hibernate es la biblioteca que usa XWiki para guardar datos. En este archivo se le indica a qué base de datos conectarse.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo nano /opt/tomcat/webapps/xwiki/WEB-INF/hibernate.cfg.xml" aria-label="Copiar el comando del paso 6.2">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo nano /opt/tomcat/webapps/xwiki/WEB-INF/hibernate.cfg.xml</pre><button class="copiar" type="button" data-copiar="sudo nano /opt/tomcat/webapps/xwiki/WEB-INF/hibernate.cfg.xml">Copiar</button></div><p class="texto">De fábrica, XWiki usa HSQLDB, una base de datos de prueba que vive en un archivo. Busca con <code class="inl">Ctrl+W</code> el texto <code class="inl">default database</code>. Justo debajo de ese comentario están las 4 líneas activas:</p><div class="ejemplo archivo"><p class="arch">Antes: líneas activas (HSQLDB)</p><pre><span class="com">&lt;!-- Configuration for the default database. ... --&gt;</span>
+&lt;property name="hibernate.connection.url"&gt;jdbc:hsqldb:file:${environment.permanentDirectory}/database/xwiki_db;shutdown=true&lt;/property&gt;
+&lt;property name="hibernate.connection.username"&gt;sa&lt;/property&gt;
+&lt;property name="hibernate.connection.password"&gt;&lt;/property&gt;
+&lt;property name="hibernate.connection.driver_class"&gt;org.hsqldb.jdbcDriver&lt;/property&gt;</pre></div><p class="texto" style="margin-top:12px">Reemplaza <strong>solo esas 4 líneas</strong> por estas:</p><div class="ejemplo archivo"><p class="arch">Después: hibernate.cfg.xml (MySQL)</p><pre>&lt;property name="hibernate.connection.url"&gt;jdbc:mysql://localhost/xwiki?useSSL=false&amp;amp;allowPublicKeyRetrieval=true&lt;/property&gt;
+&lt;property name="hibernate.connection.username"&gt;xwiki&lt;/property&gt;
+&lt;property name="hibernate.connection.password"&gt;<span class="var" data-v="PW">Xwiki#Lab2026</span>&lt;/property&gt;
+&lt;property name="hibernate.connection.driver_class"&gt;com.mysql.cj.jdbc.Driver&lt;/property&gt;</pre><button class="copiar" type="button" data-copiar="&lt;property name=&quot;hibernate.connection.url&quot;&gt;jdbc:mysql://localhost/xwiki?useSSL=false&amp;amp;allowPublicKeyRetrieval=true&lt;/property&gt;
+&lt;property name=&quot;hibernate.connection.username&quot;&gt;xwiki&lt;/property&gt;
+&lt;property name=&quot;hibernate.connection.password&quot;&gt;%PW%&lt;/property&gt;
+&lt;property name=&quot;hibernate.connection.driver_class&quot;&gt;com.mysql.cj.jdbc.Driver&lt;/property&gt;">Copiar</button></div><p class="pie-ej">Guarda con <code class="inl">Ctrl+O</code>, <code class="inl">Enter</code> y sal con <code class="inl">Ctrl+X</code>.</p><dl class="opciones" style="margin-top:10px"><dt>localhost/xwiki</dt><dd>Servidor y base de datos. Es localhost porque MySQL está en la misma VM que Tomcat (concepto D).</dd><dt>useSSL=false</dt><dd>Sin cifrado: la conexión no sale de la VM.</dd><dt>allowPublicKeyRetrieval</dt><dd>Necesario en MySQL 8 para autenticarse sin SSL. Sin él aparece «Public Key Retrieval is not allowed».</dd><dt>&amp;amp;</dt><dd>En XML el símbolo &amp; se escribe <code class="inl">&amp;amp;</code>. Escribirlo solo rompe el archivo.</dd></dl><p class="aviso">No comentes el bloque con <code class="inl">&lt;!-- --&gt;</code>: tiene comentarios dentro y el XML queda roto. Solo cambia esas 4 líneas. Más abajo en el archivo hay otros bloques de MySQL, MariaDB y PostgreSQL que ya están comentados: no los toques.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">6.3</span>
+        <div>
+          <h3 class="nombre">Verificar el cambio</h3>
+          <p class="desc">Las primeras 4 líneas de conexión que aparezcan deben ser las tuyas, con mysql.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="grep -n &#x27;hibernate.connection&#x27; /opt/tomcat/webapps/xwiki/WEB-INF/hibernate.cfg.xml | head -4" aria-label="Copiar el comando del paso 6.3">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>grep -n 'hibernate.connection' /opt/tomcat/webapps/xwiki/WEB-INF/hibernate.cfg.xml | head -4</pre><button class="copiar" type="button" data-copiar="grep -n &#x27;hibernate.connection&#x27; /opt/tomcat/webapps/xwiki/WEB-INF/hibernate.cfg.xml | head -4">Copiar</button></div>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>7. Directorio permanente</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">7.1</span>
+        <div>
+          <h3 class="nombre">Crear el directorio de datos</h3>
+          <p class="desc">Aquí XWiki guarda los archivos adjuntos, el índice de búsqueda y las extensiones instaladas. Debe ser de tomcatuser para que Tomcat pueda escribir.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo mkdir -p /var/lib/xwiki/data
+sudo chown -R tomcatuser:tomcatuser /var/lib/xwiki" aria-label="Copiar todos los comandos del paso 7.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo mkdir -p /var/lib/xwiki/data</pre><button class="copiar" type="button" data-copiar="sudo mkdir -p /var/lib/xwiki/data">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo chown -R tomcatuser:tomcatuser /var/lib/xwiki</pre><button class="copiar" type="button" data-copiar="sudo chown -R tomcatuser:tomcatuser /var/lib/xwiki">Copiar</button></div>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">7.2</span>
+        <div>
+          <h3 class="nombre">Configurar xwiki.properties</h3>
+          <p class="desc">Activar la línea environment.permanentDirectory, que de fábrica viene comentada con #.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo sed -i &#x27;s|^# environment.permanentDirectory = .*|environment.permanentDirectory = /var/lib/xwiki/data/|&#x27; /opt/tomcat/webapps/xwiki/WEB-INF/xwiki.properties
+grep -n &#x27;^environment.permanentDirectory&#x27; /opt/tomcat/webapps/xwiki/WEB-INF/xwiki.properties" aria-label="Copiar todos los comandos del paso 7.2">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo sed -i 's|^# environment.permanentDirectory = .*|environment.permanentDirectory = /var/lib/xwiki/data/|' /opt/tomcat/webapps/xwiki/WEB-INF/xwiki.properties</pre><button class="copiar" type="button" data-copiar="sudo sed -i &#x27;s|^# environment.permanentDirectory = .*|environment.permanentDirectory = /var/lib/xwiki/data/|&#x27; /opt/tomcat/webapps/xwiki/WEB-INF/xwiki.properties">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>grep -n '^environment.permanentDirectory' /opt/tomcat/webapps/xwiki/WEB-INF/xwiki.properties</pre><button class="copiar" type="button" data-copiar="grep -n &#x27;^environment.permanentDirectory&#x27; /opt/tomcat/webapps/xwiki/WEB-INF/xwiki.properties">Copiar</button></div><p class="pie-ej"><code class="inl">sed -i</code> edita el archivo sin abrirlo: busca la línea que empieza con <code class="inl"># environment.permanentDirectory</code> y la reemplaza sin el #. El grep debe mostrar la línea activa. Si no se configura, XWiki usa una carpeta temporal que se puede borrar, y perderías las extensiones instaladas.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>8. Memoria de la JVM</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">8.1</span>
+        <div>
+          <h3 class="nombre">Crear setenv.sh</h3>
+          <p class="desc">Al arrancar, Tomcat lee automáticamente bin/setenv.sh si existe. Ahí se le pasan opciones a la JVM.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo nano /opt/tomcat/bin/setenv.sh" aria-label="Copiar el comando del paso 8.1">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo nano /opt/tomcat/bin/setenv.sh</pre><button class="copiar" type="button" data-copiar="sudo nano /opt/tomcat/bin/setenv.sh">Copiar</button></div><div class="ejemplo archivo"><p class="arch">/opt/tomcat/bin/setenv.sh</p><pre>#!/bin/sh
+# Memoria de la JVM de Tomcat (XWiki necesita más que el valor por defecto)
+CATALINA_OPTS="$CATALINA_OPTS -Xms512m -Xmx1536m"
+CATALINA_OPTS="$CATALINA_OPTS -Dfile.encoding=UTF-8"
+CATALINA_OPTS="$CATALINA_OPTS -Djava.security.egd=file:/dev/./urandom"
+export CATALINA_OPTS</pre><button class="copiar" type="button" data-copiar="#!/bin/sh
+# Memoria de la JVM de Tomcat (XWiki necesita más que el valor por defecto)
+CATALINA_OPTS=&quot;$CATALINA_OPTS -Xms512m -Xmx1536m&quot;
+CATALINA_OPTS=&quot;$CATALINA_OPTS -Dfile.encoding=UTF-8&quot;
+CATALINA_OPTS=&quot;$CATALINA_OPTS -Djava.security.egd=file:/dev/./urandom&quot;
+export CATALINA_OPTS">Copiar</button></div><dl class="opciones" style="margin-top:10px"><dt>-Xms512m</dt><dd>Memoria inicial que reserva la JVM.</dd><dt>-Xmx1536m</dt><dd>Memoria máxima. Si XWiki la rebasa: error «OutOfMemoryError: Java heap space».</dd><dt>file.encoding</dt><dd>Fuerza UTF-8 para acentos y ñ.</dd><dt>java.security.egd</dt><dd>Evita que el arranque se congele esperando números aleatorios en las VMs.</dd></dl><p class="pie-ej">La VM necesita más RAM que -Xmx, porque Debian y MySQL también ocupan memoria: con 3 GB en la VM, 1536 MB para Java es razonable.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">8.2</span>
+        <div>
+          <h3 class="nombre">Permisos de setenv.sh</h3>
+          <p class="desc">Hacerlo ejecutable y de tomcatuser, igual que los demás scripts de bin/.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo chmod +x /opt/tomcat/bin/setenv.sh
+sudo chown tomcatuser:tomcatuser /opt/tomcat/bin/setenv.sh" aria-label="Copiar todos los comandos del paso 8.2">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo chmod +x /opt/tomcat/bin/setenv.sh</pre><button class="copiar" type="button" data-copiar="sudo chmod +x /opt/tomcat/bin/setenv.sh">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo chown tomcatuser:tomcatuser /opt/tomcat/bin/setenv.sh</pre><button class="copiar" type="button" data-copiar="sudo chown tomcatuser:tomcatuser /opt/tomcat/bin/setenv.sh">Copiar</button></div>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>9. Permisos de la aplicación</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">9.1</span>
+        <div>
+          <h3 class="nombre">Propietario tomcatuser</h3>
+          <p class="desc">Lo que descomprimiste y copiaste con sudo quedó a nombre de root. Tomcat corre como tomcatuser y necesita poder leer y escribir ahí.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo chown -R tomcatuser:tomcatuser /opt/tomcat/webapps/xwiki" aria-label="Copiar el comando del paso 9.1">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo chown -R tomcatuser:tomcatuser /opt/tomcat/webapps/xwiki</pre><button class="copiar" type="button" data-copiar="sudo chown -R tomcatuser:tomcatuser /opt/tomcat/webapps/xwiki">Copiar</button></div>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>10. Arrancar y verificar</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">10.1</span>
+        <div>
+          <h3 class="nombre">Iniciar Tomcat y seguir el log</h3>
+          <p class="desc">Arrancar el servicio y observar en vivo cómo carga la aplicación.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo systemctl start tomcat
+sudo tail -f /opt/tomcat/logs/catalina.out" aria-label="Copiar todos los comandos del paso 10.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo systemctl start tomcat</pre><button class="copiar" type="button" data-copiar="sudo systemctl start tomcat">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo tail -f /opt/tomcat/logs/catalina.out</pre><button class="copiar" type="button" data-copiar="sudo tail -f /opt/tomcat/logs/catalina.out">Copiar</button></div><p class="pie-ej">Espera el mensaje <code class="inl">Server startup in [...] milliseconds</code>. La primera vez tarda de 1 a 3 minutos. Sal del log con <code class="inl">Ctrl+C</code>: Tomcat sigue corriendo.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">10.2</span>
+        <div>
+          <h3 class="nombre">Puerto y prueba local</h3>
+          <p class="desc">Ver en qué interfaces escucha Tomcat y probar la aplicación desde la propia VM.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo ss -tlnp | grep &#x27;:8080 &#x27;
+curl -sI http://localhost:8080/xwiki/ | head -1" aria-label="Copiar todos los comandos del paso 10.2">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo ss -tlnp | grep ':8080 '</pre><button class="copiar" type="button" data-copiar="sudo ss -tlnp | grep &#x27;:8080 &#x27;">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>curl -sI http://localhost:8080/xwiki/ | head -1</pre><button class="copiar" type="button" data-copiar="curl -sI http://localhost:8080/xwiki/ | head -1">Copiar</button></div><p class="pie-ej">En ss debe verse <code class="inl">*:8080</code> o <code class="inl">0.0.0.0:8080</code>: escucha en todas las interfaces, no solo en localhost, así que también responde por la IP. curl debe devolver <code class="inl">HTTP/1.1 302</code> o <code class="inl">200</code>.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">10.3</span>
+        <div>
+          <h3 class="nombre">Obtener la IP de la VM</h3>
+          <p class="desc">Esta es la dirección que vas a escribir en el navegador del anfitrión.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="hostname -I" aria-label="Copiar el comando del paso 10.3">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>hostname -I</pre><button class="copiar" type="button" data-copiar="hostname -I">Copiar</button></div><p class="pie-ej">Muestra las IPs de la VM. La que empieza igual que la red del laboratorio (por ejemplo 192.168…) es la de la tarjeta en puente. Escríbela en «Tus datos».</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">10.4</span>
+        <div>
+          <h3 class="nombre">Abrir en el navegador</h3>
+          <p class="desc">Desde la PC anfitrión (concepto D).</p>
+        </div>
+        <span></span>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo archivo"><p class="arch">Navegador de la PC anfitrión</p><pre>http://<span class="var" data-v="IP">192.168.1.50</span>:8080/xwiki</pre><button class="copiar" type="button" data-copiar="http://%IP%:8080/xwiki">Copiar</button></div>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>11. Asistente de instalación (en el navegador)</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">11.1</span>
+        <div>
+          <h3 class="nombre">Distribution Wizard</h3>
+          <p class="desc">La primera vez, XWiki abre un asistente que termina la instalación. Necesita internet: descarga la interfaz desde extensions.xwiki.org.</p>
+        </div>
+        <span></span>
+      </div>
+      <div class="detalle">
+        <ol class="pasos-flujo"><li>Espera a que termine la barra de inicialización y da clic en <strong>Continue</strong>.</li><li><strong>Admin user</strong>: crea la cuenta de administrador (usuario, contraseña y correo). Anótala. Da clic en <strong>Register and login</strong> y luego en <strong>Continue</strong>.</li><li><strong>Flavor</strong>: elige <strong>XWiki Standard Flavor</strong> y da clic en <strong>Install this flavor</strong>, luego en <strong>Install</strong>.</li><li>Espera a que termine: descarga e instala cientos de extensiones (5 a 15 minutos, según la red). No cierres la pestaña.</li><li>En los siguientes pasos da clic en <strong>Continue</strong> hasta llegar a la página principal del wiki.</li></ol><p class="pie-ej">Si la instalación del flavor marca error, revisa que la VM tenga internet: <code class="inl">ping -c 3 extensions.xwiki.org</code>.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">11.2</span>
+        <div>
+          <h3 class="nombre">Ver las tablas que se crearon</h3>
+          <p class="desc">XWiki creó solo todas sus tablas en la base de datos de MySQL. Compruébalo.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo mysql -e &#x27;USE xwiki; SHOW TABLES;&#x27;" aria-label="Copiar el comando del paso 11.2">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo mysql -e 'USE xwiki; SHOW TABLES;'</pre><button class="copiar" type="button" data-copiar="sudo mysql -e &#x27;USE xwiki; SHOW TABLES;&#x27;">Copiar</button></div><p class="pie-ej">Verás tablas como <code class="inl">xwikidoc</code> (las páginas) y <code class="inl">xwikiattachment</code> (los adjuntos). Hibernate las genera a partir de los archivos .hbm.xml que viste en el paso 6.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>12. Para practicar</h2>
+    <article class="cmd">
+      <div class="detalle" style="margin-left:0">
+        <ul class="lista"><li>Crea una página por cada servicio que instalaste en el curso (Apache, Nginx, MySQL, Postfix, Tomcat…) con sus comandos principales.</li><li>Sube una captura de pantalla como archivo adjunto a una página.</li><li>Crea un segundo usuario y dale permiso solo de lectura.</li><li>Pide a un compañero que abra tu wiki con tu IP desde su PC.</li></ul>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>13. Diagnóstico</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">13.1</span>
+        <div>
+          <h3 class="nombre">Errores comunes</h3>
+          <p class="desc">Síntoma y qué revisar. Casi todos los errores aparecen en catalina.out.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo tail -n 60 /opt/tomcat/logs/catalina.out
+sudo grep -i -E &#x27;error|exception&#x27; /opt/tomcat/logs/catalina.out | tail -n 20
+sudo journalctl -u tomcat -n 50 --no-pager" aria-label="Copiar todos los comandos del paso 13.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="tabla-wrap"><table class="tabla"><thead><tr><th>Síntoma</th><th>Qué revisar</th></tr></thead><tbody><tr><td>404 en /xwiki</td><td>La carpeta no se llama <code class="inl">xwiki</code> o no está dentro de /opt/tomcat/webapps (paso 5.2).</td></tr><tr><td>El navegador del anfitrión no carga, pero curl en la VM sí</td><td>Problema de red, no de XWiki: revisa la IP (paso 10.3), que la VM esté en Adaptador puente, o el reenvío de puertos si está en NAT (concepto D).</td></tr><tr><td>Access denied for user 'xwiki'@'localhost'</td><td>La contraseña del paso 6.2 no es igual a la del paso 3.2.</td></tr><tr><td>Public Key Retrieval is not allowed</td><td>Falta <code class="inl">allowPublicKeyRetrieval=true</code> en la URL (paso 6.2).</td></tr><tr><td>Communications link failure / Could not create a DBCP pool</td><td>MySQL no está activo (paso 1.2) o la URL de conexión está mal escrita.</td></tr><tr><td>ClassNotFoundException: com.mysql.cj.jdbc.Driver</td><td>El driver .jar no está en WEB-INF/lib (paso 6.1).</td></tr><tr><td>Error al leer hibernate.cfg.xml (XML mal formado)</td><td>Se escribió &amp; en lugar de &amp;amp;, o se agregó un comentario &lt;!-- --&gt;. Revisa el paso 6.2.</td></tr><tr><td>OutOfMemoryError: Java heap space</td><td>Poca memoria: revisa setenv.sh (paso 8) y la RAM de la VM (paso 1.3).</td></tr><tr><td>Permission denied en el log</td><td>Repite el paso 9.1 y el 7.1: todo debe ser de tomcatuser.</td></tr><tr><td>El flavor no se instala</td><td>La VM no tiene internet o DNS: <code class="inl">ping -c 3 extensions.xwiki.org</code>.</td></tr><tr><td>NoClassDefFoundError: javax/servlet/...</td><td>Descargaste una versión 16.x o anterior, que no funciona en Tomcat 10. Usa la 17.10 (paso 4.1).</td></tr></tbody></table></div><div class="ejemplo"><pre><span class="p">$</span>sudo tail -n 60 /opt/tomcat/logs/catalina.out</pre><button class="copiar" type="button" data-copiar="sudo tail -n 60 /opt/tomcat/logs/catalina.out">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo grep -i -E 'error|exception' /opt/tomcat/logs/catalina.out | tail -n 20</pre><button class="copiar" type="button" data-copiar="sudo grep -i -E &#x27;error|exception&#x27; /opt/tomcat/logs/catalina.out | tail -n 20">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo journalctl -u tomcat -n 50 --no-pager</pre><button class="copiar" type="button" data-copiar="sudo journalctl -u tomcat -n 50 --no-pager">Copiar</button></div>
+      </div>
+    </article>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Para revisar el servicio en cualquier momento: <code class="inl">sudo systemctl status tomcat</code>. Los registros de XWiki están en <code class="inl">/opt/tomcat/logs/catalina.out</code>.</p>
+    <p>Escuela Politécnica «Ing. Jorge Matute Remus» · Academia de Redes de Cómputo</p>
+  </div>
+</footer>
+
+<div id="aviso-copia" role="status" aria-live="polite"></div>
+
+<script>
+const datos = {IP:'', PW:''};
+const porDefecto = {IP:'192.168.1.50', PW:'Xwiki#Lab2026'};
+const val = k => datos[k] || porDefecto[k];
+
+function pintar(){
+  document.querySelectorAll('.var[data-v]').forEach(s => { s.textContent = val(s.dataset.v); });
+}
+function guardar(){ try{ localStorage.setItem('xwiki-datos', JSON.stringify(datos)); }catch(e){} }
+
+const fIP = document.getElementById('f-ip'), fPW = document.getElementById('f-pw');
+try{
+  const g = JSON.parse(localStorage.getItem('xwiki-datos') || '{}');
+  if(g.IP) datos.IP = String(g.IP); if(g.PW) datos.PW = String(g.PW);
+}catch(e){}
+fIP.value = datos.IP; fPW.value = datos.PW; pintar();
+
+fIP.addEventListener('input', () => {
+  const l = fIP.value.replace(/[^0-9.]/g,'').slice(0,15);
+  if(l !== fIP.value) fIP.value = l;
+  datos.IP = l; pintar(); guardar();
+});
+fPW.addEventListener('input', () => {
+  /* Sin comillas, espacios, &, < ni > para no romper el SQL ni el XML */
+  const l = fPW.value.replace(/[\s'"&<>\\]/g,'').slice(0,40);
+  if(l !== fPW.value) fPW.value = l;
+  datos.PW = l; pintar(); guardar();
+});
+
+async function copiar(texto){
+  try{ await navigator.clipboard.writeText(texto); return true; }
+  catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = texto; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    let ok = false; try{ ok = document.execCommand('copy'); }catch(_){ ok = false; }
+    document.body.removeChild(ta); return ok;
+  }
+}
+document.addEventListener('click', async ev => {
+  const btn = ev.target.closest('.copiar');
+  if(!btn) return;
+  const original = btn.textContent;
+  const texto = btn.dataset.copiar.replace(/%IP%/g, val('IP')).replace(/%PW%/g, val('PW'));
+  const ok = await copiar(texto);
+  btn.textContent = ok ? 'Copiado' : 'Selecciona y copia';
+  btn.classList.toggle('ok', ok);
+  document.getElementById('aviso-copia').textContent = ok ? 'Copiado' : 'No se pudo copiar';
+  setTimeout(() => { btn.textContent = original; btn.classList.remove('ok'); }, 1600);
+});
+</script>
+</body>
+</html>
