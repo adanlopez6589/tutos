@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minecraft 1.12.2 en Debian 12: servidor y cliente · Referencia de laboratorio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EFEDF0;
+    --paper-2:#E5E2E8;
+    --ink:#2A1B25;
+    --muted:#6E5C68;
+    --rubine:#D70A53;
+    --teal:#0F6E78;
+    --term-bg:#2A1B25;
+    --term-fg:#F3E9EE;
+    --term-dim:#A78E9C;
+    --rule:#CFC9D3;
+    --sans:'Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,'DejaVu Sans Mono',Consolas,monospace;
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:940px;margin:0 auto;padding:0 20px}
+
+  /* ---------- Encabezado ---------- */
+  header.top{
+    background:var(--term-bg);
+    color:var(--term-fg);
+    padding:56px 0 44px;
+  }
+  .prompt{
+    font-family:var(--mono);
+    font-size:clamp(14px,3.2vw,19px);
+    color:var(--term-dim);
+    margin-bottom:18px;
+  }
+  .prompt .user{color:#8FD3C9}
+  .prompt .path{color:#9BB8E8}
+  .prompt .sig{color:var(--rubine);font-weight:600}
+  .cursor{
+    display:inline-block;
+    width:.62em;height:1.05em;
+    background:var(--rubine);
+    vertical-align:-.18em;
+    margin-left:.15em;
+    animation:blink 1.05s steps(1) infinite;
+  }
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+
+  header.top h1{
+    font-size:clamp(30px,6vw,52px);
+    line-height:1.06;
+    font-weight:700;
+    letter-spacing:-.02em;
+    margin:0 0 10px;
+    max-width:18ch;
+  }
+  .sub{
+    font-family:var(--mono);
+    font-size:13px;
+    color:var(--term-dim);
+    margin:0;
+  }
+
+  /* ---------- Introducción ---------- */
+  .intro{padding:44px 0 30px;border-bottom:1px solid var(--rule)}
+  .intro p{max-width:68ch;margin:0 0 16px;font-size:17px}
+  .intro .lead{font-size:19px;line-height:1.5;text-align:justify}
+  .nota{
+    margin-top:26px;
+    border-left:3px solid var(--rubine);
+    padding:2px 0 2px 16px;
+    max-width:68ch;
+  }
+  .nota h2{font-size:15px;margin:0 0 6px;font-weight:600}
+  .nota p{font-size:15px;color:var(--muted);margin:0}
+  code.inl{font-family:var(--mono);font-size:.9em;background:var(--paper-2);padding:1px 5px;border-radius:3px}
+
+  /* ---------- Grupos ---------- */
+  .grupo{margin:44px 0 0}
+  .grupo > h2{
+    font-family:var(--mono);
+    font-size:14px;
+    font-weight:600;
+    color:var(--rubine);
+    margin:0 0 4px;
+    padding-bottom:10px;
+    border-bottom:2px solid var(--rubine);
+  }
+
+  /* ---------- Paso ---------- */
+  .cmd{
+    border-bottom:1px solid var(--rule);
+    padding:22px 0;
+  }
+  .cmd-head{
+    display:grid;
+    grid-template-columns:44px 1fr auto;
+    gap:14px;
+    align-items:baseline;
+  }
+  .num{
+    font-family:var(--mono);
+    font-size:14px;
+    color:var(--muted);
+    font-variant-numeric:tabular-nums;
+    padding-top:4px;
+  }
+  .nombre{
+    font-family:var(--mono);
+    font-size:22px;
+    font-weight:600;
+    letter-spacing:-.01em;
+    margin:0;
+  }
+  .desc{margin:4px 0 0;color:var(--muted);font-size:15px;max-width:62ch}
+
+  /* ---------- Botón copiar ---------- */
+  .copiar{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--ink);
+    background:transparent;
+    border:1px solid var(--rule);
+    border-radius:3px;
+    padding:5px 11px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .copiar:hover{border-color:var(--ink)}
+  .copiar:focus-visible{outline:2px solid var(--rubine);outline-offset:2px}
+  .copiar.ok{background:var(--rubine);border-color:var(--rubine);color:#fff}
+
+  /* ---------- Detalle: comandos del paso ---------- */
+  .detalle{margin:16px 0 0 58px}
+  @media (max-width:640px){.detalle{margin-left:0}}
+
+  .opciones{
+    display:grid;
+    grid-template-columns:auto 1fr;
+    gap:5px 14px;
+    margin:0 0 16px;
+    font-size:14px;
+  }
+  .opciones dt{font-family:var(--mono);font-weight:500;color:var(--teal);white-space:nowrap}
+  .opciones dd{margin:0;color:var(--muted)}
+
+  .ejemplo{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    background:var(--term-bg);
+    border-radius:4px;
+    padding:9px 10px 9px 12px;
+    margin-bottom:6px;
+  }
+  .ejemplo pre{
+    margin:0;
+    flex:1;
+    font-family:var(--mono);
+    font-size:13.5px;
+    line-height:1.5;
+    color:var(--term-fg);
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
+  .ejemplo pre .p{color:var(--rubine);user-select:none;margin-right:.5em}
+  .ejemplo .copiar{
+    color:var(--term-dim);
+    border-color:#4B3742;
+    flex:none;
+  }
+  .ejemplo .copiar:hover{color:var(--term-fg);border-color:var(--term-dim)}
+  .ejemplo .copiar.ok{background:var(--rubine);border-color:var(--rubine);color:#fff}
+  .pie-ej{
+    font-size:13px;
+    color:var(--muted);
+    margin:-2px 0 12px 12px;
+  }
+  .aviso{
+    font-size:13px;
+    color:var(--rubine);
+    font-weight:500;
+    margin:0 0 12px;
+  }
+
+  footer{
+    margin-top:56px;
+    padding:30px 0 60px;
+    border-top:1px solid var(--rule);
+    color:var(--muted);
+    font-size:14px;
+  }
+  footer p{max-width:68ch;margin:0 0 8px}
+
+  #aviso-copia{position:fixed;left:-9999px}
+
+  /* ---------- Variables del alumno ---------- */
+  .var{color:var(--teal);font-weight:600;border-bottom:1px dotted currentColor}
+  .ejemplo .var{color:#8FD3C9}
+  .otro{font-style:italic;color:var(--muted)}
+  .ejemplo .otro{color:#E8B4C8}
+  .datos{
+    margin-top:26px;padding:18px 20px;max-width:68ch;
+    background:var(--paper-2);border-radius:4px;
+  }
+  .datos h2{font-size:15px;margin:0 0 4px;font-weight:600}
+  .datos p{font-size:14px;color:var(--muted);margin:0 0 14px}
+  .campos{display:flex;flex-wrap:wrap;gap:12px 22px;align-items:flex-end}
+  .campos label{display:flex;flex-direction:column;gap:4px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .campos input{
+    font-family:var(--mono);font-size:16px;color:var(--ink);
+    background:var(--paper);border:1px solid var(--rule);border-radius:3px;padding:7px 10px;
+  }
+  .campos input:focus-visible{outline:2px solid var(--rubine);outline-offset:1px}
+  #f-n{width:90px} #f-u{width:180px}
+  .correo{font-family:var(--mono);font-size:16px;padding-bottom:7px}
+  .correo b{color:var(--rubine);font-weight:600}
+
+  /* ---------- Bloque de archivo / sesión ---------- */
+  .ejemplo.archivo{flex-wrap:wrap;border-left:3px solid var(--teal)}
+  .ejemplo.archivo .arch{
+    width:100%;font-family:var(--mono);font-size:11.5px;color:var(--term-dim);
+    margin:0 0 2px;
+  }
+
+  /* ---------- Partes ---------- */
+  .parte{margin:72px 0 0}
+  .parte h2{font-size:clamp(24px,4vw,32px);font-weight:700;letter-spacing:-.015em;margin:0 0 6px;line-height:1.15}
+  .parte p{margin:0;color:var(--muted);max-width:68ch}
+
+  /* ---------- Texto y tablas dentro de grupos ---------- */
+  .texto{max-width:68ch;margin:0 0 14px}
+  .detalle .texto{font-size:15px;margin-top:4px}
+  .tabla-wrap{overflow-x:auto;margin:0 0 16px}
+  table.tabla{border-collapse:collapse;width:100%;font-size:14px;min-width:520px}
+  .tabla th{font-family:var(--mono);font-weight:500;font-size:12.5px;color:var(--teal);text-align:left;padding:6px 12px 6px 0;border-bottom:1px solid var(--ink)}
+  .tabla td{padding:8px 12px 8px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+  .tabla td:first-child{font-family:var(--mono);white-space:nowrap}
+
+  /* ---------- Diagrama ---------- */
+  .diagrama{overflow-x:auto;margin:6px 0 10px}
+  .diagrama svg{display:block;width:100%;min-width:640px;height:auto}
+  .d-vm{fill:none;stroke:var(--muted);stroke-width:1.2;stroke-dasharray:5 4}
+  .d-box{fill:#FAF9FB;stroke:var(--ink);stroke-width:1.3}
+  .d-box.tr{stroke-dasharray:4 3;stroke:var(--muted)}
+  .d-t{font-family:var(--mono);font-size:14px;font-weight:600;fill:var(--ink)}
+  .d-s{font-family:var(--mono);font-size:11.5px;fill:var(--muted)}
+  .d-vmt{font-family:var(--mono);font-size:14px;font-weight:600;fill:var(--rubine)}
+  .d-l{font-family:var(--mono);font-size:11.5px;fill:var(--ink)}
+  .d-smtp{stroke:var(--rubine);stroke-width:2;fill:none}
+  .d-imap{stroke:var(--teal);stroke-width:2;fill:none}
+  .d-dash{stroke:var(--muted);stroke-width:1.3;stroke-dasharray:3 3;fill:none}
+  .d-c{fill:var(--rubine)} .d-c.t{fill:var(--teal)}
+  .d-cn{font-family:var(--mono);font-size:11px;font-weight:600;fill:#fff}
+  ol.pasos-flujo{margin:0 0 6px;padding-left:22px;max-width:68ch;font-size:15px}
+  ol.pasos-flujo li{margin:0 0 4px}
+
+  ul.lista{margin:0 0 14px;padding-left:20px;max-width:68ch;font-size:15px}
+  ul.lista li{margin:0 0 5px}
+</style>
+</head>
+<body>
+<!-- ===== Barra para regresar al índice (pegar justo después de <body>) ===== -->
+<style>
+  .nav-indice{position:sticky;top:0;z-index:100;height:44px;box-sizing:border-box;background:#1E131A;border-bottom:1px solid #3A2833;font-family:'IBM Plex Mono',ui-monospace,Consolas,monospace;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+  .nav-indice .nav-wrap{max-width:940px;height:100%;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  /* Si la guía tiene su propia barra fija (.toolbar), se acomoda debajo de esta */
+  .toolbar{top:44px !important}
+  html{scroll-padding-top:132px}
+  .nav-indice a{color:#F3E9EE;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+  .nav-indice a .flecha{color:#D70A53;font-weight:700;font-size:20px;line-height:1;transition:transform .15s}
+  .nav-indice a:hover .flecha{transform:translateX(-3px)}
+  .nav-indice a:hover{color:#D70A53}
+  .nav-indice a:focus-visible,.btn-indice:focus-visible{outline:2px solid #D70A53;outline-offset:3px}
+  .nav-indice .ruta{color:#A78E9C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nav-indice .ruta .u{color:#8FD3C9}
+  .nav-indice .ruta .h{color:#9BB8E8}
+  .nav-indice .ruta .s{color:#D70A53;font-weight:600}
+  .nav-indice .ruta .c{color:#F3E9EE}
+  .nav-indice .cursor-nav{display:inline-block;width:.6em;height:1.05em;background:#D70A53;vertical-align:-.2em;margin-left:.2em;animation:nav-blink 1.05s steps(1) infinite}
+  @keyframes nav-blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.nav-indice .cursor-nav{animation:none}}
+  .btn-indice{position:fixed;right:18px;bottom:18px;z-index:50;background:#D70A53;color:#fff;font-family:'IBM Plex Mono',ui-monospace,Consolas,monospace;font-size:13px;font-weight:600;text-decoration:none;padding:10px 14px;border-radius:4px;box-shadow:0 4px 14px rgba(42,27,37,.25)}
+  .btn-indice:hover{background:#B00845}
+  @media (max-width:560px){.nav-indice .ruta{display:none}}
+  @media print{.nav-indice,.btn-indice{display:none}}
+</style>
+<nav class="nav-indice" aria-label="Navegación">
+  <div class="nav-wrap">
+    <a href="https://adanlopez6589.github.io/tutos/"><span class="flecha">←</span> Guías de laboratorio</a>
+    <span class="ruta" aria-hidden="true"><span class="u">alumno</span>@<span class="h">debian12</span>:~/guias<span class="s">$</span> <span class="c">cd ..</span><span class="cursor-nav"></span></span>
+  </div>
+</nav>
+<a class="btn-indice" href="https://adanlopez6589.github.io/tutos/" title="Regresar al índice de guías">☰ Índice</a>
+<!-- ===== Fin barra índice ===== -->
+
+<header class="top">
+  <div class="wrap">
+    <p class="prompt"><span class="user">alumno</span>@<span class="path">debian12</span>:~<span class="sig">$</span> sudo systemctl start minecraft<span class="cursor"></span></p>
+    <h1>Minecraft 1.12.2 en Debian 12: servidor y cliente</h1>
+    <p class="sub">Referencia de laboratorio · Administración y Configuración Cliente/Servidor</p>
+  </div>
+</header>
+
+<section class="intro">
+  <div class="wrap">
+    <p class="lead">Esta guía instala en una misma VM Debian 12 el servidor oficial de Minecraft Java Edition 1.12.2, con Java 8 y como servicio de systemd, y el cliente con el launcher oficial sobre un escritorio XFCE. Se eligió la 1.12.2 porque corre en equipos con Core i3 y gráficos integrados. Al final podrás jugar en tu propio servidor y entrar al de cualquier compañero por el puerto TCP 25565.</p>
+    <p class="lead">Es el mismo modelo que siguen los juegos en línea más jugados: un servidor autoritativo que calcula el estado de la partida y clientes que solo envían acciones y muestran el resultado.</p>
+  </div>
+</section>
+
+<main class="wrap">
+
+  <section class="grupo">
+    <h2>Qué es un servidor de Minecraft Java</h2>
+    <article class="cmd">
+      <div class="detalle" style="margin-left:0">
+        <p class="texto">Minecraft Java Edition separa el juego en dos programas: el <strong>cliente</strong>, que cada jugador instala en su computadora y que renderiza el mundo, y el <strong>servidor</strong> (<code class="inl">server.jar</code>), que Mojang distribuye gratis y que calcula el estado real de la partida. El servidor es autoritativo: los clientes solo envían sus acciones y el servidor decide qué pasa.</p><div class="diagrama"><svg viewBox="0 0 900 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos VMs Debian, cada una con su servidor y su cliente de Minecraft 1.12.2; cada cliente puede entrar a su propio servidor por localhost o al servidor del compañero por la red, en TCP 25565"><defs><marker id="fl-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#D70A53"/></marker><marker id="fl-t" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#0F6E78"/></marker></defs><rect class="d-vm" x="10" y="14" width="380" height="190" rx="6"/><text class="d-vmt" x="24" y="36">VM de Ana · Debian 12 + XFCE</text><rect class="d-box" x="30" y="56" width="160" height="60" rx="4"/><text class="d-t" x="110" y="82" text-anchor="middle">Cliente</text><text class="d-s" x="110" y="100" text-anchor="middle">launcher · 1.12.2</text><rect class="d-box" x="210" y="56" width="160" height="60" rx="4"/><text class="d-t" x="290" y="82" text-anchor="middle">Servidor</text><text class="d-s" x="290" y="100" text-anchor="middle">server.jar · Java 8</text><path class="d-imap" d="M110 116 V145 H250 V122" marker-end="url(#fl-t)"/><text class="d-l" x="180" y="166" text-anchor="middle">localhost:25565</text><rect class="d-vm" x="510" y="14" width="380" height="190" rx="6"/><text class="d-vmt" x="524" y="36">VM de Luis · Debian 12 + XFCE</text><rect class="d-box" x="530" y="56" width="160" height="60" rx="4"/><text class="d-t" x="610" y="82" text-anchor="middle">Servidor</text><text class="d-s" x="610" y="100" text-anchor="middle">server.jar · Java 8</text><rect class="d-box" x="710" y="56" width="160" height="60" rx="4"/><text class="d-t" x="790" y="82" text-anchor="middle">Cliente</text><text class="d-s" x="790" y="100" text-anchor="middle">launcher · 1.12.2</text><path class="d-smtp" d="M150 56 V46 H650 V52" marker-end="url(#fl-r)"/><text class="d-l" x="450" y="40" text-anchor="middle">IP de Luis:25565</text><path class="d-imap" d="M790 116 V188 H330 V122" marker-end="url(#fl-t)"/><text class="d-l" x="450" y="202" text-anchor="middle">IP de Ana:25565</text><text class="d-s" x="450" y="236" text-anchor="middle">Cada VM tiene su servidor y su cliente; en modo puente, cualquier cliente entra al servidor de cualquier compañero</text></svg></div><dl class="opciones"><dt>1.12.2</dt><dd>Versión de 2017, la última de la serie 1.12. Es ligera y funciona con Java 8 en equipos sin tarjeta gráfica dedicada.</dd><dt>server.jar</dt><dd>Programa servidor oficial de Mojang, escrito en Java.</dd><dt>TCP 25565</dt><dd>Puerto y protocolo predeterminados de Minecraft Java Edition.</dd><dt>Tick</dt><dd>Cada ciclo en que el servidor recalcula el mundo. Minecraft trabaja a 20 ticks por segundo.</dd><dt>EULA</dt><dd>Acuerdo de licencia de Mojang que hay que aceptar antes de arrancar el servidor.</dd><dt>Temurin 8</dt><dd>Distribución gratuita de OpenJDK 8 del proyecto Eclipse Adoptium.</dd></dl>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>Antes de empezar</h2>
+    <article class="cmd">
+      <div class="detalle" style="margin-left:0">
+        <p class="texto">En esta práctica cada alumno tiene en <strong>su misma VM</strong> el servidor y el cliente: puede jugar en su propio mundo y también entrar al servidor de cualquier compañero. Los recursos se reparten así:</p><div class="tabla-wrap"><table class="tabla"><thead><tr><th>Componente</th><th>Memoria</th><th>Nota</th></tr></thead><tbody><tr><td>Debian + XFCE</td><td>~1 GB</td><td>Escritorio ligero</td></tr><tr><td>Servidor 1.12.2</td><td>1 GB</td><td>-Xmx1G</td></tr><tr><td>Cliente 1.12.2</td><td>1.5 GB</td><td>-Xmx1536M en el launcher</td></tr><tr><td>Total de la VM</td><td>6 GB · 2 CPU</td><td>Con 12 GB en la PC, quedan 6 GB para Windows</td></tr></tbody></table></div><ul class="lista"><li>Para jugar, cada alumno necesita una <strong>cuenta de Minecraft Java Edition con licencia</strong>. El servidor es gratis; el cliente no. Quien no tenga cuenta monta su servidor y lo comprueba con <code class="inl">mcstatus</code> (paso 11); sus compañeros con cuenta pueden entrar a jugar en él.</li><li>La PC no tiene tarjeta gráfica dedicada, pero el i3 sí tiene gráficos integrados; VirtualBox los aprovecha con la aceleración 3D (paso 10.1).</li><li>Si ya instalaste Tomcat, no hay conflicto: Tomcat sigue con OpenJDK 17 y Minecraft usa su propio Java 8 por ruta completa.</li></ul><div class="nota"><h2>¿Qué es systemd?</h2><p>Es el programa que Debian ejecuta primero al encender (el proceso con PID 1) y que arranca, vigila y detiene todos los servicios del sistema: SSH, Apache, MySQL, Tomcat. Cada servicio se describe en un archivo <code class="inl">.service</code> que indica qué programa ejecutar, con qué usuario y qué hacer si falla. En esta guía crearás <code class="inl">minecraft.service</code> (paso 7.2) para que el servidor arranque solo con la VM, se reinicie si se cae y se controle igual que los demás servicios: <code class="inl">systemctl start</code>, <code class="inl">stop</code>, <code class="inl">status</code> y <code class="inl">journalctl -u minecraft</code> para su bitácora.</p></div><div class="nota"><h2>Seguridad: versión antigua, solo en la red del laboratorio</h2><p>La 1.12.2 ya no recibe actualizaciones. En 2021 se descubrió una falla grave en la librería Log4j que usa el servidor; Mojang publicó un archivo de configuración que la corrige y esta guía lo descarga en el paso 5.2 y lo aplica en el arranque (pasos 6 y 7). Aun así, no publiques este servidor en internet: úsalo solo dentro de la red del laboratorio.</p></div>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>1. Actualizar el sistema</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">1.1</span>
+        <div>
+          <h3 class="nombre">Actualizar e instalar herramientas</h3>
+          <p class="desc">Se actualizan los paquetes y se instalan las utilidades para descargar archivos y leer JSON.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo apt update
+sudo apt upgrade -y
+sudo apt install -y wget curl jq gpg" aria-label="Copiar los comandos del paso 1.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo apt update</pre><button class="copiar" type="button" data-copiar="sudo apt update">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo apt upgrade -y</pre><button class="copiar" type="button" data-copiar="sudo apt upgrade -y">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo apt install -y wget curl jq gpg</pre><button class="copiar" type="button" data-copiar="sudo apt install -y wget curl jq gpg">Copiar</button></div><p class="pie-ej"><code class="inl">jq</code> sirve para leer archivos JSON desde la terminal; lo usaremos para consultar la información oficial de Mojang.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>2. Consultar qué Java pide la 1.12.2</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">2.1</span>
+        <div>
+          <h3 class="nombre">Java requerido</h3>
+          <p class="desc">Mojang publica un manifiesto JSON con todas las versiones. Se busca la 1.12.2 y se lee qué versión de Java necesita.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="VERSION_URL=$(curl -fsSL https://piston-meta.mojang.com/mc/game/version_manifest_v2.json | jq -r &#x27;.versions[] | select(.id == &quot;1.12.2&quot;) | .url&#x27;)
+echo &quot;$VERSION_URL&quot;
+curl -fsSL &quot;$VERSION_URL&quot; | jq &#x27;.javaVersion.majorVersion&#x27;" aria-label="Copiar los comandos del paso 2.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>VERSION_URL=$(curl -fsSL https://piston-meta.mojang.com/mc/game/version_manifest_v2.json | jq -r '.versions[] | select(.id == "1.12.2") | .url')</pre><button class="copiar" type="button" data-copiar="VERSION_URL=$(curl -fsSL https://piston-meta.mojang.com/mc/game/version_manifest_v2.json | jq -r &#x27;.versions[] | select(.id == &quot;1.12.2&quot;) | .url&#x27;)">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>echo "$VERSION_URL"</pre><button class="copiar" type="button" data-copiar="echo &quot;$VERSION_URL&quot;">Copiar</button></div><p class="pie-ej">Debe mostrar una dirección https que termina en .json.</p><div class="ejemplo"><pre><span class="p">$</span>curl -fsSL "$VERSION_URL" | jq '.javaVersion.majorVersion'</pre><button class="copiar" type="button" data-copiar="curl -fsSL &quot;$VERSION_URL&quot; | jq &#x27;.javaVersion.majorVersion&#x27;">Copiar</button></div><p class="pie-ej">Resultado esperado: <code class="inl">8</code>. Por eso no sirve el Java 17 de Debian ni el 21: esta versión se hizo para Java 8.</p><p class="aviso">⚠ La variable VERSION_URL solo existe en esta sesión de terminal. Si la cierras, repite este paso antes del paso 5.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>3. Instalar Java 8 (Temurin)</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">3.1</span>
+        <div>
+          <h3 class="nombre">Agregar el repositorio de Adoptium</h3>
+          <p class="desc">Debian 12 ya no trae Java 8. Se importa la llave GPG con la que Adoptium firma sus paquetes y se registra su repositorio para Debian 12 (bookworm).</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/adoptium.gpg &gt; /dev/null
+echo &quot;deb https://packages.adoptium.net/artifactory/deb bookworm main&quot; | sudo tee /etc/apt/sources.list.d/adoptium.list" aria-label="Copiar los comandos del paso 3.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/adoptium.gpg &gt; /dev/null</pre><button class="copiar" type="button" data-copiar="wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/adoptium.gpg &gt; /dev/null">Copiar</button></div><p class="pie-ej">La llave permite que apt verifique que los paquetes realmente vienen de Adoptium.</p><div class="ejemplo"><pre><span class="p">$</span>echo "deb https://packages.adoptium.net/artifactory/deb bookworm main" | sudo tee /etc/apt/sources.list.d/adoptium.list</pre><button class="copiar" type="button" data-copiar="echo &quot;deb https://packages.adoptium.net/artifactory/deb bookworm main&quot; | sudo tee /etc/apt/sources.list.d/adoptium.list">Copiar</button></div>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">3.2</span>
+        <div>
+          <h3 class="nombre">Instalar el JRE 8</h3>
+          <p class="desc">Para ejecutar el servidor basta el JRE (entorno de ejecución); no hace falta el JDK completo.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo apt update
+sudo apt install -y temurin-8-jre" aria-label="Copiar los comandos del paso 3.2">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo apt update</pre><button class="copiar" type="button" data-copiar="sudo apt update">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo apt install -y temurin-8-jre</pre><button class="copiar" type="button" data-copiar="sudo apt install -y temurin-8-jre">Copiar</button></div>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">3.3</span>
+        <div>
+          <h3 class="nombre">Verificar la ruta de Java 8</h3>
+          <p class="desc">Se comprueba dónde quedó instalado. Esa ruta completa se usará en el servicio.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="ls /usr/lib/jvm/
+/usr/lib/jvm/temurin-8-jre-amd64/bin/java -version" aria-label="Copiar los comandos del paso 3.3">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>ls /usr/lib/jvm/</pre><button class="copiar" type="button" data-copiar="ls /usr/lib/jvm/">Copiar</button></div><p class="pie-ej">Debe aparecer <code class="inl">temurin-8-jre-amd64</code>. Si ya tenías Tomcat, también verás la carpeta de OpenJDK 17.</p><div class="ejemplo"><pre><span class="p">$</span>/usr/lib/jvm/temurin-8-jre-amd64/bin/java -version</pre><button class="copiar" type="button" data-copiar="/usr/lib/jvm/temurin-8-jre-amd64/bin/java -version">Copiar</button></div><p class="pie-ej">Resultado esperado: <code class="inl">openjdk version "1.8.0_…"</code>. Java 8 se numera como 1.8.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>4. Crear el usuario del servicio</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">4.1</span>
+        <div>
+          <h3 class="nombre">Usuario minecraft</h3>
+          <p class="desc">Como con Tomcat, el servidor no corre como root: si alguien explotara una falla del juego, solo tendría los permisos de este usuario.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo useradd -r -m -U -d /opt/minecraft -s /bin/false minecraft" aria-label="Copiar los comandos del paso 4.1">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo useradd -r -m -U -d /opt/minecraft -s /bin/false minecraft</pre><button class="copiar" type="button" data-copiar="sudo useradd -r -m -U -d /opt/minecraft -s /bin/false minecraft">Copiar</button></div><p class="pie-ej"><code class="inl">-r</code> crea una cuenta de sistema, <code class="inl">-d /opt/minecraft</code> la usa como carpeta del servidor y <code class="inl">-s /bin/false</code> impide iniciar sesión con ella.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>5. Descargar el servidor 1.12.2</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">5.1</span>
+        <div>
+          <h3 class="nombre">Descargar server.jar</h3>
+          <p class="desc">Del JSON de la versión se obtiene la dirección oficial del servidor y se descarga en /opt/minecraft como el usuario minecraft.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="SERVER_URL=$(curl -fsSL &quot;$VERSION_URL&quot; | jq -r &#x27;.downloads.server.url&#x27;)
+sudo -u minecraft curl -fLo /opt/minecraft/server.jar &quot;$SERVER_URL&quot;" aria-label="Copiar los comandos del paso 5.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>SERVER_URL=$(curl -fsSL "$VERSION_URL" | jq -r '.downloads.server.url')</pre><button class="copiar" type="button" data-copiar="SERVER_URL=$(curl -fsSL &quot;$VERSION_URL&quot; | jq -r &#x27;.downloads.server.url&#x27;)">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo -u minecraft curl -fLo /opt/minecraft/server.jar "$SERVER_URL"</pre><button class="copiar" type="button" data-copiar="sudo -u minecraft curl -fLo /opt/minecraft/server.jar &quot;$SERVER_URL&quot;">Copiar</button></div><p class="pie-ej"><code class="inl">sudo -u minecraft</code> hace que el archivo nazca con el dueño correcto, sin necesidad de chown.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">5.2</span>
+        <div>
+          <h3 class="nombre">Descargar el parche de Log4j</h3>
+          <p class="desc">Archivo oficial de Mojang para las versiones 1.12 a 1.16.5. Va en la misma carpeta que server.jar.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo -u minecraft curl -fLo /opt/minecraft/log4j2_112-116.xml https://launcher.mojang.com/v1/objects/02937d122c86ce73319ef9975b58896fc1b491d1/log4j2_112-116.xml
+ls -lh /opt/minecraft/" aria-label="Copiar los comandos del paso 5.2">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo -u minecraft curl -fLo /opt/minecraft/log4j2_112-116.xml https://launcher.mojang.com/v1/objects/02937d122c86ce73319ef9975b58896fc1b491d1/log4j2_112-116.xml</pre><button class="copiar" type="button" data-copiar="sudo -u minecraft curl -fLo /opt/minecraft/log4j2_112-116.xml https://launcher.mojang.com/v1/objects/02937d122c86ce73319ef9975b58896fc1b491d1/log4j2_112-116.xml">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>ls -lh /opt/minecraft/</pre><button class="copiar" type="button" data-copiar="ls -lh /opt/minecraft/">Copiar</button></div><p class="pie-ej">Deben aparecer server.jar (unos 30 MB) y log4j2_112-116.xml.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>6. Primer arranque y EULA</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">6.1</span>
+        <div>
+          <h3 class="nombre">Arranque de prueba</h3>
+          <p class="desc">La primera ejecución crea los archivos de configuración y se detiene sola, porque todavía no se ha aceptado la licencia.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo -u minecraft bash -c &#x27;cd /opt/minecraft &amp;&amp; /usr/lib/jvm/temurin-8-jre-amd64/bin/java -Xms512M -Xmx1G -Dlog4j.configurationFile=log4j2_112-116.xml -jar server.jar nogui&#x27;" aria-label="Copiar los comandos del paso 6.1">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo -u minecraft bash -c 'cd /opt/minecraft &amp;&amp; /usr/lib/jvm/temurin-8-jre-amd64/bin/java -Xms512M -Xmx1G -Dlog4j.configurationFile=log4j2_112-116.xml -jar server.jar nogui'</pre><button class="copiar" type="button" data-copiar="sudo -u minecraft bash -c &#x27;cd /opt/minecraft &amp;&amp; /usr/lib/jvm/temurin-8-jre-amd64/bin/java -Xms512M -Xmx1G -Dlog4j.configurationFile=log4j2_112-116.xml -jar server.jar nogui&#x27;">Copiar</button></div><p class="pie-ej"><code class="inl">-Xms512M</code> es la memoria inicial y <code class="inl">-Xmx1G</code> la máxima. <code class="inl">-Dlog4j.configurationFile</code> aplica el parche de seguridad. <code class="inl">nogui</code> evita que intente abrir una ventana.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">6.2</span>
+        <div>
+          <h3 class="nombre">Aceptar la EULA</h3>
+          <p class="desc">El servidor no arranca hasta que eula.txt diga true. Al cambiarlo aceptas los términos de Mojang (minecraft.net/eula).</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo sed -i &#x27;s/eula=false/eula=true/&#x27; /opt/minecraft/eula.txt
+cat /opt/minecraft/eula.txt" aria-label="Copiar los comandos del paso 6.2">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo sed -i 's/eula=false/eula=true/' /opt/minecraft/eula.txt</pre><button class="copiar" type="button" data-copiar="sudo sed -i &#x27;s/eula=false/eula=true/&#x27; /opt/minecraft/eula.txt">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>cat /opt/minecraft/eula.txt</pre><button class="copiar" type="button" data-copiar="cat /opt/minecraft/eula.txt">Copiar</button></div><p class="pie-ej">La última línea debe decir eula=true.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>7. Configurar y crear el servicio systemd</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">7.1</span>
+        <div>
+          <h3 class="nombre">Ajustar server.properties</h3>
+          <p class="desc">Archivo principal de configuración del servidor. Busca y cambia solo estas líneas; deja el resto igual.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo nano /opt/minecraft/server.properties" aria-label="Copiar los comandos del paso 7.1">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo nano /opt/minecraft/server.properties</pre><button class="copiar" type="button" data-copiar="sudo nano /opt/minecraft/server.properties">Copiar</button></div><div class="ejemplo archivo"><p class="arch">/opt/minecraft/server.properties (solo las líneas a revisar)</p><pre>motd=Servidor del laboratorio 1.12.2
+max-players=20
+gamemode=0
+difficulty=2
+online-mode=true
+white-list=false
+server-port=25565
+view-distance=6</pre><button class="copiar" type="button" data-copiar="motd=Servidor del laboratorio 1.12.2
+max-players=20
+gamemode=0
+difficulty=2
+online-mode=true
+white-list=false
+server-port=25565
+view-distance=6">Copiar</button></div><p class="pie-ej">En la 1.12 el modo y la dificultad van en número: <code class="inl">gamemode</code> 0 supervivencia, 1 creativo; <code class="inl">difficulty</code> 0 pacífico a 3 difícil. <code class="inl">online-mode=true</code> exige cuentas con licencia: no lo cambies. <code class="inl">view-distance=6</code> reduce la carga de la VM.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">7.2</span>
+        <div>
+          <h3 class="nombre">Archivo del servicio</h3>
+          <p class="desc">Igual que con Tomcat, se le indica a systemd cómo iniciar el servidor. La diferencia: aquí Java corre en primer plano, por eso no se usa Type=forking.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo nano /etc/systemd/system/minecraft.service" aria-label="Copiar los comandos del paso 7.2">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo nano /etc/systemd/system/minecraft.service</pre><button class="copiar" type="button" data-copiar="sudo nano /etc/systemd/system/minecraft.service">Copiar</button></div><div class="ejemplo archivo"><p class="arch">/etc/systemd/system/minecraft.service</p><pre>[Unit]
+Description=Servidor de Minecraft Java 1.12.2
+After=network.target
+
+[Service]
+User=minecraft
+Group=minecraft
+WorkingDirectory=/opt/minecraft
+ExecStart=/usr/lib/jvm/temurin-8-jre-amd64/bin/java -Xms512M -Xmx1G -Dlog4j.configurationFile=log4j2_112-116.xml -jar server.jar nogui
+Restart=on-failure
+SuccessExitStatus=0 143
+
+[Install]
+WantedBy=multi-user.target</pre><button class="copiar" type="button" data-copiar="[Unit]
+Description=Servidor de Minecraft Java 1.12.2
+After=network.target
+
+[Service]
+User=minecraft
+Group=minecraft
+WorkingDirectory=/opt/minecraft
+ExecStart=/usr/lib/jvm/temurin-8-jre-amd64/bin/java -Xms512M -Xmx1G -Dlog4j.configurationFile=log4j2_112-116.xml -jar server.jar nogui
+Restart=on-failure
+SuccessExitStatus=0 143
+
+[Install]
+WantedBy=multi-user.target">Copiar</button></div><p class="pie-ej"><code class="inl">ExecStart</code> usa la ruta completa de Java 8 para no depender del Java predeterminado, e incluye el parche de Log4j. <code class="inl">SuccessExitStatus=143</code> indica que salir por la señal de detener (SIGTERM) es normal; el servidor guarda el mundo antes de cerrar.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">7.3</span>
+        <div>
+          <h3 class="nombre">Activar el servicio</h3>
+          <p class="desc">Recargar systemd, iniciar el servidor y habilitarlo al arranque.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo systemctl daemon-reload
+sudo systemctl enable --now minecraft" aria-label="Copiar los comandos del paso 7.3">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo systemctl daemon-reload</pre><button class="copiar" type="button" data-copiar="sudo systemctl daemon-reload">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo systemctl enable --now minecraft</pre><button class="copiar" type="button" data-copiar="sudo systemctl enable --now minecraft">Copiar</button></div><p class="pie-ej"><code class="inl">--now</code> lo inicia en este momento además de habilitarlo.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>8. Red y puerto</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">8.1</span>
+        <div>
+          <h3 class="nombre">Cortafuegos</h3>
+          <p class="desc">Se permite el tráfico TCP al puerto 25565 para que los compañeros puedan entrar. Si ufw está activo, asegúrate de no cerrar SSH.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo ufw allow OpenSSH
+sudo ufw allow 25565/tcp
+sudo ufw status" aria-label="Copiar los comandos del paso 8.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo ufw allow OpenSSH</pre><button class="copiar" type="button" data-copiar="sudo ufw allow OpenSSH">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo ufw allow 25565/tcp</pre><button class="copiar" type="button" data-copiar="sudo ufw allow 25565/tcp">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo ufw status</pre><button class="copiar" type="button" data-copiar="sudo ufw status">Copiar</button></div>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">8.2</span>
+        <div>
+          <h3 class="nombre">Modo de red de la VM</h3>
+          <p class="desc">Para entrar al servidor de un compañero, las VMs deben verse en la red. Hay dos casos.</p>
+        </div>
+        <span></span>
+      </div>
+      <div class="detalle">
+        <div class="tabla-wrap"><table class="tabla"><thead><tr><th>Laboratorio</th><th>Configuración en VirtualBox</th><th>A qué IP se conectan los compañeros</th></tr></thead><tbody><tr><td>Con DHCP</td><td>Red → Adaptador 1 → <strong>Adaptador puente</strong> (recomendado)</td><td>La IP de la VM del compañero (paso 9.2)</td></tr><tr><td>Sin DHCP (IP fija)</td><td>Red → <strong>NAT</strong> → Avanzadas → Reenvío de puertos: TCP, anfitrión 25565, invitado 25565</td><td>La IP de la <strong>PC</strong> del compañero, no la de su VM</td></tr></tbody></table></div><p class="texto">Para entrar a tu <strong>propio</strong> servidor desde tu cliente, en cualquiera de los dos casos usa <code class="inl">localhost</code>.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>9. Verificar el servicio</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">9.1</span>
+        <div>
+          <h3 class="nombre">Estado, puerto y bitácora</h3>
+          <p class="desc">Confirmar que el servidor está activo, escuchando en TCP 25565, y seguir su bitácora en vivo.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo systemctl status minecraft --no-pager
+sudo ss -tlnp | grep &#x27;:25565 &#x27;
+sudo journalctl -u minecraft -f" aria-label="Copiar los comandos del paso 9.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo systemctl status minecraft --no-pager</pre><button class="copiar" type="button" data-copiar="sudo systemctl status minecraft --no-pager">Copiar</button></div><p class="pie-ej">Resultado esperado: active (running).</p><div class="ejemplo"><pre><span class="p">$</span>sudo ss -tlnp | grep ':25565 '</pre><button class="copiar" type="button" data-copiar="sudo ss -tlnp | grep &#x27;:25565 &#x27;">Copiar</button></div><p class="pie-ej">Debe aparecer una línea LISTEN con :25565 del proceso java.</p><div class="ejemplo"><pre><span class="p">$</span>sudo journalctl -u minecraft -f</pre><button class="copiar" type="button" data-copiar="sudo journalctl -u minecraft -f">Copiar</button></div><p class="pie-ej">Espera la línea <code class="inl">Done (…s)! For help, type "help"</code>: el mundo terminó de generarse. Sal con Ctrl+C; el servidor sigue corriendo.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">9.2</span>
+        <div>
+          <h3 class="nombre">IP del servidor</h3>
+          <p class="desc">Obtén la IP de la VM para compartirla con tus compañeros.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="ip -br a" aria-label="Copiar los comandos del paso 9.2">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>ip -br a</pre><button class="copiar" type="button" data-copiar="ip -br a">Copiar</button></div><p class="pie-ej">Usa la IP de la interfaz enp0s3 (o similar). En NAT, usa la IP de la computadora anfitriona.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>10. Instalar el cliente en la misma VM</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">10.1</span>
+        <div>
+          <h3 class="nombre">Ajustar la VM en VirtualBox</h3>
+          <p class="desc">Con la VM apagada, en Configuración. Estos cambios dan memoria al cliente y activan los gráficos 3D.</p>
+        </div>
+        <span></span>
+      </div>
+      <div class="detalle">
+        <div class="tabla-wrap"><table class="tabla"><thead><tr><th>Sección</th><th>Valor</th></tr></thead><tbody><tr><td>Sistema → Placa base</td><td>Memoria base: 6144 MB</td></tr><tr><td>Sistema → Procesador</td><td>2 CPU</td></tr><tr><td>Pantalla → Pantalla</td><td>Memoria de video: 128 MB · Controlador gráfico: VMSVGA · ☑ Habilitar aceleración 3D</td></tr><tr><td>Red → Adaptador 1</td><td>Según el paso 8.2</td></tr></tbody></table></div>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">10.2</span>
+        <div>
+          <h3 class="nombre">Instalar el escritorio XFCE</h3>
+          <p class="desc">Si tu VM solo tiene terminal, se instala un escritorio ligero. Si ya tiene uno (GNOME, XFCE), salta este paso.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo apt install -y xorg xfce4 xfce4-terminal lightdm
+sudo systemctl set-default graphical.target
+sudo reboot" aria-label="Copiar los comandos del paso 10.2">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo apt install -y xorg xfce4 xfce4-terminal lightdm</pre><button class="copiar" type="button" data-copiar="sudo apt install -y xorg xfce4 xfce4-terminal lightdm">Copiar</button></div><p class="pie-ej">XFCE consume poca memoria; lightdm es la pantalla de inicio de sesión. La descarga es grande: unos minutos.</p><div class="ejemplo"><pre><span class="p">$</span>sudo systemctl set-default graphical.target</pre><button class="copiar" type="button" data-copiar="sudo systemctl set-default graphical.target">Copiar</button></div><p class="pie-ej">Hace que la VM arranque en modo gráfico.</p><div class="ejemplo"><pre><span class="p">$</span>sudo reboot</pre><button class="copiar" type="button" data-copiar="sudo reboot">Copiar</button></div>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">10.3</span>
+        <div>
+          <h3 class="nombre">Instalar las Guest Additions</h3>
+          <p class="desc">Controladores de VirtualBox para la VM: activan la aceleración 3D y permiten cambiar la resolución de la ventana.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo apt install -y build-essential dkms linux-headers-$(uname -r)
+sudo mount /dev/cdrom /mnt
+sudo sh /mnt/VBoxLinuxAdditions.run
+sudo reboot" aria-label="Copiar los comandos del paso 10.3">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <p class="texto">Primero, en el menú de la ventana de VirtualBox: <strong>Dispositivos → Insertar imagen de CD de las «Guest Additions»</strong>. Después, en una terminal de la VM:</p><div class="ejemplo"><pre><span class="p">$</span>sudo apt install -y build-essential dkms linux-headers-$(uname -r)</pre><button class="copiar" type="button" data-copiar="sudo apt install -y build-essential dkms linux-headers-$(uname -r)">Copiar</button></div><p class="pie-ej">Herramientas para compilar los módulos del kernel.</p><div class="ejemplo"><pre><span class="p">$</span>sudo mount /dev/cdrom /mnt</pre><button class="copiar" type="button" data-copiar="sudo mount /dev/cdrom /mnt">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo sh /mnt/VBoxLinuxAdditions.run</pre><button class="copiar" type="button" data-copiar="sudo sh /mnt/VBoxLinuxAdditions.run">Copiar</button></div><p class="pie-ej">Al final debe decir que los módulos se cargaron. Un aviso sobre el sistema de ventanas es normal.</p><div class="ejemplo"><pre><span class="p">$</span>sudo reboot</pre><button class="copiar" type="button" data-copiar="sudo reboot">Copiar</button></div>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">10.4</span>
+        <div>
+          <h3 class="nombre">Verificar el OpenGL</h3>
+          <p class="desc">El juego renderiza con OpenGL. Este comando dice quién está haciendo el trabajo gráfico.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo apt install -y mesa-utils
+glxinfo -B | grep -iE &#x27;renderer|version&#x27;" aria-label="Copiar los comandos del paso 10.4">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo apt install -y mesa-utils</pre><button class="copiar" type="button" data-copiar="sudo apt install -y mesa-utils">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>glxinfo -B | grep -iE 'renderer|version'</pre><button class="copiar" type="button" data-copiar="glxinfo -B | grep -iE &#x27;renderer|version&#x27;">Copiar</button></div><p class="pie-ej">Si el renderer dice <code class="inl">SVGA3D</code> o similar, la aceleración 3D funciona: el juego irá fluido. Si dice <code class="inl">llvmpipe</code>, el procesador dibuja todo por software: el juego funciona pero lento; aplica los ajustes del paso 10.7 al mínimo.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">10.5</span>
+        <div>
+          <h3 class="nombre">Instalar el Minecraft Launcher</h3>
+          <p class="desc">Mojang publica su launcher oficial como paquete .deb para Debian y Ubuntu. Se hace desde una terminal del escritorio XFCE.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="cd /tmp &amp;&amp; wget https://launcher.mojang.com/download/Minecraft.deb
+sudo apt install -y ./Minecraft.deb
+minecraft-launcher &amp;" aria-label="Copiar los comandos del paso 10.5">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>cd /tmp &amp;&amp; wget https://launcher.mojang.com/download/Minecraft.deb</pre><button class="copiar" type="button" data-copiar="cd /tmp &amp;&amp; wget https://launcher.mojang.com/download/Minecraft.deb">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo apt install -y ./Minecraft.deb</pre><button class="copiar" type="button" data-copiar="sudo apt install -y ./Minecraft.deb">Copiar</button></div><p class="pie-ej"><code class="inl">apt</code> instala también las dependencias que pida el paquete.</p><div class="ejemplo"><pre><span class="p">$</span>minecraft-launcher &amp;</pre><button class="copiar" type="button" data-copiar="minecraft-launcher &amp;">Copiar</button></div><p class="pie-ej">También aparece en el menú de aplicaciones de XFCE → Juegos. Inicia sesión con la cuenta Microsoft que tiene la licencia de Java Edition.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">10.6</span>
+        <div>
+          <h3 class="nombre">Crear la instalación 1.12.2</h3>
+          <p class="desc">El cliente debe ser exactamente de la misma versión que el servidor.</p>
+        </div>
+        <span></span>
+      </div>
+      <div class="detalle">
+        <ol class="pasos-flujo"><li>En el launcher: <strong>Minecraft: Java Edition</strong> → pestaña <strong>Instalaciones</strong> → <strong>Nueva instalación</strong>.</li><li>Nombre: <span class="var">Lab 1.12.2</span>. Versión: <strong>release 1.12.2</strong>.</li><li><strong>Resolución</strong>: 1280 × 720. Una ventana más chica se renderiza más rápido.</li><li><strong>Más opciones</strong> → Argumentos JVM: cambia <code class="inl">-Xmx2G</code> por <code class="inl">-Xmx1536M</code>. El servidor ya ocupa 1 GB en la misma VM.</li><li><strong>Crear</strong> y después <strong>Jugar</strong>. La primera vez descarga el juego y su propio Java 8; tarda unos minutos.</li></ol>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">10.7</span>
+        <div>
+          <h3 class="nombre">Ajustes de video</h3>
+          <p class="desc">Opciones → Gráficos. Con aceleración 3D bastan los valores normales; con llvmpipe usa los del mínimo.</p>
+        </div>
+        <span></span>
+      </div>
+      <div class="detalle">
+        <div class="tabla-wrap"><table class="tabla"><thead><tr><th>Opción</th><th>Con aceleración 3D</th><th>Con llvmpipe</th></tr></thead><tbody><tr><td>Gráficos</td><td>Rápidos</td><td>Rápidos</td></tr><tr><td>Distancia de renderizado</td><td>6 chunks</td><td>2 a 4 chunks</td></tr><tr><td>Iluminación suave</td><td>Desactivada</td><td>Desactivada</td></tr><tr><td>FPS máximos</td><td>60</td><td>30</td></tr><tr><td>Nubes y partículas</td><td>Mínimas</td><td>Desactivadas</td></tr></tbody></table></div>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">10.8</span>
+        <div>
+          <h3 class="nombre">Conectarse: a tu servidor y al de un compañero</h3>
+          <p class="desc">Desde el menú principal del juego, Multijugador → Añadir servidor.</p>
+        </div>
+        <span></span>
+      </div>
+      <div class="detalle">
+        <div class="tabla-wrap"><table class="tabla"><thead><tr><th>Para entrar a…</th><th>Dirección del servidor</th></tr></thead><tbody><tr><td>Tu propio servidor</td><td><code class="inl">localhost</code></td></tr><tr><td>El de un compañero (modo puente)</td><td>La <span class="var">IP de su VM</span>, del paso 9.2</td></tr><tr><td>El de un compañero (modo NAT)</td><td>La <span class="var">IP de su PC</span></td></tr></tbody></table></div><p class="texto">Si aparece el MOTD con la cantidad de jugadores y barras de señal, el servidor responde. Entra con <strong>Unirse al servidor</strong>.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>11. Comprobar el servidor sin cliente</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">11.1</span>
+        <div>
+          <h3 class="nombre">Consultar con mcstatus</h3>
+          <p class="desc">Herramienta de Python que hace la misma consulta que la lista de servidores del juego. No necesita licencia ni escritorio, así que cualquier alumno puede comprobar su servidor o el de un compañero.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo apt install -y python3-venv
+python3 -m venv ~/mcs
+~/mcs/bin/pip install mcstatus
+~/mcs/bin/mcstatus localhost:25565 status" aria-label="Copiar los comandos del paso 11.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo apt install -y python3-venv</pre><button class="copiar" type="button" data-copiar="sudo apt install -y python3-venv">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>python3 -m venv ~/mcs</pre><button class="copiar" type="button" data-copiar="python3 -m venv ~/mcs">Copiar</button></div><p class="pie-ej">Un entorno virtual aísla la herramienta del Python del sistema, como en sus prácticas de Flask.</p><div class="ejemplo"><pre><span class="p">$</span>~/mcs/bin/pip install mcstatus</pre><button class="copiar" type="button" data-copiar="~/mcs/bin/pip install mcstatus">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>~/mcs/bin/mcstatus localhost:25565 status</pre><button class="copiar" type="button" data-copiar="~/mcs/bin/mcstatus localhost:25565 status">Copiar</button></div><p class="pie-ej">Responde la versión (1.12.2), el MOTD, los jugadores conectados y la latencia. Cambia <code class="inl">localhost</code> por la IP de un compañero para probar su servidor.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>12. Administrar desde la consola</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">12.1</span>
+        <div>
+          <h3 class="nombre">Operador y ticks por segundo</h3>
+          <p class="desc">Como servicio, el servidor no tiene consola interactiva. Para dar comandos, se detiene el servicio y se arranca a mano.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo systemctl stop minecraft
+sudo -u minecraft bash -c &#x27;cd /opt/minecraft &amp;&amp; /usr/lib/jvm/temurin-8-jre-amd64/bin/java -Xms512M -Xmx1G -Dlog4j.configurationFile=log4j2_112-116.xml -jar server.jar nogui&#x27;" aria-label="Copiar los comandos del paso 12.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo systemctl stop minecraft</pre><button class="copiar" type="button" data-copiar="sudo systemctl stop minecraft">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo -u minecraft bash -c 'cd /opt/minecraft &amp;&amp; /usr/lib/jvm/temurin-8-jre-amd64/bin/java -Xms512M -Xmx1G -Dlog4j.configurationFile=log4j2_112-116.xml -jar server.jar nogui'</pre><button class="copiar" type="button" data-copiar="sudo -u minecraft bash -c &#x27;cd /opt/minecraft &amp;&amp; /usr/lib/jvm/temurin-8-jre-amd64/bin/java -Xms512M -Xmx1G -Dlog4j.configurationFile=log4j2_112-116.xml -jar server.jar nogui&#x27;">Copiar</button></div><div class="ejemplo archivo"><p class="arch">Consola del servidor (escribe sin diagonal)</p><pre>op TuNombreDeJugador
+list
+debug start
+debug stop
+stop</pre><button class="copiar" type="button" data-copiar="op TuNombreDeJugador
+list
+debug start
+debug stop
+stop">Copiar</button></div><p class="pie-ej"><code class="inl">op</code> da permisos de administrador y <code class="inl">list</code> muestra quién está conectado. <code class="inl">debug start</code>, espera unos 30 segundos y <code class="inl">debug stop</code>: el resultado indica los <strong>ticks por segundo</strong> reales (deben ser 20). <code class="inl">stop</code> guarda y apaga.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">12.2</span>
+        <div>
+          <h3 class="nombre">Regresar al modo servicio</h3>
+          <p class="desc">Después de stop, vuelve a iniciar el servicio.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo systemctl start minecraft" aria-label="Copiar los comandos del paso 12.2">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo systemctl start minecraft</pre><button class="copiar" type="button" data-copiar="sudo systemctl start minecraft">Copiar</button></div>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>13. Evidencias para el reporte</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">13.1</span>
+        <div>
+          <h3 class="nombre">Capturar el tráfico</h3>
+          <p class="desc">Con un compañero conectado, se capturan 20 paquetes. Compara con Luanti, que usa UDP.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo apt install -y tcpdump
+sudo tcpdump -i any -n tcp port 25565 -c 20" aria-label="Copiar los comandos del paso 13.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo apt install -y tcpdump</pre><button class="copiar" type="button" data-copiar="sudo apt install -y tcpdump">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo tcpdump -i any -n tcp port 25565 -c 20</pre><button class="copiar" type="button" data-copiar="sudo tcpdump -i any -n tcp port 25565 -c 20">Copiar</button></div><p class="pie-ej">Verás las banderas TCP (<code class="inl">[S]</code>, <code class="inl">[.]</code>, <code class="inl">[P.]</code>): la conexión se abre y cada paquete se confirma.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">13.2</span>
+        <div>
+          <h3 class="nombre">Consumo de recursos</h3>
+          <p class="desc">Se mide cuánta CPU y memoria usa el proceso Java con jugadores conectados.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="ps -o pid,user,%cpu,%mem,rss,cmd -C java" aria-label="Copiar los comandos del paso 13.2">Copiar</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>ps -o pid,user,%cpu,%mem,rss,cmd -C java</pre><button class="copiar" type="button" data-copiar="ps -o pid,user,%cpu,%mem,rss,cmd -C java">Copiar</button></div><p class="pie-ej">RSS es la memoria real en KB. Mide con 0, 1 y 5 jugadores y compara.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">13.3</span>
+        <div>
+          <h3 class="nombre">Respaldo del mundo</h3>
+          <p class="desc">El mundo vive en la carpeta world/. Se detiene el servidor para que no cambie mientras se copia.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo systemctl stop minecraft
+sudo tar -czf ~/respaldo-mundo-$(date +%F).tar.gz -C /opt/minecraft world
+sudo systemctl start minecraft" aria-label="Copiar los comandos del paso 13.3">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo systemctl stop minecraft</pre><button class="copiar" type="button" data-copiar="sudo systemctl stop minecraft">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo tar -czf ~/respaldo-mundo-$(date +%F).tar.gz -C /opt/minecraft world</pre><button class="copiar" type="button" data-copiar="sudo tar -czf ~/respaldo-mundo-$(date +%F).tar.gz -C /opt/minecraft world">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo systemctl start minecraft</pre><button class="copiar" type="button" data-copiar="sudo systemctl start minecraft">Copiar</button></div>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>14. Diagnóstico</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">14.1</span>
+        <div>
+          <h3 class="nombre">Errores comunes</h3>
+          <p class="desc">Síntoma y qué revisar.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo journalctl -u minecraft -n 50 --no-pager
+sudo tail -n 30 /opt/minecraft/logs/latest.log" aria-label="Copiar los comandos del paso 14.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="tabla-wrap"><table class="tabla"><thead><tr><th>Síntoma</th><th>Qué revisar</th></tr></thead><tbody>
+<tr><td>Outdated server! I'm still on 1.12.2</td><td>El cliente es más nuevo. En el launcher usa la instalación «release 1.12.2» (paso 10.6).</td></tr>
+<tr><td>Outdated client!</td><td>El cliente es más viejo que el servidor. Misma solución: cliente y servidor en 1.12.2.</td></tr>
+<tr><td>You need to agree to the EULA</td><td>eula.txt sigue en false. Repite el paso 6.2.</td></tr>
+<tr><td>status: failed</td><td>Revisa la bitácora con los comandos de abajo. Suele ser la ruta de Java o permisos de /opt/minecraft.</td></tr>
+<tr><td>Permission denied</td><td>La carpeta debe ser del usuario minecraft: <code class="inl">sudo chown -R minecraft:minecraft /opt/minecraft</code>.</td></tr>
+<tr><td>OutOfMemoryError</td><td>La VM tiene poca RAM o -Xmx es muy alto. Deja al menos 1 GB libre para Debian.</td></tr>
+<tr><td>Connection refused / timed out</td><td>El servidor no termina de arrancar, el puerto no está abierto en ufw o falta el reenvío NAT (paso 8).</td></tr>
+<tr><td>Failed to verify username</td><td>online-mode=true necesita que la VM tenga internet y que el jugador use una cuenta con licencia.</td></tr>
+<tr><td>El juego va muy lento en la PC</td><td>Revisa el paso 10.4: si dice llvmpipe, usa los ajustes mínimos del paso 10.7 y una ventana de 1280 × 720.</td></tr>
+<tr><td>Pantalla negra o el juego se cierra al abrir</td><td>Falla de la aceleración 3D. Apaga la VM, desactiva «Habilitar aceleración 3D» y juega con llvmpipe.</td></tr>
+<tr><td>No entro al servidor del compañero</td><td>Las VMs deben estar en modo puente (o NAT con reenvío), su ufw debe permitir 25565/tcp y su servicio estar activo. Prueba primero con mcstatus.</td></tr>
+<tr><td>La VM se congela al jugar</td><td>Falta memoria: confirma 6 GB en la VM, -Xmx1G en el servidor y -Xmx1536M en el cliente.</td></tr>
+</tbody></table></div><div class="ejemplo"><pre><span class="p">$</span>sudo journalctl -u minecraft -n 50 --no-pager</pre><button class="copiar" type="button" data-copiar="sudo journalctl -u minecraft -n 50 --no-pager">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo tail -n 30 /opt/minecraft/logs/latest.log</pre><button class="copiar" type="button" data-copiar="sudo tail -n 30 /opt/minecraft/logs/latest.log">Copiar</button></div>
+      </div>
+    </article>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Para revisar el servicio en cualquier momento: <code class="inl">sudo systemctl status minecraft</code>. Bitácora del juego: <code class="inl">/opt/minecraft/logs/latest.log</code>. Recuerda: versión antigua, úsala solo en la red del laboratorio.</p>
+    <p>Minecraft es una marca de Mojang Studios. El servidor se usa conforme a su EULA (minecraft.net/eula).</p>
+    <p>Escuela Politécnica «Ing. Jorge Matute Remus» · Academia de Redes de Cómputo</p>
+  </div>
+</footer>
+
+<div id="aviso-copia" role="status" aria-live="polite"></div>
+
+<script>
+async function copiar(texto){
+  try{ await navigator.clipboard.writeText(texto); return true; }
+  catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = texto; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    let ok = false; try{ ok = document.execCommand('copy'); }catch(_){ ok = false; }
+    document.body.removeChild(ta); return ok;
+  }
+}
+document.addEventListener('click', async ev => {
+  const btn = ev.target.closest('.copiar');
+  if(!btn) return;
+  const original = btn.textContent;
+  const ok = await copiar(btn.dataset.copiar);
+  btn.textContent = ok ? 'Copiado' : 'Selecciona y copia';
+  btn.classList.toggle('ok', ok);
+  document.getElementById('aviso-copia').textContent = ok ? 'Copiado' : 'No se pudo copiar';
+  setTimeout(() => { btn.textContent = original; btn.classList.remove('ok'); }, 1600);
+});
+</script>
+</body>
+</html>
