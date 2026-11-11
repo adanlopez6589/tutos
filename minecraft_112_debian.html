@@ -339,7 +339,7 @@
     <h2>Antes de empezar</h2>
     <article class="cmd">
       <div class="detalle" style="margin-left:0">
-        <p class="texto">En esta práctica cada alumno tiene en <strong>su misma VM</strong> el servidor y el cliente: puede jugar en su propio mundo y también entrar al servidor de cualquier compañero. Los recursos se reparten así:</p><div class="tabla-wrap"><table class="tabla"><thead><tr><th>Componente</th><th>Memoria</th><th>Nota</th></tr></thead><tbody><tr><td>Debian + XFCE</td><td>~1 GB</td><td>Escritorio ligero</td></tr><tr><td>Servidor 1.12.2</td><td>1 GB</td><td>-Xmx1G</td></tr><tr><td>Cliente 1.12.2</td><td>1.5 GB</td><td>-Xmx1536M en el launcher</td></tr><tr><td>Total de la VM</td><td>6 GB · 2 CPU</td><td>Con 12 GB en la PC, quedan 6 GB para Windows</td></tr></tbody></table></div><ul class="lista"><li>Para jugar, cada alumno necesita una <strong>cuenta de Minecraft Java Edition con licencia</strong>. El servidor es gratis; el cliente no. Quien no tenga cuenta monta su servidor y lo comprueba con <code class="inl">mcstatus</code> (paso 11); sus compañeros con cuenta pueden entrar a jugar en él.</li><li>La PC no tiene tarjeta gráfica dedicada, pero el i3 sí tiene gráficos integrados; VirtualBox los aprovecha con la aceleración 3D (paso 10.1).</li><li>Si ya instalaste Tomcat, no hay conflicto: Tomcat sigue con OpenJDK 17 y Minecraft usa su propio Java 8 por ruta completa.</li></ul><div class="nota"><h2>¿Qué es systemd?</h2><p>Es el programa que Debian ejecuta primero al encender (el proceso con PID 1) y que arranca, vigila y detiene todos los servicios del sistema: SSH, Apache, MySQL, Tomcat. Cada servicio se describe en un archivo <code class="inl">.service</code> que indica qué programa ejecutar, con qué usuario y qué hacer si falla. En esta guía crearás <code class="inl">minecraft.service</code> (paso 7.2) para que el servidor arranque solo con la VM, se reinicie si se cae y se controle igual que los demás servicios: <code class="inl">systemctl start</code>, <code class="inl">stop</code>, <code class="inl">status</code> y <code class="inl">journalctl -u minecraft</code> para su bitácora.</p></div><div class="nota"><h2>Seguridad: versión antigua, solo en la red del laboratorio</h2><p>La 1.12.2 ya no recibe actualizaciones. En 2021 se descubrió una falla grave en la librería Log4j que usa el servidor; Mojang publicó un archivo de configuración que la corrige y esta guía lo descarga en el paso 5.2 y lo aplica en el arranque (pasos 6 y 7). Aun así, no publiques este servidor en internet: úsalo solo dentro de la red del laboratorio.</p></div>
+        <p class="texto">En esta práctica cada alumno tiene en <strong>su misma VM</strong> el servidor y el cliente: puede jugar en su propio mundo y también entrar al servidor de cualquier compañero. Los recursos se reparten así:</p><div class="tabla-wrap"><table class="tabla"><thead><tr><th>Componente</th><th>Memoria</th><th>Nota</th></tr></thead><tbody><tr><td>Debian + XFCE</td><td>~1 GB</td><td>Escritorio ligero</td></tr><tr><td>Servidor 1.12.2</td><td>1 GB</td><td>-Xmx1G</td></tr><tr><td>Cliente 1.12.2</td><td>1.5 GB</td><td>-Xmx1536M en el launcher</td></tr><tr><td>Total de la VM</td><td>6 GB · 2 CPU</td><td>Con 12 GB en la PC, quedan 6 GB para Windows</td></tr></tbody></table></div><ul class="lista"><li>Para jugar, cada alumno necesita una <strong>cuenta de Minecraft Java Edition con licencia</strong>. El servidor es gratis; el cliente no. Quien no tenga cuenta monta su servidor y lo comprueba con <code class="inl">mcstatus</code> (paso 11); sus compañeros con cuenta pueden entrar a jugar en él.</li><li>La PC no tiene tarjeta gráfica dedicada, pero el i3 sí tiene gráficos integrados; VirtualBox los aprovecha con la aceleración 3D (paso 10.1).</li><li>Si ya instalaste Tomcat, no hay conflicto: Tomcat sigue con OpenJDK 17 y Minecraft usa su propio Java 8 por ruta completa.</li></ul><div class="nota"><h2>¿Qué es systemd?</h2><p>Es el programa que Debian ejecuta primero al encender (el proceso con PID 1) y que arranca, vigila y detiene todos los servicios del sistema: SSH, Apache, MySQL, Tomcat. Cada servicio se describe en un archivo <code class="inl">.service</code> que indica qué programa ejecutar, con qué usuario y qué hacer si falla. En esta guía crearás <code class="inl">minecraft.service</code> (paso 7.1) para que el servidor arranque solo con la VM, se reinicie si se cae y se controle igual que los demás servicios: <code class="inl">systemctl start</code>, <code class="inl">stop</code>, <code class="inl">status</code> y <code class="inl">journalctl -u minecraft</code> para su bitácora.</p></div><div class="nota"><h2>Seguridad: versión antigua, solo en la red del laboratorio</h2><p>La 1.12.2 ya no recibe actualizaciones. En 2021 se descubrió una falla grave en la librería Log4j que usa el servidor; Mojang publicó un archivo de configuración que la corrige y esta guía lo descarga en el paso 5.2 y lo aplica en el servicio (paso 7.1). Aun así, no publiques este servidor en internet: úsalo solo dentro de la red del laboratorio.</p></div>
       </div>
     </article>
   </section>
@@ -472,48 +472,31 @@ ls -lh /opt/minecraft/" aria-label="Copiar los comandos del paso 5.2">Copiar tod
     </article>
   </section>
   <section class="grupo">
-    <h2>6. Primer arranque y EULA</h2>
+    <h2>6. Aceptar la EULA y configurar</h2>
     <article class="cmd">
       <div class="cmd-head">
         <span class="num">6.1</span>
         <div>
-          <h3 class="nombre">Arranque de prueba</h3>
-          <p class="desc">La primera ejecución crea los archivos de configuración y se detiene sola, porque todavía no se ha aceptado la licencia.</p>
+          <h3 class="nombre">Aceptar la EULA</h3>
+          <p class="desc">El servidor no arranca si no encuentra el archivo eula.txt con eula=true. Se crea directamente, antes del primer arranque. Al hacerlo aceptas los términos de Mojang (minecraft.net/eula).</p>
         </div>
-        <button class="copiar" type="button" data-copiar="sudo -u minecraft bash -c &#x27;cd /opt/minecraft &amp;&amp; /usr/lib/jvm/temurin-8-jre-amd64/bin/java -Xms512M -Xmx1G -Dlog4j.configurationFile=log4j2_112-116.xml -jar server.jar nogui&#x27;" aria-label="Copiar los comandos del paso 6.1">Copiar</button>
+        <button class="copiar" type="button" data-copiar="echo &quot;eula=true&quot; | sudo -u minecraft tee /opt/minecraft/eula.txt" aria-label="Copiar los comandos del paso 6.1">Copiar</button>
       </div>
       <div class="detalle">
-        <div class="ejemplo"><pre><span class="p">$</span>sudo -u minecraft bash -c 'cd /opt/minecraft &amp;&amp; /usr/lib/jvm/temurin-8-jre-amd64/bin/java -Xms512M -Xmx1G -Dlog4j.configurationFile=log4j2_112-116.xml -jar server.jar nogui'</pre><button class="copiar" type="button" data-copiar="sudo -u minecraft bash -c &#x27;cd /opt/minecraft &amp;&amp; /usr/lib/jvm/temurin-8-jre-amd64/bin/java -Xms512M -Xmx1G -Dlog4j.configurationFile=log4j2_112-116.xml -jar server.jar nogui&#x27;">Copiar</button></div><p class="pie-ej"><code class="inl">-Xms512M</code> es la memoria inicial y <code class="inl">-Xmx1G</code> la máxima. <code class="inl">-Dlog4j.configurationFile</code> aplica el parche de seguridad. <code class="inl">nogui</code> evita que intente abrir una ventana.</p>
+        <div class="ejemplo"><pre><span class="p">$</span>echo "eula=true" | sudo -u minecraft tee /opt/minecraft/eula.txt</pre><button class="copiar" type="button" data-copiar="echo &quot;eula=true&quot; | sudo -u minecraft tee /opt/minecraft/eula.txt">Copiar</button></div><p class="pie-ej"><code class="inl">tee</code> escribe el archivo como el usuario minecraft, así nace con el dueño correcto.</p>
       </div>
     </article>
     <article class="cmd">
       <div class="cmd-head">
         <span class="num">6.2</span>
         <div>
-          <h3 class="nombre">Aceptar la EULA</h3>
-          <p class="desc">El servidor no arranca hasta que eula.txt diga true. Al cambiarlo aceptas los términos de Mojang (minecraft.net/eula).</p>
+          <h3 class="nombre">Crear server.properties</h3>
+          <p class="desc">Archivo principal de configuración del servidor. Se crea con las opciones que nos interesan; en su primer arranque el servidor agrega el resto con sus valores por defecto.</p>
         </div>
-        <button class="copiar" type="button" data-copiar="sudo sed -i &#x27;s/eula=false/eula=true/&#x27; /opt/minecraft/eula.txt
-cat /opt/minecraft/eula.txt" aria-label="Copiar los comandos del paso 6.2">Copiar todo</button>
+        <button class="copiar" type="button" data-copiar="sudo -u minecraft nano /opt/minecraft/server.properties" aria-label="Copiar los comandos del paso 6.2">Copiar</button>
       </div>
       <div class="detalle">
-        <div class="ejemplo"><pre><span class="p">$</span>sudo sed -i 's/eula=false/eula=true/' /opt/minecraft/eula.txt</pre><button class="copiar" type="button" data-copiar="sudo sed -i &#x27;s/eula=false/eula=true/&#x27; /opt/minecraft/eula.txt">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>cat /opt/minecraft/eula.txt</pre><button class="copiar" type="button" data-copiar="cat /opt/minecraft/eula.txt">Copiar</button></div><p class="pie-ej">La última línea debe decir eula=true.</p>
-      </div>
-    </article>
-  </section>
-  <section class="grupo">
-    <h2>7. Configurar y crear el servicio systemd</h2>
-    <article class="cmd">
-      <div class="cmd-head">
-        <span class="num">7.1</span>
-        <div>
-          <h3 class="nombre">Ajustar server.properties</h3>
-          <p class="desc">Archivo principal de configuración del servidor. Busca y cambia solo estas líneas; deja el resto igual.</p>
-        </div>
-        <button class="copiar" type="button" data-copiar="sudo nano /opt/minecraft/server.properties" aria-label="Copiar los comandos del paso 7.1">Copiar</button>
-      </div>
-      <div class="detalle">
-        <div class="ejemplo"><pre><span class="p">$</span>sudo nano /opt/minecraft/server.properties</pre><button class="copiar" type="button" data-copiar="sudo nano /opt/minecraft/server.properties">Copiar</button></div><div class="ejemplo archivo"><p class="arch">/opt/minecraft/server.properties (solo las líneas a revisar)</p><pre>motd=Servidor del laboratorio 1.12.2
+        <div class="ejemplo"><pre><span class="p">$</span>sudo -u minecraft nano /opt/minecraft/server.properties</pre><button class="copiar" type="button" data-copiar="sudo -u minecraft nano /opt/minecraft/server.properties">Copiar</button></div><div class="ejemplo archivo"><p class="arch">/opt/minecraft/server.properties</p><pre>motd=Servidor del laboratorio 1.12.2
 max-players=20
 gamemode=0
 difficulty=2
@@ -527,17 +510,20 @@ difficulty=2
 online-mode=true
 white-list=false
 server-port=25565
-view-distance=6">Copiar</button></div><p class="pie-ej">En la 1.12 el modo y la dificultad van en número: <code class="inl">gamemode</code> 0 supervivencia, 1 creativo; <code class="inl">difficulty</code> 0 pacífico a 3 difícil. <code class="inl">online-mode=true</code> exige cuentas con licencia: no lo cambies. <code class="inl">view-distance=6</code> reduce la carga de la VM.</p>
+view-distance=6">Copiar</button></div><p class="pie-ej">En la 1.12 el modo y la dificultad van en número: <code class="inl">gamemode</code> 0 supervivencia, 1 creativo; <code class="inl">difficulty</code> 0 pacífico a 3 difícil. <code class="inl">online-mode=true</code> exige cuentas con licencia: no lo cambies. <code class="inl">view-distance=6</code> reduce la carga de la VM.</p><div class="ejemplo"><pre><span class="p">$</span>ls -l /opt/minecraft/</pre><button class="copiar" type="button" data-copiar="ls -l /opt/minecraft/">Copiar</button></div><p class="pie-ej">Deben aparecer server.jar, log4j2_112-116.xml, eula.txt y server.properties, todos del usuario minecraft.</p>
       </div>
     </article>
+  </section>
+  <section class="grupo">
+    <h2>7. Crear el servicio systemd y arrancar</h2>
     <article class="cmd">
       <div class="cmd-head">
-        <span class="num">7.2</span>
+        <span class="num">7.1</span>
         <div>
           <h3 class="nombre">Archivo del servicio</h3>
           <p class="desc">Igual que con Tomcat, se le indica a systemd cómo iniciar el servidor. La diferencia: aquí Java corre en primer plano, por eso no se usa Type=forking.</p>
         </div>
-        <button class="copiar" type="button" data-copiar="sudo nano /etc/systemd/system/minecraft.service" aria-label="Copiar los comandos del paso 7.2">Copiar</button>
+        <button class="copiar" type="button" data-copiar="sudo nano /etc/systemd/system/minecraft.service" aria-label="Copiar los comandos del paso 7.1">Copiar</button>
       </div>
       <div class="detalle">
         <div class="ejemplo"><pre><span class="p">$</span>sudo nano /etc/systemd/system/minecraft.service</pre><button class="copiar" type="button" data-copiar="sudo nano /etc/systemd/system/minecraft.service">Copiar</button></div><div class="ejemplo archivo"><p class="arch">/etc/systemd/system/minecraft.service</p><pre>[Unit]
@@ -571,62 +557,31 @@ WantedBy=multi-user.target">Copiar</button></div><p class="pie-ej"><code class="
     </article>
     <article class="cmd">
       <div class="cmd-head">
-        <span class="num">7.3</span>
+        <span class="num">7.2</span>
         <div>
-          <h3 class="nombre">Activar el servicio</h3>
-          <p class="desc">Recargar systemd, iniciar el servidor y habilitarlo al arranque.</p>
+          <h3 class="nombre">Activar y arrancar por primera vez</h3>
+          <p class="desc">Recargar systemd, habilitar el servicio al arranque e iniciarlo. Este es el primer arranque del servidor.</p>
         </div>
         <button class="copiar" type="button" data-copiar="sudo systemctl daemon-reload
-sudo systemctl enable --now minecraft" aria-label="Copiar los comandos del paso 7.3">Copiar todo</button>
+sudo systemctl enable --now minecraft" aria-label="Copiar los comandos del paso 7.2">Copiar todo</button>
       </div>
       <div class="detalle">
-        <div class="ejemplo"><pre><span class="p">$</span>sudo systemctl daemon-reload</pre><button class="copiar" type="button" data-copiar="sudo systemctl daemon-reload">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo systemctl enable --now minecraft</pre><button class="copiar" type="button" data-copiar="sudo systemctl enable --now minecraft">Copiar</button></div><p class="pie-ej"><code class="inl">--now</code> lo inicia en este momento además de habilitarlo.</p>
+        <div class="ejemplo"><pre><span class="p">$</span>sudo systemctl daemon-reload</pre><button class="copiar" type="button" data-copiar="sudo systemctl daemon-reload">Copiar</button></div><p class="pie-ej">systemd vuelve a leer sus archivos y detecta minecraft.service.</p><div class="ejemplo"><pre><span class="p">$</span>sudo systemctl enable --now minecraft</pre><button class="copiar" type="button" data-copiar="sudo systemctl enable --now minecraft">Copiar</button></div><p class="pie-ej"><code class="inl">enable</code> lo deja habilitado al encender la VM y <code class="inl">--now</code> lo inicia en este momento. La primera vez genera el mundo: tarda alrededor de un minuto. Revisa que haya arrancado en el paso 8.</p>
       </div>
     </article>
   </section>
   <section class="grupo">
-    <h2>8. Red y puerto</h2>
+    <h2>8. Verificar el servicio</h2>
     <article class="cmd">
       <div class="cmd-head">
         <span class="num">8.1</span>
-        <div>
-          <h3 class="nombre">Cortafuegos</h3>
-          <p class="desc">Se permite el tráfico TCP al puerto 25565 para que los compañeros puedan entrar. Si ufw está activo, asegúrate de no cerrar SSH.</p>
-        </div>
-        <button class="copiar" type="button" data-copiar="sudo ufw allow OpenSSH
-sudo ufw allow 25565/tcp
-sudo ufw status" aria-label="Copiar los comandos del paso 8.1">Copiar todo</button>
-      </div>
-      <div class="detalle">
-        <div class="ejemplo"><pre><span class="p">$</span>sudo ufw allow OpenSSH</pre><button class="copiar" type="button" data-copiar="sudo ufw allow OpenSSH">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo ufw allow 25565/tcp</pre><button class="copiar" type="button" data-copiar="sudo ufw allow 25565/tcp">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo ufw status</pre><button class="copiar" type="button" data-copiar="sudo ufw status">Copiar</button></div>
-      </div>
-    </article>
-    <article class="cmd">
-      <div class="cmd-head">
-        <span class="num">8.2</span>
-        <div>
-          <h3 class="nombre">Modo de red de la VM</h3>
-          <p class="desc">Para entrar al servidor de un compañero, las VMs deben verse en la red. Hay dos casos.</p>
-        </div>
-        <span></span>
-      </div>
-      <div class="detalle">
-        <div class="tabla-wrap"><table class="tabla"><thead><tr><th>Laboratorio</th><th>Configuración en VirtualBox</th><th>A qué IP se conectan los compañeros</th></tr></thead><tbody><tr><td>Con DHCP</td><td>Red → Adaptador 1 → <strong>Adaptador puente</strong> (recomendado)</td><td>La IP de la VM del compañero (paso 9.2)</td></tr><tr><td>Sin DHCP (IP fija)</td><td>Red → <strong>NAT</strong> → Avanzadas → Reenvío de puertos: TCP, anfitrión 25565, invitado 25565</td><td>La IP de la <strong>PC</strong> del compañero, no la de su VM</td></tr></tbody></table></div><p class="texto">Para entrar a tu <strong>propio</strong> servidor desde tu cliente, en cualquiera de los dos casos usa <code class="inl">localhost</code>.</p>
-      </div>
-    </article>
-  </section>
-  <section class="grupo">
-    <h2>9. Verificar el servicio</h2>
-    <article class="cmd">
-      <div class="cmd-head">
-        <span class="num">9.1</span>
         <div>
           <h3 class="nombre">Estado, puerto y bitácora</h3>
           <p class="desc">Confirmar que el servidor está activo, escuchando en TCP 25565, y seguir su bitácora en vivo.</p>
         </div>
         <button class="copiar" type="button" data-copiar="sudo systemctl status minecraft --no-pager
 sudo ss -tlnp | grep &#x27;:25565 &#x27;
-sudo journalctl -u minecraft -f" aria-label="Copiar los comandos del paso 9.1">Copiar todo</button>
+sudo journalctl -u minecraft -f" aria-label="Copiar los comandos del paso 8.1">Copiar todo</button>
       </div>
       <div class="detalle">
         <div class="ejemplo"><pre><span class="p">$</span>sudo systemctl status minecraft --no-pager</pre><button class="copiar" type="button" data-copiar="sudo systemctl status minecraft --no-pager">Copiar</button></div><p class="pie-ej">Resultado esperado: active (running).</p><div class="ejemplo"><pre><span class="p">$</span>sudo ss -tlnp | grep ':25565 '</pre><button class="copiar" type="button" data-copiar="sudo ss -tlnp | grep &#x27;:25565 &#x27;">Copiar</button></div><p class="pie-ej">Debe aparecer una línea LISTEN con :25565 del proceso java.</p><div class="ejemplo"><pre><span class="p">$</span>sudo journalctl -u minecraft -f</pre><button class="copiar" type="button" data-copiar="sudo journalctl -u minecraft -f">Copiar</button></div><p class="pie-ej">Espera la línea <code class="inl">Done (…s)! For help, type "help"</code>: el mundo terminó de generarse. Sal con Ctrl+C; el servidor sigue corriendo.</p>
@@ -634,15 +589,48 @@ sudo journalctl -u minecraft -f" aria-label="Copiar los comandos del paso 9.1">C
     </article>
     <article class="cmd">
       <div class="cmd-head">
-        <span class="num">9.2</span>
+        <span class="num">8.2</span>
         <div>
           <h3 class="nombre">IP del servidor</h3>
           <p class="desc">Obtén la IP de la VM para compartirla con tus compañeros.</p>
         </div>
-        <button class="copiar" type="button" data-copiar="ip -br a" aria-label="Copiar los comandos del paso 9.2">Copiar</button>
+        <button class="copiar" type="button" data-copiar="ip -br a" aria-label="Copiar los comandos del paso 8.2">Copiar</button>
       </div>
       <div class="detalle">
         <div class="ejemplo"><pre><span class="p">$</span>ip -br a</pre><button class="copiar" type="button" data-copiar="ip -br a">Copiar</button></div><p class="pie-ej">Usa la IP de la interfaz enp0s3 (o similar). En NAT, usa la IP de la computadora anfitriona.</p>
+      </div>
+    </article>
+  </section>
+  <section class="grupo">
+    <h2>9. Red y puerto</h2>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">9.1</span>
+        <div>
+          <h3 class="nombre">Cortafuegos (opcional)</h3>
+          <p class="desc">Debian 12 no trae firewall activo: el puerto 25565 ya está abierto y puedes saltar este paso. Hazlo si quieres practicar con ufw.</p>
+        </div>
+        <button class="copiar" type="button" data-copiar="sudo apt install -y ufw
+sudo ufw allow OpenSSH
+sudo ufw allow 25565/tcp
+sudo ufw enable
+sudo ufw status" aria-label="Copiar los comandos del paso 9.1">Copiar todo</button>
+      </div>
+      <div class="detalle">
+        <div class="ejemplo"><pre><span class="p">$</span>sudo nft list ruleset</pre><button class="copiar" type="button" data-copiar="sudo nft list ruleset">Copiar</button></div><p class="pie-ej">Para comprobar que no hay reglas: si no imprime nada, no hay firewall bloqueando.</p><div class="ejemplo"><pre><span class="p">$</span>sudo apt install -y ufw</pre><button class="copiar" type="button" data-copiar="sudo apt install -y ufw">Copiar</button></div><p class="pie-ej">ufw no viene instalado en Debian 12.</p><div class="ejemplo"><pre><span class="p">$</span>sudo ufw allow OpenSSH</pre><button class="copiar" type="button" data-copiar="sudo ufw allow OpenSSH">Copiar</button></div><p class="pie-ej">Va antes de enable, para no quedarte fuera si administras la VM por SSH.</p><div class="ejemplo"><pre><span class="p">$</span>sudo ufw allow 25565/tcp</pre><button class="copiar" type="button" data-copiar="sudo ufw allow 25565/tcp">Copiar</button></div><div class="ejemplo"><pre><span class="p">$</span>sudo ufw enable</pre><button class="copiar" type="button" data-copiar="sudo ufw enable">Copiar</button></div><p class="pie-ej">Sin este comando las reglas se guardan pero no se aplican.</p><div class="ejemplo"><pre><span class="p">$</span>sudo ufw status</pre><button class="copiar" type="button" data-copiar="sudo ufw status">Copiar</button></div><p class="pie-ej">Debe decir Status: active y listar OpenSSH y 25565/tcp.</p><p class="aviso">⚠ Al activar ufw se bloquea todo lo que no esté permitido. Si en tu VM ya corren Apache (80), Tomcat (8080) o Postfix (25), permítelos también; revisa tus puertos con <code class="inl">sudo ss -tlnp</code>.</p>
+      </div>
+    </article>
+    <article class="cmd">
+      <div class="cmd-head">
+        <span class="num">9.2</span>
+        <div>
+          <h3 class="nombre">Modo de red de la VM</h3>
+          <p class="desc">Para entrar al servidor de un compañero, las VMs deben verse en la red. Hay dos casos.</p>
+        </div>
+        <span></span>
+      </div>
+      <div class="detalle">
+        <div class="tabla-wrap"><table class="tabla"><thead><tr><th>Laboratorio</th><th>Configuración en VirtualBox</th><th>A qué IP se conectan los compañeros</th></tr></thead><tbody><tr><td>Con DHCP</td><td>Red → Adaptador 1 → <strong>Adaptador puente</strong> (recomendado)</td><td>La IP de la VM del compañero (paso 8.2)</td></tr><tr><td>Sin DHCP (IP fija)</td><td>Red → <strong>NAT</strong> → Avanzadas → Reenvío de puertos: TCP, anfitrión 25565, invitado 25565</td><td>La IP de la <strong>PC</strong> del compañero, no la de su VM</td></tr></tbody></table></div><p class="texto">Para entrar a tu <strong>propio</strong> servidor desde tu cliente, en cualquiera de los dos casos usa <code class="inl">localhost</code>.</p>
       </div>
     </article>
   </section>
@@ -658,7 +646,7 @@ sudo journalctl -u minecraft -f" aria-label="Copiar los comandos del paso 9.1">C
         <span></span>
       </div>
       <div class="detalle">
-        <div class="tabla-wrap"><table class="tabla"><thead><tr><th>Sección</th><th>Valor</th></tr></thead><tbody><tr><td>Sistema → Placa base</td><td>Memoria base: 6144 MB</td></tr><tr><td>Sistema → Procesador</td><td>2 CPU</td></tr><tr><td>Pantalla → Pantalla</td><td>Memoria de video: 128 MB · Controlador gráfico: VMSVGA · ☑ Habilitar aceleración 3D</td></tr><tr><td>Red → Adaptador 1</td><td>Según el paso 8.2</td></tr></tbody></table></div>
+        <div class="tabla-wrap"><table class="tabla"><thead><tr><th>Sección</th><th>Valor</th></tr></thead><tbody><tr><td>Sistema → Placa base</td><td>Memoria base: 6144 MB</td></tr><tr><td>Sistema → Procesador</td><td>2 CPU</td></tr><tr><td>Pantalla → Pantalla</td><td>Memoria de video: 128 MB · Controlador gráfico: VMSVGA · ☑ Habilitar aceleración 3D</td></tr><tr><td>Red → Adaptador 1</td><td>Según el paso 9.2</td></tr></tbody></table></div>
       </div>
     </article>
     <article class="cmd">
@@ -757,7 +745,7 @@ minecraft-launcher &amp;" aria-label="Copiar los comandos del paso 10.5">Copiar 
         <span></span>
       </div>
       <div class="detalle">
-        <div class="tabla-wrap"><table class="tabla"><thead><tr><th>Para entrar a…</th><th>Dirección del servidor</th></tr></thead><tbody><tr><td>Tu propio servidor</td><td><code class="inl">localhost</code></td></tr><tr><td>El de un compañero (modo puente)</td><td>La <span class="var">IP de su VM</span>, del paso 9.2</td></tr><tr><td>El de un compañero (modo NAT)</td><td>La <span class="var">IP de su PC</span></td></tr></tbody></table></div><p class="texto">Si aparece el MOTD con la cantidad de jugadores y barras de señal, el servidor responde. Entra con <strong>Unirse al servidor</strong>.</p>
+        <div class="tabla-wrap"><table class="tabla"><thead><tr><th>Para entrar a…</th><th>Dirección del servidor</th></tr></thead><tbody><tr><td>Tu propio servidor</td><td><code class="inl">localhost</code></td></tr><tr><td>El de un compañero (modo puente)</td><td>La <span class="var">IP de su VM</span>, del paso 8.2</td></tr><tr><td>El de un compañero (modo NAT)</td><td>La <span class="var">IP de su PC</span></td></tr></tbody></table></div><p class="texto">Si aparece el MOTD con la cantidad de jugadores y barras de señal, el servidor responde. Entra con <strong>Unirse al servidor</strong>.</p>
       </div>
     </article>
   </section>
@@ -879,11 +867,11 @@ sudo tail -n 30 /opt/minecraft/logs/latest.log" aria-label="Copiar los comandos 
         <div class="tabla-wrap"><table class="tabla"><thead><tr><th>Síntoma</th><th>Qué revisar</th></tr></thead><tbody>
 <tr><td>Outdated server! I'm still on 1.12.2</td><td>El cliente es más nuevo. En el launcher usa la instalación «release 1.12.2» (paso 10.6).</td></tr>
 <tr><td>Outdated client!</td><td>El cliente es más viejo que el servidor. Misma solución: cliente y servidor en 1.12.2.</td></tr>
-<tr><td>You need to agree to the EULA</td><td>eula.txt sigue en false. Repite el paso 6.2.</td></tr>
+<tr><td>You need to agree to the EULA</td><td>Falta eula.txt o dice false. Repite el paso 6.1.</td></tr>
 <tr><td>status: failed</td><td>Revisa la bitácora con los comandos de abajo. Suele ser la ruta de Java o permisos de /opt/minecraft.</td></tr>
 <tr><td>Permission denied</td><td>La carpeta debe ser del usuario minecraft: <code class="inl">sudo chown -R minecraft:minecraft /opt/minecraft</code>.</td></tr>
 <tr><td>OutOfMemoryError</td><td>La VM tiene poca RAM o -Xmx es muy alto. Deja al menos 1 GB libre para Debian.</td></tr>
-<tr><td>Connection refused / timed out</td><td>El servidor no termina de arrancar, el puerto no está abierto en ufw o falta el reenvío NAT (paso 8).</td></tr>
+<tr><td>Connection refused / timed out</td><td>El servidor no termina de arrancar, el puerto no está abierto en ufw o falta el reenvío NAT (paso 9).</td></tr>
 <tr><td>Failed to verify username</td><td>online-mode=true necesita que la VM tenga internet y que el jugador use una cuenta con licencia.</td></tr>
 <tr><td>El juego va muy lento en la PC</td><td>Revisa el paso 10.4: si dice llvmpipe, usa los ajustes mínimos del paso 10.7 y una ventana de 1280 × 720.</td></tr>
 <tr><td>Pantalla negra o el juego se cierra al abrir</td><td>Falla de la aceleración 3D. Apaga la VM, desactiva «Habilitar aceleración 3D» y juega con llvmpipe.</td></tr>
