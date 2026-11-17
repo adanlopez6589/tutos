@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guía de práctica: Configuración básica de switch y dispositivos finales (Packet Tracer)</title>
+<style>
+  :root{--azul:#0b3d6e;--azul2:#1565c0;--gris:#f4f6f8;--borde:#d0d7de;--texto:#1f2328;--verde:#1a7f37;--naranja:#bc4c00;--rojo:#cf222e}
+  *{box-sizing:border-box}
+  body{font-family:"Segoe UI",Roboto,Arial,sans-serif;color:var(--texto);line-height:1.55;margin:0;background:#fff}
+  header{background:var(--azul);color:#fff;padding:28px 24px}
+  header h1{margin:0 0 6px;font-size:1.6rem}
+  header p{margin:0;opacity:.85}
+  main{max-width:920px;margin:0 auto;padding:24px}
+  nav{background:var(--gris);border:1px solid var(--borde);border-radius:8px;padding:12px 18px;margin-bottom:24px}
+  nav ol{margin:6px 0 0;padding-left:20px}
+  nav a{color:var(--azul2);text-decoration:none}
+  h2{color:var(--azul);border-bottom:2px solid var(--azul2);padding-bottom:4px;margin-top:40px}
+  h3{color:var(--azul2);margin-top:26px}
+  table{border-collapse:collapse;width:100%;margin:12px 0;font-size:.94rem}
+  th,td{border:1px solid var(--borde);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--azul);color:#fff}
+  tr:nth-child(even) td{background:var(--gris)}
+  code{background:#eef1f4;border-radius:4px;padding:1px 5px;font-family:Consolas,"Courier New",monospace;font-size:.92em}
+  pre{background:#0d1117;color:#e6edf3;padding:14px 16px;border-radius:8px;overflow-x:auto;font-family:Consolas,"Courier New",monospace;font-size:.92rem;position:relative}
+  pre code{background:none;padding:0;color:inherit}
+  .copiar{position:absolute;top:8px;right:8px;background:#30363d;color:#e6edf3;border:none;border-radius:5px;padding:4px 10px;cursor:pointer;font-size:.8rem}
+  .copiar:hover{background:#484f58}
+  .nota{background:#fff8c5;border-left:4px solid #d4a72c;padding:10px 14px;border-radius:4px;margin:14px 0}
+  .info{background:#ddf4ff;border-left:4px solid var(--azul2);padding:10px 14px;border-radius:4px;margin:14px 0}
+  .ok{color:var(--verde);font-weight:600}.warn{color:var(--naranja);font-weight:600}.bad{color:var(--rojo);font-weight:600}
+  .check li{list-style:none;margin-left:-20px}
+  .check input{margin-right:8px}
+  .datos{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+  .datos span{background:var(--gris);border:1px solid var(--borde);border-radius:6px;padding:6px 10px}
+  footer{text-align:center;color:#666;font-size:.85rem;padding:30px 0}
+  @media print{.copiar,nav{display:none}pre{background:#f4f4f4;color:#000;border:1px solid #ccc}header{background:#fff;color:#000;border-bottom:3px solid #000}th{background:#ddd;color:#000}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Guía de práctica: Configuración básica de switch y dispositivos finales</h1>
+  <p>Cisco Packet Tracer · Escuela Politécnica "Ing. Jorge Matute Remus" · Universidad de Guadalajara</p>
+</header>
+<main>
+
+<nav>
+  <b>Contenido</b>
+  <ol>
+    <li><a href="#datos">Datos generales</a></li>
+    <li><a href="#p1">Parte 1. Armar la topología</a></li>
+    <li><a href="#p2">Parte 2. Conexiones UTP y de consola</a></li>
+    <li><a href="#p3">Parte 3. Configurar el switch Class-A</a></li>
+    <li><a href="#p4">Parte 4. Configurar el switch Class-B</a></li>
+    <li><a href="#p5">Parte 5. Configurar la IP de las PCs</a></li>
+    <li><a href="#p6">Parte 6. Verificación y evidencias</a></li>
+    <li><a href="#errores">Errores comunes y preguntas de reflexión</a></li>
+  </ol>
+</nav>
+
+<h2 id="datos">Datos generales</h2>
+<p>Vas a construir desde cero una LAN pequeña con 2 switches y 2 PCs, configurar los switches por consola y comprobar que todos los equipos se comunican.</p>
+<p><b>Material:</b> Cisco Packet Tracer 8.x, archivo nuevo en blanco (File → New).<br><b>Tiempo estimado:</b> 50 minutos.</p>
+
+<h3>Tabla de direccionamiento</h3>
+<table>
+  <tr><th>Dispositivo</th><th>Modelo</th><th>Interfaz</th><th>Dirección IP</th><th>Máscara de subred</th></tr>
+  <tr><td>Class-A</td><td>Switch 2960</td><td>VLAN 1</td><td>10.10.10.100</td><td>255.255.255.0</td></tr>
+  <tr><td>Class-B</td><td>Switch 2960</td><td>VLAN 1</td><td>10.10.10.150</td><td>255.255.255.0</td></tr>
+  <tr><td>Student-1</td><td>PC-PT</td><td>NIC (Fa0)</td><td>10.10.10.4</td><td>255.255.255.0</td></tr>
+  <tr><td>Student-2</td><td>PC-PT</td><td>NIC (Fa0)</td><td>10.10.10.5</td><td>255.255.255.0</td></tr>
+</table>
+
+<h3>Requisitos</h3>
+<table>
+  <tr><th>Parámetro</th><th>Valor</th></tr>
+  <tr><td>Nombres de host</td><td>Class-A y Class-B</td></tr>
+  <tr><td>Contraseña de consola y VTY</td><td><code>xAw6k</code></td></tr>
+  <tr><td>Contraseña secreta (enable secret)</td><td><code>6EBUp</code></td></tr>
+  <tr><td>Cifrado de contraseñas</td><td><code>service password-encryption</code></td></tr>
+  <tr><td>Banner MOTD</td><td>Acceso solo a personal autorizado</td></tr>
+  <tr><td>Guardar configuración</td><td><code>copy running-config startup-config</code></td></tr>
+</table>
+<div class="nota">Las contraseñas distinguen mayúsculas y minúsculas: escríbelas exactamente como aparecen.</div>
+
+<h2 id="p1">Parte 1. Armar la topología</h2>
+<p>Al terminar esta parte tendrás 4 equipos en el área de trabajo, con su nombre visible.</p>
+<ol>
+  <li>Abre Packet Tracer y crea un archivo nuevo (File → New). Guárdalo como <code>Practica_Switch_TuNombre.pkt</code>.</li>
+  <li>En la barra inferior izquierda, entra a <b>Network Devices</b> → <b>Switches</b>.</li>
+  <li>Arrastra 2 switches <b>2960</b> al área de trabajo, uno a la izquierda y otro a la derecha.</li>
+  <li>Entra a <b>End Devices</b> → <b>End Devices</b> y arrastra 2 <b>PC</b> (PC-PT). Coloca una debajo de cada switch.</li>
+  <li>Cambia el nombre visible de cada equipo: clic en el equipo → pestaña <b>Config</b> → <b>Display Name</b>:
+    <ul>
+      <li>Switch izquierdo: <code>Class-A</code></li>
+      <li>Switch derecho: <code>Class-B</code></li>
+      <li>PC izquierda: <code>Student-1</code></li>
+      <li>PC derecha: <code>Student-2</code></li>
+    </ul>
+  </li>
+</ol>
+<div class="info"><b>Importante:</b> el Display Name es solo la etiqueta del diagrama. El nombre real del switch (hostname) se configura después por CLI.</div>
+
+<h3>Topología esperada</h3>
+<svg viewBox="0 0 640 300" width="100%" style="max-width:640px;display:block;margin:10px auto" font-family="Segoe UI,Arial" font-size="14">
+  <!-- enlaces -->
+  <line x1="170" y1="110" x2="470" y2="110" stroke="#000" stroke-width="3" stroke-dasharray="10,6"/>
+  <line x1="130" y1="135" x2="130" y2="215" stroke="#000" stroke-width="3"/>
+  <line x1="510" y1="135" x2="510" y2="215" stroke="#000" stroke-width="3"/>
+  <path d="M100 215 Q60 175 100 135" stroke="#3fa9f5" stroke-width="3" fill="none"/>
+  <path d="M540 215 Q580 175 540 135" stroke="#3fa9f5" stroke-width="3" fill="none"/>
+  <!-- switches -->
+  <rect x="80" y="85" width="100" height="50" rx="8" fill="#1565c0"/>
+  <text x="130" y="115" fill="#fff" text-anchor="middle" font-weight="bold">Class-A</text>
+  <rect x="460" y="85" width="100" height="50" rx="8" fill="#1565c0"/>
+  <text x="510" y="115" fill="#fff" text-anchor="middle" font-weight="bold">Class-B</text>
+  <!-- PCs -->
+  <rect x="85" y="215" width="90" height="45" rx="6" fill="#e8eef5" stroke="#0b3d6e" stroke-width="2"/>
+  <text x="130" y="243" text-anchor="middle">Student-1</text>
+  <rect x="465" y="215" width="90" height="45" rx="6" fill="#e8eef5" stroke="#0b3d6e" stroke-width="2"/>
+  <text x="510" y="243" text-anchor="middle">Student-2</text>
+  <!-- etiquetas -->
+  <text x="320" y="100" text-anchor="middle" font-size="12">Gi0/1 ↔ Gi0/1 (cruzado)</text>
+  <text x="140" y="180" font-size="12">Fa0/1 (directo)</text>
+  <text x="430" y="180" font-size="12" text-anchor="end">Fa0/1 (directo)</text>
+  <text x="320" y="285" text-anchor="middle" font-size="12">— UTP directo   - - - UTP cruzado   <tspan fill="#3fa9f5">━</tspan> Consola</text>
+  <text x="130" y="70" text-anchor="middle" font-size="12">10.10.10.100</text>
+  <text x="510" y="70" text-anchor="middle" font-size="12">10.10.10.150</text>
+</svg>
+
+<h2 id="p2">Parte 2. Conexiones UTP y de consola</h2>
+<p>Vas a hacer 5 conexiones: 3 de datos (UTP) y 2 de consola. Todos los cables están en <b>Connections</b> (ícono del rayo ⚡), en la barra inferior izquierda.</p>
+<h3>Tabla de cableado</h3>
+<table>
+  <tr><th>#</th><th>Cable en Packet Tracer</th><th>Desde (puerto)</th><th>Hacia (puerto)</th><th>Por qué este cable</th></tr>
+  <tr><td>1</td><td>Copper Straight-Through (línea negra continua)</td><td>Student-1 (FastEthernet0)</td><td>Class-A (FastEthernet0/1)</td><td>Equipos distintos: PC ↔ switch</td></tr>
+  <tr><td>2</td><td>Copper Straight-Through</td><td>Student-2 (FastEthernet0)</td><td>Class-B (FastEthernet0/1)</td><td>Equipos distintos: PC ↔ switch</td></tr>
+  <tr><td>3</td><td>Copper Cross-Over (línea negra punteada)</td><td>Class-A (GigabitEthernet0/1)</td><td>Class-B (GigabitEthernet0/1)</td><td>Equipos iguales: switch ↔ switch</td></tr>
+  <tr><td>4</td><td>Console (línea azul claro)</td><td>Student-1 (RS 232)</td><td>Class-A (Console)</td><td>Administración por consola</td></tr>
+  <tr><td>5</td><td>Console</td><td>Student-2 (RS 232)</td><td>Class-B (Console)</td><td>Administración por consola</td></tr>
+</table>
+<h3>Cómo conectar cada cable</h3>
+<ol>
+  <li>Selecciona el tipo de cable en <b>Connections</b>.</li>
+  <li>Da clic en el primer equipo y elige el puerto de la columna "Desde".</li>
+  <li>Da clic en el segundo equipo y elige el puerto de la columna "Hacia".</li>
+  <li>Repite para los 5 cables.</li>
+</ol>
+<h3>Comprueba las luces de enlace</h3>
+<ul>
+  <li><span class="ok">Verde</span> en ambos extremos: el enlace está activo.</li>
+  <li><span class="warn">Naranja</span> en un puerto del switch: el puerto está negociando (STP). Espera unos 30 segundos o presiona <b>Fast Forward Time</b> (abajo a la derecha).</li>
+  <li><span class="bad">Rojo</span>: cable equivocado o puerto apagado. Borra el cable y vuelve a conectarlo.</li>
+  <li>El cable de consola no muestra luces; es normal.</li>
+</ul>
+<div class="info"><b>Nota de diseño:</b> el enlace entre switches va por los puertos Gigabit porque concentra el tráfico de todos los equipos. Los puertos FastEthernet se reservan para los equipos finales.</div>
+
+<h2 id="p3">Parte 3. Configurar el switch Class-A por consola</h2>
+<p>Entra a Class-A desde la PC Student-1 por el cable de consola y aplica nombre, contraseñas, banner, IP y guardado.</p>
+<h3>3.1 Abrir la sesión de consola</h3>
+<ol>
+  <li>Da clic en <b>Student-1</b> → pestaña <b>Desktop</b> → <b>Terminal</b>.</li>
+  <li>Deja los valores por defecto (9600, 8, None, 1, None) y da <b>OK</b>.</li>
+  <li>Presiona <b>Enter</b>. Debe aparecer <code>Switch&gt;</code>.</li>
+  <li>Si te pregunta <code>Would you like to enter the initial configuration dialog? [yes/no]</code>, escribe <code>no</code>.</li>
+</ol>
+<div class="nota">Si la pantalla queda en negro sin prompt, revisa que el cable de consola vaya de <b>RS 232</b> a <b>Console</b>.</div>
+<h3>3.2 Comandos</h3>
+<pre><code>enable
+configure terminal
+hostname Class-A
+enable secret 6EBUp
+line console 0
+ password xAw6k
+ login
+ exit
+line vty 0 15
+ password xAw6k
+ login
+ exit
+service password-encryption
+banner motd #Acceso solo a personal autorizado#
+interface vlan 1
+ ip address 10.10.10.100 255.255.255.0
+ no shutdown
+ end
+copy running-config startup-config</code></pre>
+<p>Cuando aparezca <code>Destination filename [startup-config]?</code>, presiona <b>Enter</b>.</p>
+<h3>3.3 Qué hace cada comando</h3>
+<table>
+  <tr><th>Comando</th><th>Función</th></tr>
+  <tr><td><code>enable</code></td><td>Pasa del modo usuario (<code>&gt;</code>) al modo privilegiado (<code>#</code>)</td></tr>
+  <tr><td><code>configure terminal</code></td><td>Entra al modo de configuración global</td></tr>
+  <tr><td><code>hostname Class-A</code></td><td>Cambia el nombre del switch</td></tr>
+  <tr><td><code>enable secret 6EBUp</code></td><td>Protege el modo privilegiado con contraseña cifrada (MD5)</td></tr>
+  <tr><td><code>line console 0</code> + <code>password</code> + <code>login</code></td><td>Pide contraseña al entrar por consola</td></tr>
+  <tr><td><code>line vty 0 15</code> + <code>password</code> + <code>login</code></td><td>Pide contraseña al entrar por Telnet/SSH (16 líneas)</td></tr>
+  <tr><td><code>service password-encryption</code></td><td>Cifra las contraseñas que estaban en texto plano</td></tr>
+  <tr><td><code>banner motd #...#</code></td><td>Mensaje que aparece al conectarse</td></tr>
+  <tr><td><code>interface vlan 1</code> + <code>ip address</code></td><td>Asigna la IP de administración del switch</td></tr>
+  <tr><td><code>no shutdown</code></td><td>Activa la interfaz VLAN 1</td></tr>
+  <tr><td><code>copy running-config startup-config</code></td><td>Guarda la configuración en la NVRAM para que sobreviva a un reinicio</td></tr>
+</table>
+
+<h2 id="p4">Parte 4. Configurar el switch Class-B</h2>
+<p>Repite el procedimiento entrando desde <b>Student-2</b> → <b>Desktop</b> → <b>Terminal</b>. Solo cambian el nombre y la IP.</p>
+<pre><code>enable
+configure terminal
+hostname Class-B
+enable secret 6EBUp
+line console 0
+ password xAw6k
+ login
+ exit
+line vty 0 15
+ password xAw6k
+ login
+ exit
+service password-encryption
+banner motd #Acceso solo a personal autorizado#
+interface vlan 1
+ ip address 10.10.10.150 255.255.255.0
+ no shutdown
+ end
+copy running-config startup-config</code></pre>
+<p>Presiona <b>Enter</b> para confirmar el guardado.</p>
+<div class="info"><b>Comprueba el acceso:</b> escribe <code>exit</code> hasta salir y presiona Enter. Debe aparecer el banner y luego pedirte la contraseña de consola (<code>xAw6k</code>). Después, <code>enable</code> debe pedirte la contraseña secreta (<code>6EBUp</code>).</div>
+
+<h2 id="p5">Parte 5. Configurar la IP de las PCs</h2>
+<p>Cada PC recibe una IP estática de la red 10.10.10.0/24. No necesitan gateway porque todos los equipos están en la misma red.</p>
+<ol>
+  <li>Da clic en <b>Student-1</b> → <b>Desktop</b> → <b>IP Configuration</b>.</li>
+  <li>Selecciona <b>Static</b>.</li>
+  <li>Escribe <b>IPv4 Address</b> <code>10.10.10.4</code> y <b>Subnet Mask</b> <code>255.255.255.0</code>.</li>
+  <li>Deja <b>Default Gateway</b> y <b>DNS Server</b> vacíos.</li>
+  <li>Cierra la ventana; los cambios se guardan solos.</li>
+  <li>Repite en <b>Student-2</b> con IPv4 Address <code>10.10.10.5</code> y Subnet Mask <code>255.255.255.0</code>.</li>
+</ol>
+
+<h2 id="p6">Parte 6. Verificación y evidencias</h2>
+<p>La práctica está completa cuando los 6 pings responden y los comandos <code>show</code> muestran la configuración esperada. Toma captura de pantalla de cada prueba.</p>
+<h3>6.1 Comandos en cada switch</h3>
+<pre><code>show running-config
+show ip interface brief</code></pre>
+<ul>
+  <li>En <code>show running-config</code>, las contraseñas de línea deben aparecer como <code>password 7 ...</code> (cifradas) y el secreto como <code>enable secret 5 ...</code>.</li>
+  <li>En <code>show ip interface brief</code>, <b>Vlan1</b> debe mostrar su IP y el estado <code>up</code> / <code>up</code>.</li>
+</ul>
+<h3>6.2 Pings (Desktop → Command Prompt)</h3>
+<div class="nota">El primer ping puede perder 1 paquete mientras se resuelve ARP; es normal.</div>
+<table>
+  <tr><th>#</th><th>Desde</th><th>Comando</th><th>Resultado esperado</th><th>¿Correcto?</th></tr>
+  <tr><td>1</td><td>Student-1</td><td><code>ping 10.10.10.5</code></td><td>Reply from 10.10.10.5</td><td><input type="checkbox"></td></tr>
+  <tr><td>2</td><td>Student-1</td><td><code>ping 10.10.10.100</code></td><td>Reply from 10.10.10.100</td><td><input type="checkbox"></td></tr>
+  <tr><td>3</td><td>Student-1</td><td><code>ping 10.10.10.150</code></td><td>Reply from 10.10.10.150</td><td><input type="checkbox"></td></tr>
+  <tr><td>4</td><td>Student-2</td><td><code>ping 10.10.10.4</code></td><td>Reply from 10.10.10.4</td><td><input type="checkbox"></td></tr>
+  <tr><td>5</td><td>Student-2</td><td><code>ping 10.10.10.100</code></td><td>Reply from 10.10.10.100</td><td><input type="checkbox"></td></tr>
+  <tr><td>6</td><td>Student-2</td><td><code>ping 10.10.10.150</code></td><td>Reply from 10.10.10.150</td><td><input type="checkbox"></td></tr>
+</table>
+<h3>6.3 Entrega</h3>
+<ul class="check">
+  <li><label><input type="checkbox">Archivo <code>.pkt</code> guardado con tu nombre</label></li>
+  <li><label><input type="checkbox">Captura de <code>show running-config</code> de Class-A y Class-B</label></li>
+  <li><label><input type="checkbox">Captura de <code>show ip interface brief</code> de ambos switches</label></li>
+  <li><label><input type="checkbox">Capturas de los 6 pings</label></li>
+  <li><label><input type="checkbox">Respuestas a las preguntas de reflexión</label></li>
+</ul>
+
+<h2 id="errores">Errores comunes y preguntas de reflexión</h2>
+<h3>Errores comunes</h3>
+<table>
+  <tr><th>Síntoma</th><th>Causa probable</th><th>Solución</th></tr>
+  <tr><td>Terminal en negro, sin <code>Switch&gt;</code></td><td>Falta el cable de consola o va al puerto equivocado</td><td>Conecta Console de RS 232 (PC) a Console (switch) y presiona Enter</td></tr>
+  <tr><td><code>% Invalid input detected</code></td><td>Comando mal escrito o en el modo equivocado</td><td>Revisa el prompt: <code>&gt;</code>, <code>#</code>, <code>(config)#</code> o <code>(config-line)#</code></td></tr>
+  <tr><td>Ping a la IP del switch falla</td><td>Falta <code>no shutdown</code> en <code>interface vlan 1</code></td><td>Entra a <code>interface vlan 1</code> y escribe <code>no shutdown</code></td></tr>
+  <tr><td>Ping entre PCs falla</td><td>IP o máscara mal escrita, o el enlace entre switches está en rojo</td><td>Revisa IP Configuration y el cable cruzado Gi0/1 ↔ Gi0/1</td></tr>
+  <tr><td>No pide contraseña al entrar</td><td>Falta <code>login</code> en la línea</td><td><code>line console 0</code> → <code>login</code></td></tr>
+  <tr><td>La configuración se pierde al reiniciar</td><td>No se guardó</td><td><code>copy running-config startup-config</code></td></tr>
+  <tr><td>El hostname sigue como <code>Switch</code></td><td>Solo se cambió el Display Name</td><td><code>hostname Class-A</code> en configuración global</td></tr>
+</table>
+<h3>Preguntas de reflexión</h3>
+<ol>
+  <li>¿Por qué se usa cable cruzado entre los switches y cable directo entre PC y switch?</li>
+  <li>¿Cuál es la diferencia entre <code>enable password</code> y <code>enable secret</code>? ¿Cuál es más seguro y por qué?</li>
+  <li>¿Qué tipo de cifrado aplica <code>service password-encryption</code> y por qué se considera débil?</li>
+  <li>¿Para qué le sirve una dirección IP a un switch de capa 2 si los switches no necesitan IP para reenviar tramas?</li>
+  <li>¿Qué diferencia hay entre <code>running-config</code> y <code>startup-config</code>?</li>
+  <li>¿Por qué el enlace entre switches debería ir por puertos Gigabit y no FastEthernet?</li>
+  <li>¿Qué pasaría con los pings si Student-2 tuviera la máscara 255.255.0.0?</li>
+</ol>
+
+</main>
+<footer>Academia de Redes de Cómputo · Escuela Politécnica "Ing. Jorge Matute Remus" · UdeG</footer>
+
+<script>
+document.querySelectorAll('pre').forEach(function(pre){
+  var b=document.createElement('button');b.className='copiar';b.textContent='Copiar';
+  b.onclick=function(){
+    var t=pre.querySelector('code').innerText;
+    var done=function(){b.textContent='¡Copiado!';setTimeout(function(){b.textContent='Copiar'},1500)};
+    if(navigator.clipboard){navigator.clipboard.writeText(t).then(done,function(){fallback()})}else{fallback()}
+    function fallback(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){}document.body.removeChild(ta)}
+  };
+  pre.appendChild(b);
+});
+</script>
+</body>
+</html>
