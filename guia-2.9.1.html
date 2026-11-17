@@ -26,6 +26,11 @@
   pre code{background:none;padding:0;color:inherit}
   .copiar{position:absolute;top:8px;right:8px;background:#30363d;color:#e6edf3;border:none;border-radius:5px;padding:4px 10px;cursor:pointer;font-size:.8rem}
   .copiar:hover{background:#484f58}
+  .cmt{color:#8b949e;font-style:italic}
+  .cables{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+  .cable{border:1px solid var(--borde);border-radius:8px;padding:10px 14px;background:var(--gris)}
+  .cable h4{margin:0 0 6px;color:var(--azul)}
+  @media(max-width:640px){.cables{grid-template-columns:1fr}}
   .nota{background:#fff8c5;border-left:4px solid #d4a72c;padding:10px 14px;border-radius:4px;margin:14px 0}
   .info{background:#ddf4ff;border-left:4px solid var(--azul2);padding:10px 14px;border-radius:4px;margin:14px 0}
   .ok{color:var(--verde);font-weight:600}.warn{color:var(--naranja);font-weight:600}.bad{color:var(--rojo);font-weight:600}
@@ -43,7 +48,6 @@
   <p>Cisco Packet Tracer · Escuela Politécnica "Ing. Jorge Matute Remus" · Universidad de Guadalajara</p>
 </header>
 <main>
-
 <nav>
   <b>Contenido</b>
   <ol>
@@ -130,6 +134,14 @@
 
 <h2 id="p2">Parte 2. Conexiones UTP y de consola</h2>
 <p>Vas a hacer 5 conexiones: 3 de datos (UTP) y 2 de consola. Todos los cables están en <b>Connections</b> (ícono del rayo ⚡), en la barra inferior izquierda.</p>
+<h3>Tipos de cable UTP</h3>
+<div class="cables">
+  <div class="cable"><h4>Directo (Straight-Through)</h4>
+    <p style="margin:0">Mismas normas en ambas puntas (<b>T568B ↔ T568B</b>). Une <b>equipos distintos</b>: PC ↔ switch.<br>En Packet Tracer: <b>línea negra continua</b>.<br>En esta práctica: Student-1 → Class-A y Student-2 → Class-B.</p></div>
+  <div class="cable"><h4>Cruzado (Cross-Over)</h4>
+    <p style="margin:0">Normas distintas (<b>T568A ↔ T568B</b>): invierte los pares de transmisión y recepción. Une <b>equipos iguales</b>: switch ↔ switch.<br>En Packet Tracer: <b>línea negra punteada</b>.<br>En esta práctica: Class-A ↔ Class-B.</p></div>
+</div>
+<div class="info"><b>Regla rápida:</b> iguales → cruzado, distintos → directo. Los switches 2960 tienen Auto-MDIX y pueden ajustarse solos, pero en la práctica y en el examen se espera el cable correcto.</div>
 <h3>Tabla de cableado</h3>
 <table>
   <tr><th>#</th><th>Cable en Packet Tracer</th><th>Desde (puerto)</th><th>Hacia (puerto)</th><th>Por qué este cable</th></tr>
@@ -166,25 +178,26 @@
 </ol>
 <div class="nota">Si la pantalla queda en negro sin prompt, revisa que el cable de consola vaya de <b>RS 232</b> a <b>Console</b>.</div>
 <h3>3.2 Comandos</h3>
-<pre><code>enable
-configure terminal
-hostname Class-A
-enable secret 6EBUp
-line console 0
- password xAw6k
- login
- exit
-line vty 0 15
- password xAw6k
- login
- exit
-service password-encryption
-banner motd #Acceso solo a personal autorizado#
-interface vlan 1
- ip address 10.10.10.100 255.255.255.0
- no shutdown
- end
-copy running-config startup-config</code></pre>
+<pre class="anotado"><code><span class="cmd">enable</span>                                <span class="cmt">← entra al modo privilegiado (Switch#)</span>
+<span class="cmd">configure terminal</span>                    <span class="cmt">← entra al modo de configuración global (config)#</span>
+<span class="cmd">hostname Class-A</span>                      <span class="cmt">← cambia el nombre del switch</span>
+<span class="cmd">enable secret 6EBUp</span>                   <span class="cmt">← contraseña cifrada para el modo privilegiado</span>
+<span class="cmd">line console 0</span>                        <span class="cmt">← entra a la línea de consola (acceso físico)</span>
+<span class="cmd"> password xAw6k</span>                       <span class="cmt">← define la contraseña de consola</span>
+<span class="cmd"> login</span>                                <span class="cmt">← obliga a pedirla al conectarse</span>
+<span class="cmd"> exit</span>                                 <span class="cmt">← regresa a (config)#</span>
+<span class="cmd">line vty 0 15</span>                         <span class="cmt">← entra a las 16 líneas remotas (Telnet/SSH)</span>
+<span class="cmd"> password xAw6k</span>                       <span class="cmt">← define la contraseña remota</span>
+<span class="cmd"> login</span>                                <span class="cmt">← obliga a pedirla al conectarse</span>
+<span class="cmd"> exit</span>                                 <span class="cmt">← regresa a (config)#</span>
+<span class="cmd">service password-encryption</span>           <span class="cmt">← cifra las contraseñas en texto plano</span>
+<span class="cmd">banner motd #Acceso solo a personal autorizado#</span>  <span class="cmt">← mensaje al conectarse</span>
+<span class="cmd">interface vlan 1</span>                      <span class="cmt">← entra a la interfaz de administración</span>
+<span class="cmd"> ip address 10.10.10.100 255.255.255.0</span>  <span class="cmt">← asigna la IP del switch</span>
+<span class="cmd"> no shutdown</span>                          <span class="cmt">← activa la interfaz</span>
+<span class="cmd"> end</span>                                  <span class="cmt">← regresa a Switch#</span>
+<span class="cmd">copy running-config startup-config</span>    <span class="cmt">← guarda la configuración en NVRAM</span></code></pre>
+<p class="nota" style="margin-top:0">Las flechas (←) son solo explicación: <b>no las escribas</b>. El botón <b>Copiar</b> copia únicamente los comandos.</p>
 <p>Cuando aparezca <code>Destination filename [startup-config]?</code>, presiona <b>Enter</b>.</p>
 <h3>3.3 Qué hace cada comando</h3>
 <table>
@@ -204,25 +217,25 @@ copy running-config startup-config</code></pre>
 
 <h2 id="p4">Parte 4. Configurar el switch Class-B</h2>
 <p>Repite el procedimiento entrando desde <b>Student-2</b> → <b>Desktop</b> → <b>Terminal</b>. Solo cambian el nombre y la IP.</p>
-<pre><code>enable
-configure terminal
-hostname Class-B
-enable secret 6EBUp
-line console 0
- password xAw6k
- login
- exit
-line vty 0 15
- password xAw6k
- login
- exit
-service password-encryption
-banner motd #Acceso solo a personal autorizado#
-interface vlan 1
- ip address 10.10.10.150 255.255.255.0
- no shutdown
- end
-copy running-config startup-config</code></pre>
+<pre class="anotado"><code><span class="cmd">enable</span>                                <span class="cmt">← entra al modo privilegiado (Switch#)</span>
+<span class="cmd">configure terminal</span>                    <span class="cmt">← entra al modo de configuración global (config)#</span>
+<span class="cmd">hostname Class-B</span>                      <span class="cmt">← cambia el nombre del switch</span>
+<span class="cmd">enable secret 6EBUp</span>                   <span class="cmt">← contraseña cifrada para el modo privilegiado</span>
+<span class="cmd">line console 0</span>                        <span class="cmt">← entra a la línea de consola (acceso físico)</span>
+<span class="cmd"> password xAw6k</span>                       <span class="cmt">← define la contraseña de consola</span>
+<span class="cmd"> login</span>                                <span class="cmt">← obliga a pedirla al conectarse</span>
+<span class="cmd"> exit</span>                                 <span class="cmt">← regresa a (config)#</span>
+<span class="cmd">line vty 0 15</span>                         <span class="cmt">← entra a las 16 líneas remotas (Telnet/SSH)</span>
+<span class="cmd"> password xAw6k</span>                       <span class="cmt">← define la contraseña remota</span>
+<span class="cmd"> login</span>                                <span class="cmt">← obliga a pedirla al conectarse</span>
+<span class="cmd"> exit</span>                                 <span class="cmt">← regresa a (config)#</span>
+<span class="cmd">service password-encryption</span>           <span class="cmt">← cifra las contraseñas en texto plano</span>
+<span class="cmd">banner motd #Acceso solo a personal autorizado#</span>  <span class="cmt">← mensaje al conectarse</span>
+<span class="cmd">interface vlan 1</span>                      <span class="cmt">← entra a la interfaz de administración</span>
+<span class="cmd"> ip address 10.10.10.150 255.255.255.0</span>  <span class="cmt">← asigna la IP del switch</span>
+<span class="cmd"> no shutdown</span>                          <span class="cmt">← activa la interfaz</span>
+<span class="cmd"> end</span>                                  <span class="cmt">← regresa a Switch#</span>
+<span class="cmd">copy running-config startup-config</span>    <span class="cmt">← guarda la configuración en NVRAM</span></code></pre>
 <p>Presiona <b>Enter</b> para confirmar el guardado.</p>
 <div class="info"><b>Comprueba el acceso:</b> escribe <code>exit</code> hasta salir y presiona Enter. Debe aparecer el banner y luego pedirte la contraseña de consola (<code>xAw6k</code>). Después, <code>enable</code> debe pedirte la contraseña secreta (<code>6EBUp</code>).</div>
 
@@ -240,8 +253,8 @@ copy running-config startup-config</code></pre>
 <h2 id="p6">Parte 6. Verificación y evidencias</h2>
 <p>La práctica está completa cuando los 6 pings responden y los comandos <code>show</code> muestran la configuración esperada. Toma captura de pantalla de cada prueba.</p>
 <h3>6.1 Comandos en cada switch</h3>
-<pre><code>show running-config
-show ip interface brief</code></pre>
+<pre class="anotado"><code><span class="cmd">show running-config</span>                   <span class="cmt">← muestra la configuración activa</span>
+<span class="cmd">show ip interface brief</span>               <span class="cmt">← resumen de interfaces, IP y estado</span></code></pre>
 <ul>
   <li>En <code>show running-config</code>, las contraseñas de línea deben aparecer como <code>password 7 ...</code> (cifradas) y el secreto como <code>enable secret 5 ...</code>.</li>
   <li>En <code>show ip interface brief</code>, <b>Vlan1</b> debe mostrar su IP y el estado <code>up</code> / <code>up</code>.</li>
@@ -296,7 +309,7 @@ show ip interface brief</code></pre>
 document.querySelectorAll('pre').forEach(function(pre){
   var b=document.createElement('button');b.className='copiar';b.textContent='Copiar';
   b.onclick=function(){
-    var t=pre.querySelector('code').innerText;
+    var cmds=pre.querySelectorAll('.cmd');var t=cmds.length?Array.prototype.map.call(cmds,function(c){return c.textContent}).join('\n'):pre.querySelector('code').innerText;
     var done=function(){b.textContent='¡Copiado!';setTimeout(function(){b.textContent='Copiar'},1500)};
     if(navigator.clipboard){navigator.clipboard.writeText(t).then(done,function(){fallback()})}else{fallback()}
     function fallback(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){}document.body.removeChild(ta)}
